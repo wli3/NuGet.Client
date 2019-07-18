@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -25,6 +25,7 @@ namespace NuGet.ProjectModel
         public static BuildAction AndroidAsset = Define(nameof(AndroidAsset));
         public static BuildAction AndroidResource = Define(nameof(AndroidResource));
         public static BuildAction BundleResource = Define(nameof(BundleResource));
+        public static BuildAction AdditionalFiles = Define(nameof(AdditionalFiles));
 
         public string Value { get; }
 

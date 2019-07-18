@@ -508,6 +508,9 @@ Copyright (c) .NET Foundation. All rights reserved.
       </_PackageFiles>
       <_PackageFiles Include="@(BundleResource)" Condition=" %(BundleResource.Pack) == 'true' ">
         <BuildAction Condition = "'%(BundleResource.BuildAction)' == ''">BundleResource</BuildAction>
+      </_PackageFiles>    
+      <_PackageFiles Include="@(AdditionalFiles)" Condition=" %(AdditionalFiles.Pack) == 'true' ">
+        <BuildAction Condition = "'%(AdditionalFiles.BuildAction)' == ''">AdditionalFiles</BuildAction>
       </_PackageFiles>
     </ItemGroup>
   </Target>

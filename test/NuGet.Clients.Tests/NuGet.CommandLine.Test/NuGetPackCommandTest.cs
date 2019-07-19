@@ -39,14 +39,14 @@ namespace NuGet.CommandLine.Test
                 Util.CreateFile(
                     Path.Combine(workingDirectory, "contentFiles", "any", "any"),
                     "a.txt",
-                    "");
+                    "sample text file");
                 Util.CreateFile(
                     workingDirectory,
                     "packageA.nuspec",
 @"<package xmlns='http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd'>
   <metadata>
     <id>packageA</id>
-    <version>1.0.0.2</version>
+    <version>1.0.0.3</version>
     <title>packageA</title>
     <authors>test</authors>
     <owners>test</owners>
@@ -54,7 +54,7 @@ namespace NuGet.CommandLine.Test
     <description>Description</description>
     <copyright>Copyright ©  2013</copyright> 
     <contentFiles>
-        <files include=""contentFiles/any/any/a.txt"" buildAction=""AdditionalFiles"" />
+        <files include=""any/any/a.txt"" buildAction=""AdditionalFiles"" />
     </contentFiles>
   </metadata>
 </package>");
@@ -68,7 +68,7 @@ namespace NuGet.CommandLine.Test
                 Assert.True(0 == r.Item1, r.Item2 + " " + r.Item3);
 
                 // Assert
-                var path = Path.Combine(workingDirectory, "packageA.1.0.0.2.nupkg");
+                var path = Path.Combine(workingDirectory, "packageA.1.0.0.3.nupkg");
                 var package = new OptimizedZipPackage(path);
                 using (var zip = new ZipArchive(File.OpenRead(path)))
                 {

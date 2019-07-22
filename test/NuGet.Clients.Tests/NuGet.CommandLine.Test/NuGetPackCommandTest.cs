@@ -29,7 +29,7 @@ namespace NuGet.CommandLine.Test
         }
 
         [Fact]
-        public void PackCommand_NoWarn_AdditionalFilesFromNuSpec()
+        public void PackCommand_AdditionalFilesFromNuSpec()
         {
             var nugetexe = Util.GetNuGetExePath();
 
@@ -68,7 +68,7 @@ namespace NuGet.CommandLine.Test
                 Assert.True(0 == r.Item1, r.Item2 + " " + r.Item3);
 
                 // Assert
-                var path = Path.Combine(workingDirectory, "packageA.1.0.0.3.nupkg");
+                var path = Path.Combine(workingDirectory, "packageA.1.0.0.1.nupkg");
                 var package = new OptimizedZipPackage(path);
                 using (var zip = new ZipArchive(File.OpenRead(path)))
                 {
@@ -81,6 +81,7 @@ namespace NuGet.CommandLine.Test
                 }
             }
         }
+        
         [Fact]
         public void PackCommand_IncludeExcludePackageFromNuspec()
         {
@@ -449,6 +450,69 @@ namespace NuGet.CommandLine.Test
                     new string[]
                     {
                         Path.Combine("analyzers", "cs", "code", "a.dll"),
+                    },
+                    files);
+
+                Assert.False(r.Item2.Contains("Assembly outside lib folder"));
+            }
+        }
+
+        [Fact]
+        public void PackCommand_PackAnalyzersWithAdditionalFiles()
+        {
+            var nugetexe = Util.GetNuGetExePath();
+
+            using (var workingDirectory = TestDirectory.Create())
+            {
+                // Arrange
+                Util.CreateFile(
+                    Path.Combine(workingDirectory, "analyzers", "cs", "code"),
+                    "a.dll",
+                    "");
+
+                Util.CreateFile(
+                Path.Combine(workingDirectory, "contentFiles", "any", "any"),
+                "a.txt",
+                string.Empty);
+
+                Util.CreateFile(
+                    workingDirectory,
+                    "packageA.nuspec",
+@"<package xmlns='http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd'>
+  <metadata>
+    <id>packageA</id>
+    <version>1.0.0</version>
+    <title>packageA</title>
+    <authors>test</authors>
+    <owners>test</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Description</description>
+    <copyright>Copyright ©  2013</copyright>
+    <contentFiles>
+        <files include=""any/any/a.txt"" buildAction=""AdditionalFiles"" />
+    </contentFiles>
+  </metadata>
+</package>");
+
+                // Act
+                var r = CommandRunner.Run(
+                    nugetexe,
+                    workingDirectory,
+                    "pack packageA.nuspec",
+                    waitForExit: true);
+                Assert.True(0 == r.Item1, r.Item2 + " " + r.Item3);
+
+                // Assert
+                var path = Path.Combine(workingDirectory, "packageA.1.0.0.nupkg");
+                var package = new OptimizedZipPackage(path);
+                var files = package.GetFiles().Select(f => f.Path).ToArray();
+                Array.Sort(files);
+
+                Assert.Equal(
+                    new string[]
+                    {
+                        Path.Combine("analyzers", "cs", "code", "a.dll"),
+                        Path.Combine("contentFiles", "any", "any", "a.txt")
                     },
                     files);
 

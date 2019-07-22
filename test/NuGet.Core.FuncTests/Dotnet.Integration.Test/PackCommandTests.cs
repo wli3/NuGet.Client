@@ -2446,6 +2446,7 @@ namespace ClassLibrary
         [InlineData("EmbeddedResource",                             "ApplicationDefinition",                "ApplicationDefinition")]
         [InlineData("Content",                                      "LinkDescription",                      "LinkDescription")]
         [InlineData("Content",                                      "RandomBuildAction",                    "RandomBuildAction")]
+        [InlineData("Content",                                      "AdditionalFiles",                      "AdditionalFiles")]
         public void PackCommand_PackProject_OutputsBuildActionForContentFiles(string itemType, string buildAction, string expectedBuildAction )
         {
             // Arrange

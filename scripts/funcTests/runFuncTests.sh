@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-echo "Starting runFuncTests at `date -u +"%Y-%m-%dT%H:%M:%S"`"
-
 env | sort
 
 while true ; do
@@ -14,10 +12,6 @@ done
 
 RESULTCODE=0
 
-# print openssl version
-echo "==================================================================================================="
-openssl version -a
-echo "==================================================================================================="
 # move up to the repo root
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 DIR=$SCRIPTDIR/../..
@@ -41,6 +35,12 @@ scripts/funcTests/dotnet-install.sh -i cli -c 2.2 -NoPath
 
 DOTNET="$(pwd)/cli/dotnet"
 
+#restore solution packages
+$DOTNET msbuild -t:restore "$DIR/build/bootstrap.proj"
+if [ $? -ne 0 ]; then
+	echo "Restore failed!!"
+	exit 1
+fi
 
 echo "dotnet msbuild build/config.props /v:m /nologo /t:GetCliBranchForTesting"
 
@@ -60,41 +60,24 @@ do
 	fi
 	echo "Channel is: $Channel"
 	echo "Version is: $Version"
-	scripts/funcTests/dotnet-install.sh -i cli -c $Channel -v $Version -nopath
+	script/funcTests/dotnet-install.sh -i cli -c $Channel -v $Version -nopath
 
 	# Display current version
 	$DOTNET --version
 	dotnet --info
 done
-
-echo "initial dotnet cli install finished at `date -u +"%Y-%m-%dT%H:%M:%S"`"
-
 echo "================="
 
-# install SDK2 runtime as we encounter problems on running dotnet vstest command when only download SDK3.
-cli/dotnet-install.sh -runtime dotnet -Channel 2.2 -i cli -NoPath
 
 echo "Deleting .NET Core temporary files"
 rm -rf "/tmp/"dotnet.*
 
-echo "second dotnet cli install finished at `date -u +"%Y-%m-%dT%H:%M:%S"`"
 echo "================="
-
-#restore solution packages
-$DOTNET msbuild -t:restore "$DIR/build/bootstrap.proj"
-if [ $? -ne 0 ]; then
-	echo "Restore failed!!"
-	exit 1
-fi
-
-echo "bootstrap project restore finished at `date -u +"%Y-%m-%dT%H:%M:%S"`"
 
 # init the repo
 
 git submodule init
 git submodule update
-
-echo "git submodules updated finished at `date -u +"%Y-%m-%dT%H:%M:%S"`"
 
 # clear caches
 if [ "$CLEAR_CACHE" == "1" ]
@@ -113,8 +96,6 @@ if [ $? -ne 0 ]; then
 	echo "Restore failed!!"
 	exit 1
 fi
-
-echo "Restore finished at `date -u +"%Y-%m-%dT%H:%M:%S"`"
 
 # Unit tests
 echo "dotnet msbuild build/build.proj /t:CoreUnitTests /p:VisualStudioVersion=16.0 /p:Configuration=Release /p:BuildNumber=1 /p:ReleaseLabel=beta"
@@ -135,8 +116,6 @@ then
 else
 	echo "$DIR/$RESULTFILE not found."
 fi
-
-echo "Core tests finished at `date -u +"%Y-%m-%dT%H:%M:%S"`"
 
 # Func tests
 echo "dotnet msbuild build/build.proj /t:CoreFuncTests /p:VisualStudioVersion=16.0 /p:Configuration=Release /p:BuildNumber=1 /p:ReleaseLabel=beta"
@@ -173,8 +152,8 @@ rm -rf "$TestDir/System.*" "$TestDir/WindowsBase.dll" "$TestDir/Microsoft.CSharp
 case "$(uname -s)" in
 		Linux)
 			# We are not testing Mono on linux currently, so comment it out.
-			#echo "mono $XunitConsole "$TestDir/NuGet.CommandLine.Test.dll" -notrait Platform=Windows -notrait Platform=Darwin -xml build/TestResults/monoonlinux.xml -verbose"
-			#mono $XunitConsole "$TestDir/NuGet.CommandLine.Test.dll" -notrait Platform=Windows -notrait Platform=Darwin -xml "build/TestResults/monoonlinux.xml" -verbose
+			#echo "mono $XunitConsole "$TestDir/NuGet.CommandLine.Test.dll" -notrait Platform=Windows -notrait Platform=Darwin -xml build/TestResults/monoonlinux.xml"
+			#mono $XunitConsole "$TestDir/NuGet.CommandLine.Test.dll" -notrait Platform=Windows -notrait Platform=Darwin -xml "build/TestResults/monoonlinux.xml"
 			if [ $RESULTCODE -ne '0' ]; then
 				RESULTCODE=$?
 				echo "Unit Tests or Core Func Tests failed on Linux"
@@ -193,7 +172,6 @@ case "$(uname -s)" in
 		*) ;;
 esac
 
-echo "Func tests finished at `date -u +"%Y-%m-%dT%H:%M:%S"`"
 
 popd
 

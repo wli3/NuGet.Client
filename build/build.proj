@@ -19,7 +19,7 @@
   -->
   <Target Name="GetXPLATProjects">
       <MsBuild
-      Projects="@(ProductProjects)"
+      Projects="@(AllSolutionProjects)"
       Targets="GetXPLATProject">
       <Output
           TaskParameter="TargetOutputs"
@@ -118,7 +118,8 @@
         Targets="RunTestsOnProjects"
         Properties="$(CommonMSBuildProperties);
                     TestResultsFileName=$(TestResultsFileName);
-                    TestProjectPaths=$(TestProjectPaths)">
+                    TestProjectPaths=$(TestProjectPaths);
+                    Verbosity=-verbose">
       <Output TaskParameter="TargetOutputs"
               ItemName="TestAssemblyPath" />
     </MSBuild>
@@ -226,6 +227,16 @@
              Targets="PackProjects"
              Properties="$(CommonMSBuildProperties);
                          VisualStudioVersion=$(VisualStudioVersion)" />
+
+    <Message Text="Packing for 2nd NuGet.Build.Tasks.pack" Importance="high" />
+    <!-- Pack the 2nd NuGet.Build.Tasks.pack only when IsXPlat != true  -->
+    <MSBuild Condition=" '$(IsXPlat)' != 'true' "
+             BuildInParallel="false"
+             Projects="$(NuGetBuildTasksPackProject)"
+             Targets="PackProjects"
+             Properties="$(CommonMSBuildProperties);
+                         VisualStudioVersion=$(VisualStudioVersion);
+                         Create2ndNupkg=true" />
   </Target>
 
   <!--
@@ -241,6 +252,14 @@
              Targets="PackProjects"
              Properties="$(CommonMSBuildProperties);
                          VisualStudioVersion=$(VisualStudioVersion)" />
+
+    <Message Text="Packing for 2nd NuGet.Build.Tasks.pack   $(NuGetBuildTasksPackProject)" Importance="high" />
+    <MSBuild BuildInParallel="false"
+             Projects="$(NuGetBuildTasksPackProject)"
+             Targets="PackProjects"
+             Properties="$(CommonMSBuildProperties);
+                         VisualStudioVersion=$(VisualStudioVersion);
+                         Create2ndNupkg=true" />
   </Target>
 
   <!--
@@ -321,19 +340,6 @@
     </MSBuild>
   </Target>
 
-    <!--
-    ============================================================
-    EnsurePackageReferenceVersionsInSolution
-    ============================================================
-  -->
-  <Target Name="EnsurePackageReferenceVersionsInSolution">
-      <MsBuild
-        Projects="@(AllRepoProjects)"
-        Targets="EnsurePackageReferenceVersions"
-        Properties="SkipCentralPackageVersions=true">
-    </MsBuild>
-  </Target>
-
   <!--
     ============================================================
     RunTestsOnProjects
@@ -377,15 +383,15 @@
       <DesktopInputTestAssembliesSpaced>$(DesktopInputTestAssemblies.Replace(';', ' '))</DesktopInputTestAssembliesSpaced>
       
       <!-- Build exe commands -->
-      <DesktopTestCommand>$(XunitConsoleExePath) $(DesktopInputTestAssembliesSpaced) -verbose</DesktopTestCommand>
-      <DesktopTestCommand Condition=" '$(TestResultsXunit)' != '' ">$(DesktopTestCommand) -$(TestResultOutputFormat) $(TestResultsXunit)</DesktopTestCommand>
+      <DesktopTestCommand>$(XunitConsoleExePath) $(DesktopInputTestAssembliesSpaced)</DesktopTestCommand>
+      <DesktopTestCommand Condition=" '$(TestResultsXunit)' != '' ">$(DesktopTestCommand) -$(TestResultOutputFormat) $(TestResultsXunit) $(Verbosity)</DesktopTestCommand>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(SkipCoreAssemblies)' != 'true' ">
       <CoreInputTestAssemblies>@(TestAssemblyPath->WithMetadataValue("IsCore", "true"))</CoreInputTestAssemblies>
       <CoreInputTestAssembliesSpaced>$(CoreInputTestAssemblies.Replace(';', ' '))</CoreInputTestAssembliesSpaced>
 
-      <VsTestLogger>--TestAdapterPath:$(XunitXmlLoggerDirectory) --logger:"xunit;LogFileName=$(TestResultsFileName)-vsts.$(TestResultOutputFormat)" --logger:"console;verbosity=detailed" --settings:$(MSBuildThisFileDirectory)xunit.runsettings</VsTestLogger>
+      <VsTestLogger>--TestAdapterPath:$(XunitXmlLoggerDirectory) --logger:xunit;LogFileName=$(TestResultsFileName)-vsts.$(TestResultOutputFormat)</VsTestLogger>      
       <VSTestCommand>$(DotnetExePath) vstest $(CoreInputTestAssembliesSpaced) $(VsTestLogger)</VSTestCommand>
     </PropertyGroup>
 

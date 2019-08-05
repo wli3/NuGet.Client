@@ -11,17 +11,8 @@
     <IsCore>true</IsCore>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp5.0' ">
-    <DefineConstants>$(DefineConstants);NETCORE5_0</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <SigningNotSupported Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.1'">true</SigningNotSupported>
-    <SigningNotSupported Condition=" '$(SigningNotSupported)' != 'true'">false</SigningNotSupported>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(SigningNotSupported)' != 'true' ">
-    <DefineConstants>$(DefineConstants);IS_SIGNING_SUPPORTED</DefineConstants>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.0' ">
+    <DefineConstants>$(DefineConstants);NETCORE3_0</DefineConstants>
   </PropertyGroup>
 
   <!-- Include shared files for netcore projects -->
@@ -59,13 +50,8 @@
     <Import Project="test.targets" />
   </ImportGroup>
 
-  <!-- Centrally managed packages. SkipCentralPackageVersions is used to enforce that the packages are centrally managed through a check in build.proj -->
-  <ImportGroup Condition=" '$(SkipCentralPackageVersions)' != 'true' ">
-    <Import Project="packages.targets" />
-  </ImportGroup>
-
   <!-- Allow WPF projects to run under NETCore SDK -->
-  <!-- Errors occur if the output path is not set correctly -->
+  <!-- Errors occur if the output ptah is not set correctly -->
   <PropertyGroup Condition=" '$(NETCoreWPFProject)' == 'true' ">
     <TargetFrameworkVersion>$(NETFXTargetFrameworkVersion)</TargetFrameworkVersion>
     <BaseOutputPath>bin\</BaseOutputPath>
@@ -153,7 +139,7 @@
           TaskParameter="TargetOutputs"
           ItemName="DllsToSign" />
     </MSBuild>
-    <MsBuild
+    <MsBuild Condition="'$(BuildRTM)' != 'true'"
       Projects="$(MSBuildProjectFullPath)"
       Targets="_GetLocalizedDllsForSigning"
       Properties="BuildProjectReferences=false;">
@@ -334,16 +320,22 @@
   -->
   <Target Name="EnsureNewtonsoftJsonVersion" AfterTargets="ResolveAssemblyReferences">
     <Error
-      Text="Newtonsoft.Json must be version $(NewtonsoftJsonPackageVersion) but resolved %(Reference.NuGetPackageVersion)"
-      Condition=" %(Reference.NuGetPackageId) == 'Newtonsoft.Json' AND %(Reference.NuGetPackageVersion) != '$(NewtonsoftJsonPackageVersion)' " />
-  </Target>
-
-  <Target Name="EnsurePackageReferenceVersions">
-    <Error
-      Text="%(PackageReference.Identity) should not have a version declared outside of packages.targets but found %(PackageReference.Version)"
-      Condition=" '%(PackageReference.Version)' != '' AND '%(PackageReference.IsImplicitlyDefined)' != 'true' AND '%(PackageReference.Identity)' != 'Microsoft.NET.Test.Sdk' " />
+      Text="Newtonsoft.Json must be version $(NewtonsoftJsonVersionCore) but resolved %(Reference.NuGetPackageVersion)"
+      Condition=" %(Reference.NuGetPackageId) == 'Newtonsoft.Json' AND %(Reference.NuGetPackageVersion) != '$(NewtonsoftJsonVersionCore)' " />
   </Target>
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'README.md'))\packages\Microsoft.VisualStudioEng.MicroBuild.Core.0.4.1\build\Microsoft.VisualStudioEng.MicroBuild.Core.targets" Condition="Exists('$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), &quot;README.md&quot;))\packages\Microsoft.VisualStudioEng.MicroBuild.Core.0.4.1\build\Microsoft.VisualStudioEng.MicroBuild.Core.targets')" />
+
+</Project>
+  <!--
+    ==========================================================================================
+    Temporary Workaround Target related to issue https://github.com/dotnet/cli/issues/11378
+    ==========================================================================================
+  -->
+  <Target Name="WorkaroundNetStandard" AfterTargets="ResolvePackageAssets" Condition=" '$(TargetFramework)' == 'netcoreapp3.0' ">
+    <ItemGroup>
+      <TransitiveFrameworkReference Remove="NETStandard.Library" />
+    </ItemGroup>
+  </Target>
 
 </Project>

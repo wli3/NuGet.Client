@@ -14,7 +14,6 @@
     <Shipping>true</Shipping>
     <IncludeInVSIX>true</IncludeInVSIX>
     <XPLATProject>true</XPLATProject>
-    <Description>NuGet's core types and interfaces for PackageReference-based restore, such as lock files, assets file and internal restore models.</Description>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(IsVsixBuild)' == 'true' ">
@@ -27,8 +26,8 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(IsCore)' == 'true' ">
-    <PackageReference Include="System.Dynamic.Runtime" />
-    <PackageReference Include="System.Threading.Thread" />
+    <PackageReference Include="System.Dynamic.Runtime" Version="$(SystemPackagesVersion)" />
+    <PackageReference Include="System.Threading.Thread" Version="$(SystemPackagesVersion)" />
   </ItemGroup>
 
   <ItemGroup>

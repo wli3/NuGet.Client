@@ -6,13 +6,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Threading;
-using Newtonsoft.Json.Linq;
 using NuGet.Common;
 using NuGet.Packaging.Core;
-using NuGet.Protocol;
 using NuGet.Test.Utility;
 using NuGet.XPlat.FuncTest;
 using Xunit;
@@ -35,18 +31,16 @@ namespace Dotnet.Integration.Test
             TestDotnetCli = Path.Combine(_cliDirectory, dotnetExecutableName);
 
             var sdkPaths = Directory.GetDirectories(Path.Combine(_cliDirectory, "sdk"));
-
-            // TODO - remove when shipping. See https://github.com/NuGet/Home/issues/8508
-            // const string dotnetMajorVersion = "3.";
-            const string dotnetMajorVersion = "5.";
-            PatchSDKWithCryptographyDlls(dotnetMajorVersion, sdkPaths);
-
+#if NETCORE3_0
             MsBuildSdksPath = Path.Combine(
-             sdkPaths.Where(path => path.Split(Path.DirectorySeparatorChar).Last().StartsWith(dotnetMajorVersion)).First()
+             sdkPaths.Where(path => path.Split(Path.DirectorySeparatorChar).Last().StartsWith("3")).First()
              , "Sdks");
-
+#else
+            MsBuildSdksPath = Path.Combine(
+             sdkPaths.Where(path => path.Split(Path.DirectorySeparatorChar).Last().StartsWith("2")).First()
+             , "Sdks");
+#endif        
             _templateDirectory = TestDirectory.Create();
-
             _processEnvVars.Add("MSBuildSDKsPath", MsBuildSdksPath);
             _processEnvVars.Add("UseSharedCompilation", "false");
             _processEnvVars.Add("DOTNET_MULTILEVEL_LOOKUP", "0");
@@ -92,11 +86,38 @@ namespace Dotnet.Integration.Test
             {
                 File.Copy(file.FullName, Path.Combine(workingDirectory, file.Name));
             }
+            CreateTempGlobalJson(solutionRoot);
+
             File.Move(
                 Path.Combine(workingDirectory, args + ".csproj"),
                 Path.Combine(workingDirectory, projectName + ".csproj"));
         }
 
+        //create a global.json file in temperary testing folder, to make sure testing with the correct sdk when there're multiple of them in CLI folder.
+        internal void CreateTempGlobalJson(string solutionRoot)
+        {
+            //put the global.json at one level up to solutionRoot path
+            var pathToPlaceGlobalJsonFile = solutionRoot.Substring(0, solutionRoot.Length - 1 - solutionRoot.Split(Path.DirectorySeparatorChar).Last().Length);
+            if (File.Exists(pathToPlaceGlobalJsonFile + Path.DirectorySeparatorChar + "global.json"))
+            {
+                return;
+            }
+
+            var sdkVersion = MsBuildSdksPath.Split(Path.DirectorySeparatorChar).ElementAt(MsBuildSdksPath.Split(Path.DirectorySeparatorChar).Count() - 2);
+
+            var globalJsonFile =
+@"{
+    ""sdk"": {
+              ""version"": """ + sdkVersion + @"""
+             }
+}";
+
+            using (var outputFile = new StreamWriter(Path.Combine(pathToPlaceGlobalJsonFile, "global.json")))
+            {
+                outputFile.WriteLine(globalJsonFile);
+                outputFile.Close();
+            }
+        }
         internal void CreateDotnetToolProject(string solutionRoot, string projectName, string targetFramework, string rid, string source, IList<PackageIdentity> packages, int timeOut = 60000)
         {
             var workingDirectory = Path.Combine(solutionRoot, projectName);
@@ -104,6 +125,8 @@ namespace Dotnet.Integration.Test
             {
                 Directory.CreateDirectory(workingDirectory);
             }
+
+            CreateTempGlobalJson(solutionRoot);
 
             var projectFileName = Path.Combine(workingDirectory, projectName + ".csproj");
 
@@ -186,6 +209,7 @@ namespace Dotnet.Integration.Test
         /// </summary>
         internal CommandRunnerResult RunDotnet(string workingDirectory, string args, bool ignoreExitCode = false)
         {
+
             var result = CommandRunner.Run(TestDotnetCli,
                 workingDirectory,
                 args,
@@ -295,14 +319,15 @@ namespace Dotnet.Integration.Test
             {
                 var projectArtifactsFolder = new DirectoryInfo(Path.Combine(artifactsDirectory, projectName, toolsetVersion, "bin", configuration));
 
-                IEnumerable<DirectoryInfo> frameworkArtifactFolders = projectArtifactsFolder.EnumerateDirectories().Where(folder => folder.FullName.Contains("netstandard2.1") || folder.FullName.Contains("netcoreapp5.0"));
+                var artifactDirectories = projectArtifactsFolder.EnumerateDirectories();
 
-                if (!frameworkArtifactFolders.Any())
+                IEnumerable<DirectoryInfo> frameworkArtifactFolders = artifactDirectories.Where(folder => folder.FullName.Contains("netstandard2.1") || folder.FullName.Contains("netcoreapp3.0"));
+                if (!frameworkArtifactsFolders.Any())
                 {
-                    frameworkArtifactFolders = projectArtifactsFolder.EnumerateDirectories().Where(folder => folder.FullName.Contains("netstandard2.0"));
+                    frameworkArtifactsFolders = frameworkArtifactsFolders.Where(folder => folder.FullName.Contains("netstandard2.0"));
                 }
 
-                foreach (var frameworkArtifactsFolder in frameworkArtifactFolders)
+                foreach (var frameworkArtifactsFolder in frameworkArtifactsFolders)
                 {
                     var fileName = projectName + ".dll";
                     File.Copy(
@@ -328,8 +353,7 @@ namespace Dotnet.Integration.Test
             const string packProjectName = "NuGet.Build.Tasks.Pack";
             const string packTargetsName = "NuGet.Build.Tasks.Pack.targets";
             // Copy the pack SDK.
-            //Order by fullname so that we can get the latest nestandard version. E.g. if we have both netstandard2.0 and netstandard2.1, netstandard2.1 will be selected.
-            var packProjectCoreArtifactsDirectory = new DirectoryInfo(Path.Combine(artifactsDirectory, packProjectName, toolsetVersion, "bin", configuration)).EnumerateDirectories("netstandard*").OrderBy(x => x.FullName).Last();
+            var packProjectCoreArtifactsDirectory = new DirectoryInfo(Path.Combine(artifactsDirectory, packProjectName, toolsetVersion, "bin", configuration)).EnumerateDirectories("netstandard*").Single();
             var packAssemblyDestinationDirectory = Path.Combine(pathToPackSdk, "CoreCLR");
             // Be smart here so we don't have to call ILMerge in the VS build. It takes ~15s total.
             // In VisualStudio, simply use the non il merged version.
@@ -445,112 +469,6 @@ namespace Dotnet.Integration.Test
             {
 
             }
-        }
-
-        // Temporary added methods for processing deps.json files for patching
-
-        /// <summary>
-        /// Temporary patching process to bring in Cryptography DLLs for testing while SDK gets around to including them in 5.0.
-        /// See also: https://github.com/NuGet/Home/issues/8508
-        /// </summary>
-        private void PatchSDKWithCryptographyDlls(string dotnetMajorVersion, string[] sdkPaths)
-        {
-            string directoryToPatch = sdkPaths.Where(path => path.Split(Path.DirectorySeparatorChar).Last().StartsWith(dotnetMajorVersion)).First();
-            var assemblyNames = new string[1] { "System.Security.Cryptography.Pkcs.dll" };
-            PatchDepsJsonFiles(assemblyNames, directoryToPatch);
-
-            string userProfilePath = Environment.GetEnvironmentVariable(RuntimeEnvironmentHelper.IsWindows ? "USERPROFILE" : "HOME");
-            string globalPackagesPath = Path.Combine(userProfilePath, ".nuget", "packages");
-
-            CopyNewlyAddedDlls(assemblyNames, Directory.GetCurrentDirectory(), directoryToPatch);
-        }
-
-        private void PatchDepsJsonFiles(string[] assemblyNames, string patchDir)
-        {
-            string[] fileNames = new string[3] { "dotnet.deps.json", "MSBuild.deps.json", "NuGet.CommandLine.XPlat.deps.json" };
-            string[] fullNames = fileNames.Select(filename => Path.Combine(patchDir, filename)).ToArray();
-            PatchDepsJsonWithNewlyAddedDlls(assemblyNames, fullNames);
-        }
-
-        private void CopyNewlyAddedDlls(string[] assemblyNames, string copyFromPath, string copyToPath)
-        {
-            foreach (var assemblyName in assemblyNames)
-            {
-                File.Copy(
-                    Path.Combine(copyFromPath, assemblyName),
-                    Path.Combine(copyToPath, assemblyName)
-                );
-            }
-        }
-
-        private void PatchDepsJsonWithNewlyAddedDlls(string[] assemblyNames, string[] filePaths)
-        {
-            string nugetBuildTasksName = "NuGet.Build.Tasks/5.3.0-rtm.6251";
-            foreach (string assemblyName in assemblyNames)
-            {
-                foreach (string filePath in filePaths)
-                {
-                    JObject jsonFile = GetJson(filePath);
-
-                    JObject targets = jsonFile.GetJObjectProperty<JObject>("targets");
-
-                    JObject netcoreapp50 = targets.GetJObjectProperty<JObject>(".NETCoreApp,Version=v5.0");
-
-                    JObject nugetBuildTasks = netcoreapp50.GetJObjectProperty<JObject>(nugetBuildTasksName);
-
-                    JObject runtime = nugetBuildTasks.GetJObjectProperty<JObject>("runtime");
-
-                    var assemblyPath = Path.Combine(Directory.GetCurrentDirectory(), assemblyName);
-                    var assemblyVersion = Assembly.LoadFile(assemblyPath).GetName().Version.ToString();
-                    var assemblyFileVersion = FileVersionInfo.GetVersionInfo(assemblyPath).FileVersion;
-                    var jproperty = new JProperty("lib/netstandard2.1/" + assemblyName,
-                        new JObject
-                        {
-                            new JProperty("assemblyVersion", assemblyVersion),
-                            new JProperty("fileVersion", assemblyFileVersion),
-                        }
-                    );
-                    runtime.Add(jproperty);
-                    nugetBuildTasks["runtime"] = runtime;
-                    netcoreapp50[nugetBuildTasksName] = nugetBuildTasks;
-                    targets[".NETCoreApp,Version=v5.0"] = netcoreapp50;
-                    jsonFile["targets"] = targets;
-                    SaveJson(jsonFile, filePath);
-                }
-            }
-        }
-
-        private JObject GetJson(string jsonFilePath)
-        {
-            try
-            {
-                return FileUtility.SafeRead(jsonFilePath, (stream, filePath) =>
-                {
-                    using (var reader = new StreamReader(stream))
-                    {
-                        return JObject.Parse(reader.ReadToEnd());
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException(
-                    string.Format("Failed to read json file at {0}: {1}", jsonFilePath, ex.Message),
-                    ex
-                );
-            }
-        }
-
-        private void SaveJson(JObject json, string jsonFilePath)
-        {
-            FileUtility.Replace((outputPath) =>
-            {
-                using (var writer = new StreamWriter(outputPath, append: false, encoding: Encoding.UTF8))
-                {
-                    writer.Write(json.ToString());
-                }
-            },
-            jsonFilePath);
         }
     }
 }

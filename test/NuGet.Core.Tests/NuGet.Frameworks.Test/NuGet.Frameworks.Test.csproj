@@ -11,7 +11,6 @@
     <TargetFrameworks Condition=" '$(IsXPlat)' == 'true' ">$(NETCoreTargetFrameworks)</TargetFrameworks>
     <TestProject>true</TestProject>
     <UseParallelXunit>true</UseParallelXunit>
-    <Description>Unit tests for NuGet.Frameworks.</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(IsCore)' == 'true' ">
-    <PackageReference Include="System.Diagnostics.TraceSource" />
+    <PackageReference Include="System.Diagnostics.TraceSource" Version="$(SystemPackagesVersion)" />
   </ItemGroup>
 
   <ItemGroup>

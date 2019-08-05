@@ -1,4 +1,8 @@
 <Project>
+  <PropertyGroup>
+    <RequiresSigningXplatAPIs>true</RequiresSigningXplatAPIs>
+  </PropertyGroup>
+
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'README.md'))\build\common.props" />
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
 
@@ -45,6 +49,7 @@
     <Reference Include="System.IO.Compression" />
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(IsCore)' == 'true' ">
   <ItemGroup Condition=" '$(TargetFramework)' == '$(NetStandardVersion)' ">
     <PackageReference Include="System.Dynamic.Runtime" />
   </ItemGroup>

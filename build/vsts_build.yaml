@@ -350,6 +350,7 @@ jobs:
     displayName: 'Wording Review'
     inputs:
       targetType: F
+      targetArgument: '$(Build.SourcesDirectory)/src'
       optionsFC: '1'
       optionsXS: '1'
       optionsSEV: '1|2'

@@ -224,16 +224,34 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.VisualStudio.Common.T
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Packaging.Core", "src\NuGet.Core\NuGet.Packaging.Core\NuGet.Packaging.Core.csproj", "{02B7C422-C592-4BA6-89A7-ACBD7923B34D}"
 EndProject
+<<<<<<< HEAD
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Msbuild.Integration.Test", "test\NuGet.Core.FuncTests\Msbuild.Integration.Test\Msbuild.Integration.Test.csproj", "{92EF44DB-4F40-4610-A1AD-3A554A0CA8B9}"
+||||||| parent of f3277095c... add crossVerify tests
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Tools.Test", "test\NuGet.Clients.Tests\NuGet.Tools.Test\NuGet.Tools.Test.csproj", "{437C6B7E-B625-4AE5-A4CE-F2B3747FE1CE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Msbuild.Integration.Test", "test\NuGet.Core.FuncTests\Msbuild.Integration.Test\Msbuild.Integration.Test.csproj", "{92EF44DB-4F40-4610-A1AD-3A554A0CA8B9}"
+=======
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Tools.Test", "test\NuGet.Clients.Tests\NuGet.Tools.Test\NuGet.Tools.Test.csproj", "{437C6B7E-B625-4AE5-A4CE-F2B3747FE1CE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Msbuild.Integration.Test", "test\NuGet.Core.FuncTests\Msbuild.Integration.Test\Msbuild.Integration.Test.csproj", "{92EF44DB-4F40-4610-A1AD-3A554A0CA8B9}"
+>>>>>>> f3277095c... add crossVerify tests
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Build.Tasks.Console", "src\NuGet.Core\NuGet.Build.Tasks.Console\NuGet.Build.Tasks.Console.csproj", "{3ED13630-90EB-420E-8083-0959B2955C6E}"
 EndProject
+<<<<<<< HEAD
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Build.Tasks.Console.Test", "test\NuGet.Core.Tests\NuGet.Build.Tasks.Console.Test\NuGet.Build.Tasks.Console.Test.csproj", "{2011B5A4-2184-4F94-9897-E5BC2425DCDA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NuGet.VisualStudio.OnlineEnvironment.Client", "src\NuGet.Clients\NuGet.VisualStudio.OnlineEnvironment.Client\NuGet.VisualStudio.OnlineEnvironment.Client.csproj", "{290DB64D-74BA-45C5-BAC0-6E31A8AFD5CB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.VisualStudio.Internal.Contracts", "src\NuGet.Clients\NuGet.VisualStudio.Internal.Contracts\NuGet.VisualStudio.Internal.Contracts.csproj", "{DEEBF1A1-1C21-4E9E-8CE3-1EB21381FF1E}"
 EndProject
+||||||| parent of f3277095c... add crossVerify tests
+=======
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Packaging.CrossVerify.Generate.Test", "test\NuGet.Core.FuncTests\NuGet.Packaging.CrossVerify.Generate.Test\NuGet.Packaging.CrossVerify.Generate.Test.csproj", "{5F7B0AAE-4522-4D1F-B358-627041BF336D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Packaging.CrossVerify.Verify.Test", "test\NuGet.Core.FuncTests\NuGet.Packaging.CrossVerify.Verify.Test\NuGet.Packaging.CrossVerify.Verify.Test.csproj", "{DBB6AA5C-C9F7-4F59-9A51-80B26EA1ABDD}"
+EndProject
+>>>>>>> f3277095c... add crossVerify tests
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -552,6 +570,7 @@ Global
 		{3ED13630-90EB-420E-8083-0959B2955C6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3ED13630-90EB-420E-8083-0959B2955C6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3ED13630-90EB-420E-8083-0959B2955C6E}.Release|Any CPU.Build.0 = Release|Any CPU
+<<<<<<< HEAD
 		{2011B5A4-2184-4F94-9897-E5BC2425DCDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2011B5A4-2184-4F94-9897-E5BC2425DCDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2011B5A4-2184-4F94-9897-E5BC2425DCDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -564,6 +583,17 @@ Global
 		{DEEBF1A1-1C21-4E9E-8CE3-1EB21381FF1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DEEBF1A1-1C21-4E9E-8CE3-1EB21381FF1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DEEBF1A1-1C21-4E9E-8CE3-1EB21381FF1E}.Release|Any CPU.Build.0 = Release|Any CPU
+||||||| parent of f3277095c... add crossVerify tests
+=======
+		{5F7B0AAE-4522-4D1F-B358-627041BF336D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F7B0AAE-4522-4D1F-B358-627041BF336D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F7B0AAE-4522-4D1F-B358-627041BF336D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F7B0AAE-4522-4D1F-B358-627041BF336D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBB6AA5C-C9F7-4F59-9A51-80B26EA1ABDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBB6AA5C-C9F7-4F59-9A51-80B26EA1ABDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBB6AA5C-C9F7-4F59-9A51-80B26EA1ABDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBB6AA5C-C9F7-4F59-9A51-80B26EA1ABDD}.Release|Any CPU.Build.0 = Release|Any CPU
+>>>>>>> f3277095c... add crossVerify tests
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -660,6 +690,8 @@ Global
 		{2011B5A4-2184-4F94-9897-E5BC2425DCDA} = {7323F93B-D141-4001-BB9E-7AF14031143E}
 		{290DB64D-74BA-45C5-BAC0-6E31A8AFD5CB} = {08F523EC-3C2A-4A00-A54C-2E54C5AC856B}
 		{DEEBF1A1-1C21-4E9E-8CE3-1EB21381FF1E} = {08F523EC-3C2A-4A00-A54C-2E54C5AC856B}
+		{5F7B0AAE-4522-4D1F-B358-627041BF336D} = {BB63CACA-866F-454F-BA4C-78B788D032BB}
+		{DBB6AA5C-C9F7-4F59-9A51-80B26EA1ABDD} = {BB63CACA-866F-454F-BA4C-78B788D032BB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3747A66A-00D1-41B8-A9C5-ED0D7BEA9D25}

@@ -83,7 +83,7 @@
   <Target Name="CrossVerifyGeneratePackageTests">
     <!-- Test inputs -->
     <PropertyGroup>
-      <TestProjectPaths>$(RepositoryRootDirectory)test\NuGet.Core.FuncTests\NuGet.Packaging.CrossVerify.Generate.Test.csproj</TestProjectPaths>
+      <TestProjectPaths>$(RepositoryRootDirectory)test\NuGet.Core.FuncTests\NuGet.Packaging.CrossVerify.Generate.Test\NuGet.Packaging.CrossVerify.Generate.Test.csproj</TestProjectPaths>
       <TestResultsFileName>CrossVerifyGeneratePackageTests</TestResultsFileName>
     </PropertyGroup>
 
@@ -107,7 +107,7 @@
   <Target Name="CrossVerifyVerifyPackageTests">
     <!-- Test inputs -->
     <PropertyGroup>
-      <TestProjectPaths>$(RepositoryRootDirectory)test\NuGet.Core.FuncTests\NuGet.Packaging.CrossVerify.Verify.Test.csproj</TestProjectPaths>
+      <TestProjectPaths>$(RepositoryRootDirectory)test\NuGet.Core.FuncTests\NuGet.Packaging.CrossVerify.Verify.Test\NuGet.Packaging.CrossVerify.Verify.Test.csproj</TestProjectPaths>
       <TestResultsFileName>CrossVerifyVerifyPackageTests</TestResultsFileName>
     </PropertyGroup>
 
@@ -376,10 +376,10 @@
     ============================================================
   -->
   <Target Name="RestoreCrossVerifyTest">
-    <Message Text="Restoring packagesigning cross verify test projects" Importance="high" />
+    <Message Text="Restoring cross verify test projects" Importance="high" />
 
     <PropertyGroup>
-      <ProjectListValue>@(CrossVerifySignedPackageProjects)</ProjectListValue>
+      <ProjectListValue>@(CrossVerifyProjects)</ProjectListValue>
     </PropertyGroup>
 
     <MSBuild

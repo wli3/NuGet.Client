@@ -35,9 +35,9 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
         private string _dir;
         private X509Store _store;
 
-        public VerifySignedPackages(SigningTestFixture fixture)
+        public VerifySignedPackages()
         {
-            _testFixture = fixture ?? throw new ArgumentNullException(nameof(fixture));
+            _testFixture = new SigningTestFixture();
             // _trustedTestCert = _testFixture.TrustedTestCertificate;
             // _untrustedTestCertificate = _testFixture.UntrustedTestCertificate;
             _trustProviders = new List<ISignatureVerificationProvider>()

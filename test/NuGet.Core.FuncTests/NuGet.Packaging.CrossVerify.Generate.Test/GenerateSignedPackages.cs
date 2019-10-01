@@ -35,9 +35,9 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
         private readonly X509Certificate2 _trustedRootCertForTSA;
         private string _dir;
 
-        public GenerateSignedPackages(SigningTestFixture fixture)
+        public GenerateSignedPackages()
         {
-            _testFixture = fixture ?? throw new ArgumentNullException(nameof(fixture));
+            _testFixture = new SigningTestFixture();
             _trustedTestCert = _testFixture.TrustedTestCertificate;
             _untrustedTestCertificate = _testFixture.UntrustedTestCertificate;
             _trustProviders = new List<ISignatureVerificationProvider>()

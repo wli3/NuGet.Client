@@ -638,24 +638,6 @@ phases:
       testRunTitle: "NuGet.Client Functional Tests On Windows"
     condition: "succeededOrFailed()"
   
-  - task: PublishBuildArtifacts@1
-    displayName: "Publish pre generated packages by Windows_NetCore"
-    continueOnError: "true"
-    inputs:
-      pathToPublish: "$(Build.Repository.LocalPath)\\.test\\work\\PreGenPackages\\Windows_NetCore"
-      artifactName: "PreGenPackages"
-      publishLocation: "Container"
-    condition: "succeededOrFailed()"
-
-  - task: PublishBuildArtifacts@1
-    displayName: "Publish pre generated packages by Windows_NetFulFramework"
-    continueOnError: "true"
-    inputs:
-      pathToPublish: "$(Build.Repository.LocalPath)\\.test\\work\\PreGenPackages\\Windows_NetFulFramework"
-      artifactName: "PreGenPackages"
-      publishLocation: "Container"
-    condition: "succeededOrFailed()"
-
   - task: PowerShell@1
     displayName: "Initialize Git Commit Status on GitHub"
     inputs:
@@ -712,15 +694,6 @@ phases:
       scriptPath: "scripts/funcTests/runFuncTests.sh"
       disableAutoCwd: "true"
       cwd: "$(Build.Repository.LocalPath)"
-
-  - task: PublishBuildArtifacts@1
-    displayName: "Publish pre generated packages by Linux_NetCore"
-    continueOnError: "true"
-    inputs:
-      pathToPublish: "$(Build.Repository.LocalPath)/.test/work/PreGenPackages/Linux_NetCore"
-      artifactName: "PreGenPackages"
-      publishLocation: "Container"
-    condition: "succeededOrFailed()"
 
   - task: PublishTestResults@2
     displayName: "Publish Test Results"
@@ -1088,8 +1061,10 @@ phases:
     matrix:
       IsDesktop:
         SkipCoreAssemblies: "true"
+        PreGenPackageFolder: "Windows_NetFulFramework"
       IsCore:
         SkipDesktopAssemblies: "true"
+        PreGenPackageFolder: "Windows_NetCore"
         
   steps:
   - task: UseDotNet@2
@@ -1143,20 +1118,11 @@ phases:
     condition: "succeededOrFailed()"
 
   - task: PublishBuildArtifacts@1
-    displayName: "Publish pre generated packages by Windows_NetCore"
+    displayName: "Publish pre generated packages by $(PreGenPackageFolder)"
     continueOnError: "true"
     inputs:
-      pathToPublish: "$(Build.Repository.LocalPath)\\.test\\work\\PreGenPackages\\Windows_NetCore"
-      artifactName: "PreGenPackages_Windows_NetCore"
-      publishLocation: "Container"
-    condition: "succeededOrFailed()"
-
-  - task: PublishBuildArtifacts@1
-    displayName: "Publish pre generated packages by Windows_NetFulFramework"
-    continueOnError: "true"
-    inputs:
-      pathToPublish: "$(Build.Repository.LocalPath)\\.test\\work\\PreGenPackages\\Windows_NetFulFramework"
-      artifactName: "PreGenPackages_Windows_NetFulFramework"
+      pathToPublish: "$(Build.Repository.LocalPath)\\.test\\work\\PreGenPackages\\$(PreGenPackageFolder)"
+      artifactName: "PreGenPackages_$(PreGenPackageFolder)"
       publishLocation: "Container"
     condition: "succeededOrFailed()"
 
@@ -1190,13 +1156,13 @@ phases:
       includePreviewVersions: true
       installationPath: $(Agent.TempDirectory)/dotnet
 
-  - task: PowerShell@1
-    displayName: "Print Environment Variables"
-    inputs:
-      scriptType: "inlineScript"
-      inlineScript: |
-        Write-Host "##vso[build.updatebuildnumber]$env:FullVstsBuildNumber"
-        gci env:* | sort-object name
+  #- task: PowerShell@1
+  #  displayName: "Print Environment Variables"
+  #  inputs:
+  #    scriptType: "inlineScript"
+  #    inlineScript: |
+  #      Write-Host "##vso[build.updatebuildnumber]$env:FullVstsBuildNumber"
+  #      gci env:* | sort-object name
 
   - task: PowerShell@1
     displayName: "Run Configure.ps1"
@@ -1271,14 +1237,14 @@ phases:
       includePreviewVersions: true
       installationPath: $(Agent.TempDirectory)/dotnet
       
-  - task: PowerShell@2
-    displayName: "Update Build Number"
-    inputs:
-      targetType: "inline"
-      script: |
-        Write-Host "##vso[build.updatebuildnumber]$env:FULLVSTSBUILDNUMBER"
-      failOnStderr: "true"
-    condition: "always()"
+#  - task: PowerShell@2
+#    displayName: "Update Build Number"
+#    inputs:
+#      targetType: "inline"
+#      script: |
+#        Write-Host "##vso[build.updatebuildnumber]$env:FULLVSTSBUILDNUMBER"
+#      failOnStderr: "true"
+#    condition: "always()"
 
   - task: ShellScript@2
     displayName: "Generate Signed Packages"
@@ -1329,14 +1295,14 @@ phases:
       includePreviewVersions: true
       installationPath: $(Agent.TempDirectory)/dotnet
       
-  - task: PowerShell@2
-    displayName: "Update Build Number"
-    inputs:
-      targetType: "inline"
-      script: |
-        Write-Host "##vso[build.updatebuildnumber]$env:FULLVSTSBUILDNUMBER"
-      failOnStderr: "true"
-    condition: "always()"
+#  - task: PowerShell@2
+#    displayName: "Update Build Number"
+#    inputs:
+#      targetType: "inline"
+#      script: |
+#        Write-Host "##vso[build.updatebuildnumber]$env:FULLVSTSBUILDNUMBER"
+#      failOnStderr: "true"
+#    condition: "always()"
 
   - task: DownloadBuildArtifacts@0
     displayName: "Download Signed Packages from Windows_NetFulFramework artifacts"

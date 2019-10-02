@@ -1128,6 +1128,7 @@ phases:
 
 - phase: CrossVerify_Verify_Packages_On_Windows
   dependsOn:
+  - Initialize_Build
   - CrossVerify_Generate_Packages_On_Windows
   - CrossVerify_Generate_Packages_On_Linux 
   variables:
@@ -1274,6 +1275,7 @@ phases:
 
 - phase: CrossVerify_Verify_Tests_On_Linux
   dependsOn:
+  - Initialize_Build
   - CrossVerify_Generate_Packages_On_Windows
   - CrossVerify_Generate_Packages_On_Linux 
   variables:

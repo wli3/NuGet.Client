@@ -1122,7 +1122,7 @@ phases:
     continueOnError: "true"
     inputs:
       pathToPublish: "$(Build.Repository.LocalPath)\\.test\\work\\PreGenPackages\\$(PreGenPackageFolder)"
-      artifactName: "PreGenPackages_$(PreGenPackageFolder)"
+      artifactName: "$(PreGenPackageFolder)"
       publishLocation: "Container"
     condition: "succeededOrFailed()"
 
@@ -1174,20 +1174,20 @@ phases:
   - task: DownloadBuildArtifacts@0
     displayName: "Download Signed Packages from Windows_NetFulFramework artifacts"
     inputs:
-      artifactName: "PreGenPackages_Windows_NetFulFramework"
-      downloadPath: "$(Build.Repository.LocalPath)\\.test\\work\\PreGenPackages\\Windows_NetFulFramework"
+      artifactName: "Windows_NetFulFramework"
+      downloadPath: "$(Build.Repository.LocalPath)\\.test\\work\\PreGenPackages"
 
   - task: DownloadBuildArtifacts@0
     displayName: "Download Signed Packages from Windows_NetCore artifacts"
     inputs:
-      artifactName: "PreGenPackages_Windows_NetCore"
-      downloadPath: "$(Build.Repository.LocalPath)\\.test\\work\\PreGenPackages\\Windows_NetCore"
+      artifactName: "Windows_NetCore"
+      downloadPath: "$(Build.Repository.LocalPath)\\.test\\work\\PreGenPackages"
 
   - task: DownloadBuildArtifacts@0
     displayName: "Download Signed Packages from Linux_NetCore artifacts"
     inputs:
-      artifactName: "PreGenPackages_Linux_NetCore"
-      downloadPath: "$(Build.Repository.LocalPath)\\.test\\work\\PreGenPackages\\Linux_NetCore"
+      artifactName: "Linux_NetCore"
+      downloadPath: "$(Build.Repository.LocalPath)\\.test\\work\\PreGenPackages"
   
   - task: MSBuild@1
     displayName: "Restore Cross Verify projects"
@@ -1269,7 +1269,7 @@ phases:
     continueOnError: "true"
     inputs:
       pathToPublish: "$(Build.Repository.LocalPath)/.test/work/PreGenPackages/Linux_NetCore"
-      artifactName: "PreGenPackages_Linux_NetCore"
+      artifactName: "Linux_NetCore"
       publishLocation: "Container"
     condition: "succeededOrFailed()"
 
@@ -1309,20 +1309,20 @@ phases:
   - task: DownloadBuildArtifacts@0
     displayName: "Download Signed Packages from Windows_NetFulFramework artifacts"
     inputs:
-      artifactName: "PreGenPackages_Windows_NetFulFramework"
-      downloadPath: "$(Build.Repository.LocalPath)/.test/work/PreGenPackages/Windows_NetFulFramework"
+      artifactName: "Windows_NetFulFramework"
+      downloadPath: "$(Build.Repository.LocalPath)/.test/work/PreGenPackages"
 
   - task: DownloadBuildArtifacts@0
     displayName: "Download Signed Packages from Windows_NetCore artifacts"
     inputs:
-      artifactName: "PreGenPackages_Windows_NetCore"
-      downloadPath: "$(Build.Repository.LocalPath)/.test/work/PreGenPackages/Windows_NetCore"
+      artifactName: "Windows_NetCore"
+      downloadPath: "$(Build.Repository.LocalPath)/.test/work/PreGenPackages"
 
   - task: DownloadBuildArtifacts@0
     displayName: "Download Signed Packages from Linux_NetCore artifacts"
     inputs:
-      artifactName: "PreGenPackages_Linux_NetCore"
-      downloadPath: "$(Build.Repository.LocalPath)/.test/work/PreGenPackages/Linux_NetCore"
+      artifactName: "Linux_NetCore"
+      downloadPath: "$(Build.Repository.LocalPath)/.test/work/PreGenPackages"
 
   - task: ShellScript@2
     displayName: "Verify Signed Packages"

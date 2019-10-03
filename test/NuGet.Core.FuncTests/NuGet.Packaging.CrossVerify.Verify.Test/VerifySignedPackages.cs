@@ -25,51 +25,27 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
     [Collection(SigningTestCollection.Name)]
     public class VerifySignedPackages
     {
-        //private const string _untrustedChainCertError = "A certificate chain processed, but terminated in a root certificate which is not trusted by the trust provider.";
-        private readonly SignedPackageVerifierSettings _verifyCommandSettings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy(TestEnvironmentVariableReader.EmptyInstance);
-        private readonly SignedPackageVerifierSettings _defaultSettings = SignedPackageVerifierSettings.GetDefault(TestEnvironmentVariableReader.EmptyInstance);
-        private readonly SigningTestFixture _testFixture;
-        //private readonly TrustedTestCert<TestCertificate> _trustedTestCert;
-        //private readonly TestCertificate _untrustedTestCertificate;
         private readonly IList<ISignatureVerificationProvider> _trustProviders;
         private string _dir;
-        private X509Store _store;
 
         public VerifySignedPackages()
         {
-            _testFixture = new SigningTestFixture();
-            // _trustedTestCert = _testFixture.TrustedTestCertificate;
-            // _untrustedTestCertificate = _testFixture.UntrustedTestCertificate;
             _trustProviders = new List<ISignatureVerificationProvider>()
             {
+                new IntegrityVerificationProvider(),
                 new SignatureTrustAndValidityVerificationProvider()
             };
             _dir = GetPreGenPackageRootPath();
-            //_platformFolderList = Directory.GetDirectories(_dir);
-
         }
 
         [Theory]
         [MemberData(nameof(FolderForEachPlatform))]
-        public async Task VerifySignaturesAsync_PreGenerateSignedPackages_AuthorSigned_TimeStamped(string dir)
+        public async Task VerifySignaturesAsync_PreGenerateSignedPackages_AuthorSigned(string dir)
         {
             // Arrange
-            var caseName = "AuthorSigned_TimeStamped";
+            var caseName = "AuthorSigned";
 
-            var settings = new SignedPackageVerifierSettings(
-            allowUnsigned: false,
-            allowIllegal: false,
-            allowUntrusted: false,
-            allowIgnoreTimestamp: true,
-            allowMultipleTimestamps: true,
-            allowNoTimestamp: true,
-            allowUnknownRevocation: true,
-            reportUnknownRevocation: true,
-            verificationTarget: VerificationTarget.All,
-            signaturePlacement: SignaturePlacement.Any,
-            repositoryCountersignatureVerificationBehavior: SignatureVerificationBehavior.IfExistsAndIsNecessary,
-            revocationMode: RevocationMode.Online);
-
+            var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
 
             var signedPackageFolder = Path.Combine(dir, caseName, "package");
             var signedPackagePath = Directory.GetFiles(signedPackageFolder).First();
@@ -79,36 +55,358 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
 
             var tsaRootCertFile = Directory.GetFiles(dir, "tsaRoot.cer", SearchOption.TopDirectoryOnly).First();
 
-            using (var testCertificate = new X509Certificate2(File.ReadAllBytes(certFile)))
-            using (var tsaRootCertificate = new X509Certificate2(File.ReadAllBytes(tsaRootCertFile)))
+            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(certFile)))
             using (var packageReader = new PackageArchiveReader(signedPackagePath))
+            using (var store = new X509Store(StoreName.Root,
+                RuntimeEnvironmentHelper.IsWindows ? StoreLocation.LocalMachine : StoreLocation.CurrentUser))
             {
-                CreateCertificateStore();
-                AddCertificateToStore(testCertificate);
-                AddCertificateToStore(tsaRootCertificate);
+                AddCertificateToStore(primaryCertificate, store);
 
                 var verifier = new PackageSignatureVerifier(_trustProviders);
                 // Act
                 var result = await verifier.VerifySignaturesAsync(packageReader, settings, CancellationToken.None);
                 var resultsWithErrors = result.Results.Where(r => r.GetErrorIssues().Any());
+                var resultsWithWarnings = result.Results.Where(r => r.GetWarningIssues().Any());
+
                 // Assert
-                result.IsValid.Should().BeTrue();
-
-                var sb = new System.Text.StringBuilder();
-                foreach (var resultWithError in resultsWithErrors)
+                try
                 {
-                    foreach (var message in resultWithError.Issues)
-                    {
-                        sb.AppendLine(message.Message);
-                    }
-
+                    result.IsValid.Should().BeTrue();
+                    resultsWithErrors.Count().Should().Be(0);
+                    resultsWithWarnings.Count().Should().Be(0);
                 }
-                var msg = sb.ToString();
-                resultsWithErrors.Count().Should().Be(0);
+                catch (Exception e)
+                {
+                    throw new Exception(e.Message + GetResultIssues(result, dir));
+                }
             }
         }
 
+        [Theory]
+        [MemberData(nameof(FolderForEachPlatform))]
+        public async Task VerifySignaturesAsync_PreGenerateSignedPackages_AuthorSigned_TimeStamped(string dir)
+        {
+            // Arrange
+            var caseName = "AuthorSigned_TimeStamped";
+            
+            var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
 
+            var signedPackageFolder = Path.Combine(dir, caseName, "package");
+            var signedPackagePath = Directory.GetFiles(signedPackageFolder).First();
+
+            var certFolder = Path.Combine(dir, caseName, "cert");
+            var certFile = Directory.GetFiles(certFolder).First();
+
+            var tsaRootCertFile = Directory.GetFiles(dir, "tsaRoot.cer", SearchOption.TopDirectoryOnly).First();
+
+            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(certFile)))
+            using (var tsaRootCertificate = new X509Certificate2(File.ReadAllBytes(tsaRootCertFile)))
+            using (var packageReader = new PackageArchiveReader(signedPackagePath))
+            using (var store = new X509Store(StoreName.Root,
+                RuntimeEnvironmentHelper.IsWindows ? StoreLocation.LocalMachine : StoreLocation.CurrentUser))
+            {
+                AddCertificateToStore(primaryCertificate, store);
+                AddCertificateToStore(tsaRootCertificate, store);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+                // Act
+                var result = await verifier.VerifySignaturesAsync(packageReader, settings, CancellationToken.None);
+                var resultsWithErrors = result.Results.Where(r => r.GetErrorIssues().Any());
+                var resultsWithWarnings = result.Results.Where(r => r.GetWarningIssues().Any());
+
+                // Assert
+                try
+                {
+                    result.IsValid.Should().BeTrue();
+                    resultsWithErrors.Count().Should().Be(0);
+                    resultsWithWarnings.Count().Should().Be(0);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception(e.Message + GetResultIssues(result, dir));
+                }
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(FolderForEachPlatform))]
+        public async Task VerifySignaturesAsync_PreGenerateSignedPackages_RepositorySigned(string dir)
+        {
+            // Arrange
+            var caseName = "RepositorySigned";
+
+            var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
+
+            var signedPackageFolder = Path.Combine(dir, caseName, "package");
+            var signedPackagePath = Directory.GetFiles(signedPackageFolder).First();
+
+            var certFolder = Path.Combine(dir, caseName, "cert");
+            var certFile = Directory.GetFiles(certFolder).First();
+
+            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(certFile)))
+            using (var packageReader = new PackageArchiveReader(signedPackagePath))
+            using (var store = new X509Store(StoreName.Root,
+                RuntimeEnvironmentHelper.IsWindows ? StoreLocation.LocalMachine : StoreLocation.CurrentUser))
+            {
+                AddCertificateToStore(primaryCertificate, store);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+                // Act
+                var result = await verifier.VerifySignaturesAsync(packageReader, settings, CancellationToken.None);
+                var resultsWithErrors = result.Results.Where(r => r.GetErrorIssues().Any());
+                var resultsWithWarnings = result.Results.Where(r => r.GetWarningIssues().Any());
+
+                // Assert
+                try
+                {
+                    result.IsValid.Should().BeTrue();
+                    resultsWithErrors.Count().Should().Be(0);
+                    resultsWithWarnings.Count().Should().Be(0);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception(e.Message + GetResultIssues(result, dir));
+                }
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(FolderForEachPlatform))]
+        public async Task VerifySignaturesAsync_PreGenerateSignedPackages_RepositorySigned_Timestamped(string dir)
+        {
+            // Arrange
+            var caseName = "RepositorySigned_TimeStamped";
+
+            var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
+
+            var signedPackageFolder = Path.Combine(dir, caseName, "package");
+            var signedPackagePath = Directory.GetFiles(signedPackageFolder).First();
+
+            var certFolder = Path.Combine(dir, caseName, "cert");
+            var certFile = Directory.GetFiles(certFolder).First();
+
+            var tsaRootCertFile = Directory.GetFiles(dir, "tsaRoot.cer", SearchOption.TopDirectoryOnly).First();
+
+            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(certFile)))
+            using (var tsaRootCertificate = new X509Certificate2(File.ReadAllBytes(tsaRootCertFile)))
+            using (var packageReader = new PackageArchiveReader(signedPackagePath))
+            using (var store = new X509Store(StoreName.Root,
+                RuntimeEnvironmentHelper.IsWindows ? StoreLocation.LocalMachine : StoreLocation.CurrentUser))
+            {
+                AddCertificateToStore(primaryCertificate, store);
+                AddCertificateToStore(tsaRootCertificate, store);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+                // Act
+                var result = await verifier.VerifySignaturesAsync(packageReader, settings, CancellationToken.None);
+                var resultsWithErrors = result.Results.Where(r => r.GetErrorIssues().Any());
+                var resultsWithWarnings = result.Results.Where(r => r.GetWarningIssues().Any());
+
+                // Assert
+                try
+                {
+                    result.IsValid.Should().BeTrue();
+                    resultsWithErrors.Count().Should().Be(0);
+                    resultsWithWarnings.Count().Should().Be(0);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception(e.Message + GetResultIssues(result, dir));
+                }
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(FolderForEachPlatform))]
+        public async Task VerifySignaturesAsync_PreGenerateSignedPackages_AuthorSigned_RepositorySigned(string dir)
+        {
+            // Arrange
+            var caseName = "AuthorSigned_RepositorySigned";
+
+            var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
+
+            var signedPackageFolder = Path.Combine(dir, caseName, "package");
+            var signedPackagePath = Directory.GetFiles(signedPackageFolder).First();
+
+            var certFolder = Path.Combine(dir, caseName, "cert");
+            var primaryCertFile = Directory.GetFiles(certFolder).First();
+            var counterCertFile = Directory.GetFiles(certFolder).Last();
+
+            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(primaryCertFile)))
+            using (var counterCertificate = new X509Certificate2(File.ReadAllBytes(counterCertFile)))
+            using (var packageReader = new PackageArchiveReader(signedPackagePath))
+            using (var store = new X509Store(StoreName.Root,
+                RuntimeEnvironmentHelper.IsWindows ? StoreLocation.LocalMachine : StoreLocation.CurrentUser))
+            {
+                AddCertificateToStore(primaryCertificate, store);
+                AddCertificateToStore(counterCertificate, store);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+                // Act
+                var result = await verifier.VerifySignaturesAsync(packageReader, settings, CancellationToken.None);
+                var resultsWithErrors = result.Results.Where(r => r.GetErrorIssues().Any());
+                var resultsWithWarnings = result.Results.Where(r => r.GetWarningIssues().Any());
+
+                // Assert
+                try
+                {
+                    result.IsValid.Should().BeTrue();
+                    resultsWithErrors.Count().Should().Be(0);
+                    resultsWithWarnings.Count().Should().Be(0);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception(e.Message + GetResultIssues(result, dir));
+                }
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(FolderForEachPlatform))]
+        public async Task VerifySignaturesAsync_PreGenerateSignedPackages_AuthorSigned_Timestamped_RepositorySigned(string dir)
+        {
+            // Arrange
+            var caseName = "AuthorSigned_Timestamped_RepositorySigned";
+
+            var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
+
+            var signedPackageFolder = Path.Combine(dir, caseName, "package");
+            var signedPackagePath = Directory.GetFiles(signedPackageFolder).First();
+
+            var certFolder = Path.Combine(dir, caseName, "cert");
+            var primaryCertFile = Directory.GetFiles(certFolder).First();
+            var counterCertFile = Directory.GetFiles(certFolder).Last();
+
+            var tsaRootCertFile = Directory.GetFiles(dir, "tsaRoot.cer", SearchOption.TopDirectoryOnly).First();
+
+            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(primaryCertFile)))
+            using (var counterCertificate = new X509Certificate2(File.ReadAllBytes(counterCertFile)))
+            using (var tsaRootCertificate = new X509Certificate2(File.ReadAllBytes(tsaRootCertFile)))
+            using (var packageReader = new PackageArchiveReader(signedPackagePath))
+            using (var store = new X509Store(StoreName.Root,
+                RuntimeEnvironmentHelper.IsWindows ? StoreLocation.LocalMachine : StoreLocation.CurrentUser))
+            {
+                AddCertificateToStore(primaryCertificate, store);
+                AddCertificateToStore(counterCertificate, store);
+                AddCertificateToStore(tsaRootCertificate, store);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+                // Act
+                var result = await verifier.VerifySignaturesAsync(packageReader, settings, CancellationToken.None);
+                var resultsWithErrors = result.Results.Where(r => r.GetErrorIssues().Any());
+                var resultsWithWarnings = result.Results.Where(r => r.GetWarningIssues().Any());
+
+                // Assert
+                try
+                {
+                    result.IsValid.Should().BeTrue();
+                    resultsWithErrors.Count().Should().Be(0);
+                    resultsWithWarnings.Count().Should().Be(0);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception(e.Message + GetResultIssues(result, dir));
+                }
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(FolderForEachPlatform))]
+        public async Task VerifySignaturesAsync_PreGenerateSignedPackages_AuthorSigned_RepositorySigned_Timestamped(string dir)
+        {
+            // Arrange
+            var caseName = "AuthorSigned_RepositorySigned_Timestamped";
+
+            var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
+
+            var signedPackageFolder = Path.Combine(dir, caseName, "package");
+            var signedPackagePath = Directory.GetFiles(signedPackageFolder).First();
+
+            var certFolder = Path.Combine(dir, caseName, "cert");
+            var primaryCertFile = Directory.GetFiles(certFolder).First();
+            var counterCertFile = Directory.GetFiles(certFolder).Last();
+
+            var tsaRootCertFile = Directory.GetFiles(dir, "tsaRoot.cer", SearchOption.TopDirectoryOnly).First();
+
+            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(primaryCertFile)))
+            using (var counterCertificate = new X509Certificate2(File.ReadAllBytes(counterCertFile)))
+            using (var tsaRootCertificate = new X509Certificate2(File.ReadAllBytes(tsaRootCertFile)))
+            using (var packageReader = new PackageArchiveReader(signedPackagePath))
+            using (var store = new X509Store(StoreName.Root,
+                RuntimeEnvironmentHelper.IsWindows ? StoreLocation.LocalMachine : StoreLocation.CurrentUser))
+            {
+                AddCertificateToStore(primaryCertificate, store);
+                AddCertificateToStore(counterCertificate, store);
+                AddCertificateToStore(tsaRootCertificate, store);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+                // Act
+                var result = await verifier.VerifySignaturesAsync(packageReader, settings, CancellationToken.None);
+                var resultsWithErrors = result.Results.Where(r => r.GetErrorIssues().Any());
+                var resultsWithWarnings = result.Results.Where(r => r.GetWarningIssues().Any());
+
+                // Assert
+                try
+                {
+                    result.IsValid.Should().BeTrue();
+                    resultsWithErrors.Count().Should().Be(0);
+                    resultsWithWarnings.Count().Should().Be(0);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception(e.Message + GetResultIssues(result, dir));
+                }
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(FolderForEachPlatform))]
+        public async Task VerifySignaturesAsync_PreGenerateSignedPackages_AuthorSigned_Timestamped_RepositorySigned_Timestamped(string dir)
+        {
+            // Arrange
+            var caseName = "AuthorSigned_Timestamped_RepositorySigned_Timestamped";
+
+            var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
+
+            var signedPackageFolder = Path.Combine(dir, caseName, "package");
+            var signedPackagePath = Directory.GetFiles(signedPackageFolder).First();
+
+            var certFolder = Path.Combine(dir, caseName, "cert");
+            var primaryCertFile = Directory.GetFiles(certFolder).First();
+            var counterCertFile = Directory.GetFiles(certFolder).Last();
+
+            var tsaRootCertFile = Directory.GetFiles(dir, "tsaRoot.cer", SearchOption.TopDirectoryOnly).First();
+
+            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(primaryCertFile)))
+            using (var counterCertificate = new X509Certificate2(File.ReadAllBytes(counterCertFile)))
+            using (var tsaRootCertificate = new X509Certificate2(File.ReadAllBytes(tsaRootCertFile)))
+            using (var packageReader = new PackageArchiveReader(signedPackagePath))
+            using (var store = new X509Store(StoreName.Root,
+                RuntimeEnvironmentHelper.IsWindows ? StoreLocation.LocalMachine : StoreLocation.CurrentUser))
+            {
+                AddCertificateToStore(primaryCertificate, store);
+                AddCertificateToStore(counterCertificate, store);
+                AddCertificateToStore(tsaRootCertificate, store);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+                // Act
+                var result = await verifier.VerifySignaturesAsync(packageReader, settings, CancellationToken.None);
+                var resultsWithErrors = result.Results.Where(r => r.GetErrorIssues().Any());
+                var resultsWithWarnings = result.Results.Where(r => r.GetWarningIssues().Any());
+
+                // Assert
+                try
+                {
+                    result.IsValid.Should().BeTrue();
+                    resultsWithErrors.Count().Should().Be(0);
+                    resultsWithWarnings.Count().Should().Be(0);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception(e.Message + GetResultIssues(result, dir));
+                }
+            }
+        }
         private static string GetPreGenPackageRootPath()
         {
             var root = TestFileSystemUtility.NuGetTestFolder;
@@ -116,6 +414,7 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
             return path;
         }
 
+        /*
         private void CreateCertificateStore()
         {
             StoreName storeName = StoreName.Root;
@@ -127,14 +426,38 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
                 storeLocation = StoreLocation.CurrentUser;
             }
 
-            _store = new X509Store(storeName, storeLocation);
+            store = new X509Store(storeName, storeLocation);
         }
-        private void AddCertificateToStore(X509Certificate2 cert)
+        */
+
+        private void AddCertificateToStore(X509Certificate2 cert, X509Store store)
         {
-            _store.Open(OpenFlags.ReadWrite);
-            _store.Add(cert);
+            store.Open(OpenFlags.ReadWrite);
+            store.Add(cert);
 
         }
+
+        private string GetResultIssues(VerifySignaturesResult result, string dir)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"verify package from : {dir}");
+            int i = 0;
+            foreach (var rst in result.Results)
+            {
+                sb.AppendLine($"result {i}:  {rst.Trust.ToString()}");
+                foreach (var error in rst.Issues.Where(issue => issue.Level == LogLevel.Error))
+                {
+                    sb.AppendLine($"   error :  {error.Code} : {error.Message}");
+                }
+                foreach (var warning in rst.Issues.Where(issue => issue.Level == LogLevel.Warning))
+                {
+                    sb.AppendLine($"   warning :  {warning.Code} : {warning.Message}");
+                }
+                i++;
+            }
+            return sb.ToString();
+        }
+
         public static TheoryData FolderForEachPlatform
         {
             get

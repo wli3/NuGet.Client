@@ -60,7 +60,7 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
             // Arrange
             var caseName = "AuthorSigned";
 
-            var nupkg = new SimpleTestPackageContext(caseName);
+            var nupkg = new SimpleTestPackageContext();
 
             using (var primaryCertificate = new X509Certificate2(_trustedTestCert.Source.Cert))
             {
@@ -90,7 +90,7 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
             // Arrange
             var caseName = "AuthorSigned_TimeStamped";
 
-            var nupkg = new SimpleTestPackageContext(caseName);
+            var nupkg = new SimpleTestPackageContext();
 
             var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
 
@@ -123,7 +123,7 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
             // Arrange
             var caseName = "RepositorySigned";
 
-            var nupkg = new SimpleTestPackageContext(caseName);
+            var nupkg = new SimpleTestPackageContext();
 
             using (var primaryCertificate = new X509Certificate2(_trustedTestCert.Source.Cert))
             {
@@ -154,7 +154,7 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
             // Arrange
             var caseName = "RepositorySigned_TimeStamped";
 
-            var nupkg = new SimpleTestPackageContext(caseName);
+            var nupkg = new SimpleTestPackageContext();
 
             var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
 
@@ -188,14 +188,13 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
             // Arrange
             var caseName = "AuthorSigned_RepositoryCounterSigned";
 
-            var nupkg = new SimpleTestPackageContext(caseName);
-
-            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var nupkg = new SimpleTestPackageContext();
 
             using (var primaryCertificate = new X509Certificate2(_testFixture.TrustedTestCertificate.Source.Cert))
             using (var counterCertificate = new X509Certificate2(_trustedRepoTestCert.Source.Cert))
             {
                 string packagePath = Path.Combine(_dir, caseName, "package");
+                Directory.CreateDirectory(packagePath);
 
                 var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
                     primaryCertificate,
@@ -231,7 +230,7 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
             // Arrange
             var caseName = "AuthorSigned_Timestamped_RepositoryCounterSigned";
 
-            var nupkg = new SimpleTestPackageContext(caseName);
+            var nupkg = new SimpleTestPackageContext();
 
             var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
 
@@ -239,6 +238,7 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
             using (var counterCertificate = new X509Certificate2(_trustedRepoTestCert.Source.Cert))
             {
                 string packagePath = Path.Combine(_dir, caseName, "package");
+                Directory.CreateDirectory(packagePath);
 
                 var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
                     primaryCertificate,
@@ -247,7 +247,8 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
                     timestampService.Url);
 
                 var countersignedPackagePath = await SignedArchiveTestUtility.RepositorySignPackageAsync(
-                    counterCertificate, signedPackagePath,
+                    counterCertificate,
+                    signedPackagePath,
                     packagePath,
                     new Uri("https://v3serviceIndex.test/api/index.json"));
 
@@ -274,7 +275,7 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
             // Arrange
             var caseName = "AuthorSigned_RepositoryCounterSigned_Timestamped";
 
-            var nupkg = new SimpleTestPackageContext(caseName);
+            var nupkg = new SimpleTestPackageContext();
 
             var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
 
@@ -282,6 +283,7 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
             using (var counterCertificate = new X509Certificate2(_trustedRepoTestCert.Source.Cert))
             {
                 string packagePath = Path.Combine(_dir, caseName, "package");
+                Directory.CreateDirectory(packagePath);
 
                 var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
                     primaryCertificate,
@@ -317,7 +319,7 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
             // Arrange
             var caseName = "AuthorSigned_Timestamped_RepositoryCounterSigned_Timestamped";
 
-            var nupkg = new SimpleTestPackageContext(caseName);
+            var nupkg = new SimpleTestPackageContext();
 
             var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
 
@@ -325,6 +327,7 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
             using (var counterCertificate = new X509Certificate2(_trustedRepoTestCert.Source.Cert))
             {
                 string packagePath = Path.Combine(_dir, caseName, "package");
+                Directory.CreateDirectory(packagePath);
 
                 var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
                     primaryCertificate,

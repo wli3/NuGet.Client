@@ -58,7 +58,7 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
         public async Task PreGenerateSignedPackages_AuthorSigned()
         {
             // Arrange
-            var caseName = "AuthorSigned";
+            var caseName = "A";
 
             var nupkg = new SimpleTestPackageContext();
 
@@ -88,7 +88,7 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
         public async Task PreGenerateSignedPackages_AuthorSigned_TimeStamped()
         {
             // Arrange
-            var caseName = "AuthorSigned_TimeStamped";
+            var caseName = "AT";
 
             var nupkg = new SimpleTestPackageContext();
 
@@ -121,7 +121,7 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
         public async Task PreGenerateSignedPackages_RepositorySigned()
         {
             // Arrange
-            var caseName = "RepositorySigned";
+            var caseName = "R";
 
             var nupkg = new SimpleTestPackageContext();
 
@@ -152,7 +152,7 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
         public async Task PreGenerateSignedPackages_RepositorySigned_TimeStamped()
         {
             // Arrange
-            var caseName = "RepositorySigned_TimeStamped";
+            var caseName = "RT";
 
             var nupkg = new SimpleTestPackageContext();
 
@@ -186,7 +186,7 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
         public async Task PreGenerateSignedPackages_AuthorSigned_RepositoryCounterSigned()
         {
             // Arrange
-            var caseName = "AuthorSigned_RepositoryCounterSigned";
+            var caseName = "AR";
 
             var nupkg = new SimpleTestPackageContext();
 
@@ -228,7 +228,7 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
         public async Task PreGenerateSignedPackages_AuthorSigned_Timestamped_RepositoryCounterSigned()
         {
             // Arrange
-            var caseName = "AuthorSigned_Timestamped_RepositoryCounterSigned";
+            var caseName = "ATR";
 
             var nupkg = new SimpleTestPackageContext();
 
@@ -273,7 +273,7 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
         public async Task PreGenerateSignedPackages_AuthorSigned_RepositoryCounterSigned_Timestamped()
         {
             // Arrange
-            var caseName = "AuthorSigned_RepositoryCounterSigned_Timestamped";
+            var caseName = "ART";
 
             var nupkg = new SimpleTestPackageContext();
 
@@ -317,7 +317,7 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
         public async Task PreGenerateSignedPackages_AuthorSigned_Timestamped_RepositoryCounterSigned_Timestamped()
         {
             // Arrange
-            var caseName = "AuthorSigned_Timestamped_RepositoryCounterSigned_Timestamped";
+            var caseName = "ATRT";
 
             var nupkg = new SimpleTestPackageContext();
 

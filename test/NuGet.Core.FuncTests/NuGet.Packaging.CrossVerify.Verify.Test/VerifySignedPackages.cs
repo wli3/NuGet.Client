@@ -43,7 +43,7 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
         public async Task VerifySignaturesAsync_PreGenerateSignedPackages_AuthorSigned(string dir)
         {
             // Arrange
-            var caseName = "AuthorSigned";
+            var caseName = "A";
 
             var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
 
@@ -87,7 +87,7 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
         public async Task VerifySignaturesAsync_PreGenerateSignedPackages_AuthorSigned_TimeStamped(string dir)
         {
             // Arrange
-            var caseName = "AuthorSigned_TimeStamped";
+            var caseName = "AT";
             
             var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
 
@@ -133,7 +133,7 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
         public async Task VerifySignaturesAsync_PreGenerateSignedPackages_RepositorySigned(string dir)
         {
             // Arrange
-            var caseName = "RepositorySigned";
+            var caseName = "R";
 
             var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
 
@@ -175,7 +175,7 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
         public async Task VerifySignaturesAsync_PreGenerateSignedPackages_RepositorySigned_Timestamped(string dir)
         {
             // Arrange
-            var caseName = "RepositorySigned_TimeStamped";
+            var caseName = "RT";
 
             var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
 
@@ -221,7 +221,7 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
         public async Task VerifySignaturesAsync_PreGenerateSignedPackages_AuthorSigned_RepositorySigned(string dir)
         {
             // Arrange
-            var caseName = "AuthorSigned_RepositorySigned";
+            var caseName = "AR";
 
             var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
 
@@ -266,7 +266,7 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
         public async Task VerifySignaturesAsync_PreGenerateSignedPackages_AuthorSigned_Timestamped_RepositorySigned(string dir)
         {
             // Arrange
-            var caseName = "AuthorSigned_Timestamped_RepositorySigned";
+            var caseName = "ATR";
 
             var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
 
@@ -315,7 +315,7 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
         public async Task VerifySignaturesAsync_PreGenerateSignedPackages_AuthorSigned_RepositorySigned_Timestamped(string dir)
         {
             // Arrange
-            var caseName = "AuthorSigned_RepositorySigned_Timestamped";
+            var caseName = "ART";
 
             var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
 
@@ -364,7 +364,7 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
         public async Task VerifySignaturesAsync_PreGenerateSignedPackages_AuthorSigned_Timestamped_RepositorySigned_Timestamped(string dir)
         {
             // Arrange
-            var caseName = "AuthorSigned_Timestamped_RepositorySigned_Timestamped";
+            var caseName = "ATRT";
 
             var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
 

@@ -48,14 +48,12 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
             var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
 
             var signedPackageFolder = Path.Combine(dir, caseName, "package");
-            var signedPackagePath = Directory.GetFiles(signedPackageFolder).First();
+            var signedPackagePath = Directory.GetFiles(signedPackageFolder).Where(f => f.StartsWith("package")).First();
 
             var certFolder = Path.Combine(dir, caseName, "cert");
-            var certFile = Directory.GetFiles(certFolder).First();
+            var authorCertFile = Directory.GetFiles(certFolder).Where(f => f.Equals("Author.cer")).First();
 
-            var tsaRootCertFile = Directory.GetFiles(dir, "tsaRoot.cer", SearchOption.TopDirectoryOnly).First();
-
-            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(certFile)))
+            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(authorCertFile)))
             using (var packageReader = new PackageArchiveReader(signedPackagePath))
             using (var store = new X509Store(StoreName.Root,
                 RuntimeEnvironmentHelper.IsWindows ? StoreLocation.LocalMachine : StoreLocation.CurrentUser))
@@ -92,15 +90,14 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
             var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
 
             var signedPackageFolder = Path.Combine(dir, caseName, "package");
-            var signedPackagePath = Directory.GetFiles(signedPackageFolder).First();
+            var signedPackagePath = Directory.GetFiles(signedPackageFolder).Where(f => f.StartsWith("package")).First();
 
             var certFolder = Path.Combine(dir, caseName, "cert");
-            var certFile = Directory.GetFiles(certFolder).First();
+            var authorCertFile = Directory.GetFiles(certFolder).Where(f => f.Equals("Author.cer")).First();
+            var authorTsaRootCertFile = Directory.GetFiles(certFolder).Where(f => f.Equals("AuthorTSARoot.cer")).First();
 
-            var tsaRootCertFile = Directory.GetFiles(dir, "tsaRoot.cer", SearchOption.TopDirectoryOnly).First();
-
-            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(certFile)))
-            using (var tsaRootCertificate = new X509Certificate2(File.ReadAllBytes(tsaRootCertFile)))
+            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(authorCertFile)))
+            using (var tsaRootCertificate = new X509Certificate2(File.ReadAllBytes(authorTsaRootCertFile)))
             using (var packageReader = new PackageArchiveReader(signedPackagePath))
             using (var store = new X509Store(StoreName.Root,
                 RuntimeEnvironmentHelper.IsWindows ? StoreLocation.LocalMachine : StoreLocation.CurrentUser))
@@ -138,12 +135,12 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
             var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
 
             var signedPackageFolder = Path.Combine(dir, caseName, "package");
-            var signedPackagePath = Directory.GetFiles(signedPackageFolder).First();
+            var signedPackagePath = Directory.GetFiles(signedPackageFolder).Where(f => f.StartsWith("package")).First();
 
             var certFolder = Path.Combine(dir, caseName, "cert");
-            var certFile = Directory.GetFiles(certFolder).First();
+            var repoCertFile = Directory.GetFiles(certFolder).Where(f => f.Equals("Repo.cer")).First();
 
-            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(certFile)))
+            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(repoCertFile)))
             using (var packageReader = new PackageArchiveReader(signedPackagePath))
             using (var store = new X509Store(StoreName.Root,
                 RuntimeEnvironmentHelper.IsWindows ? StoreLocation.LocalMachine : StoreLocation.CurrentUser))
@@ -180,15 +177,14 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
             var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
 
             var signedPackageFolder = Path.Combine(dir, caseName, "package");
-            var signedPackagePath = Directory.GetFiles(signedPackageFolder).First();
+            var signedPackagePath = Directory.GetFiles(signedPackageFolder).Where(f => f.StartsWith("package")).First();
 
             var certFolder = Path.Combine(dir, caseName, "cert");
-            var certFile = Directory.GetFiles(certFolder).First();
+            var repoCertFile = Directory.GetFiles(certFolder).Where(f => f.Equals("Repo.cer")).First();
+            var repoTsaRootCertFile = Directory.GetFiles(certFolder).Where(f => f.Equals("RepoTSARoot.cer")).First();
 
-            var tsaRootCertFile = Directory.GetFiles(dir, "tsaRoot.cer", SearchOption.TopDirectoryOnly).First();
-
-            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(certFile)))
-            using (var tsaRootCertificate = new X509Certificate2(File.ReadAllBytes(tsaRootCertFile)))
+            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(repoCertFile)))
+            using (var tsaRootCertificate = new X509Certificate2(File.ReadAllBytes(repoTsaRootCertFile)))
             using (var packageReader = new PackageArchiveReader(signedPackagePath))
             using (var store = new X509Store(StoreName.Root,
                 RuntimeEnvironmentHelper.IsWindows ? StoreLocation.LocalMachine : StoreLocation.CurrentUser))
@@ -226,14 +222,14 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
             var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
 
             var signedPackageFolder = Path.Combine(dir, caseName, "package");
-            var signedPackagePath = Directory.GetFiles(signedPackageFolder).First();
+            var signedPackagePath = Directory.GetFiles(signedPackageFolder).Where(f => f.StartsWith("package")).First();
 
             var certFolder = Path.Combine(dir, caseName, "cert");
-            var primaryCertFile = Directory.GetFiles(certFolder).First();
-            var counterCertFile = Directory.GetFiles(certFolder).Last();
+            var authorCertFile = Directory.GetFiles(certFolder).Where(f => f.Equals("Author.cer")).First();
+            var repoCertFile = Directory.GetFiles(certFolder).Where(f => f.Equals("Repo.cer")).First();
 
-            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(primaryCertFile)))
-            using (var counterCertificate = new X509Certificate2(File.ReadAllBytes(counterCertFile)))
+            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(authorCertFile)))
+            using (var counterCertificate = new X509Certificate2(File.ReadAllBytes(repoCertFile)))
             using (var packageReader = new PackageArchiveReader(signedPackagePath))
             using (var store = new X509Store(StoreName.Root,
                 RuntimeEnvironmentHelper.IsWindows ? StoreLocation.LocalMachine : StoreLocation.CurrentUser))
@@ -271,17 +267,16 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
             var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
 
             var signedPackageFolder = Path.Combine(dir, caseName, "package");
-            var signedPackagePath = Directory.GetFiles(signedPackageFolder).First();
+            var signedPackagePath = Directory.GetFiles(signedPackageFolder).Where(f => f.StartsWith("package")).First();
 
             var certFolder = Path.Combine(dir, caseName, "cert");
-            var primaryCertFile = Directory.GetFiles(certFolder).First();
-            var counterCertFile = Directory.GetFiles(certFolder).Last();
+            var authorCertFile = Directory.GetFiles(certFolder).Where(f => f.Equals("Author.cer")).First();
+            var authorTsaRootCertFile = Directory.GetFiles(certFolder).Where(f => f.Equals("AuthorTSARoot.cer")).First();
+            var repoCertFile = Directory.GetFiles(certFolder).Where(f => f.Equals("Repo.cer")).First();
 
-            var tsaRootCertFile = Directory.GetFiles(dir, "tsaRoot.cer", SearchOption.TopDirectoryOnly).First();
-
-            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(primaryCertFile)))
-            using (var counterCertificate = new X509Certificate2(File.ReadAllBytes(counterCertFile)))
-            using (var tsaRootCertificate = new X509Certificate2(File.ReadAllBytes(tsaRootCertFile)))
+            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(authorCertFile)))
+            using (var counterCertificate = new X509Certificate2(File.ReadAllBytes(repoCertFile)))
+            using (var tsaRootCertificate = new X509Certificate2(File.ReadAllBytes(authorTsaRootCertFile)))
             using (var packageReader = new PackageArchiveReader(signedPackagePath))
             using (var store = new X509Store(StoreName.Root,
                 RuntimeEnvironmentHelper.IsWindows ? StoreLocation.LocalMachine : StoreLocation.CurrentUser))
@@ -320,17 +315,16 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
             var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
 
             var signedPackageFolder = Path.Combine(dir, caseName, "package");
-            var signedPackagePath = Directory.GetFiles(signedPackageFolder).First();
+            var signedPackagePath = Directory.GetFiles(signedPackageFolder).Where(f => f.StartsWith("package")).First();
 
             var certFolder = Path.Combine(dir, caseName, "cert");
-            var primaryCertFile = Directory.GetFiles(certFolder).First();
-            var counterCertFile = Directory.GetFiles(certFolder).Last();
+            var authorCertFile = Directory.GetFiles(certFolder).Where(f => f.Equals("Author.cer")).First();
+            var repoCertFile = Directory.GetFiles(certFolder).Where(f => f.Equals("Repo.cer")).First();
+            var repoTsaRootCertFile = Directory.GetFiles(certFolder).Where(f => f.Equals("RepoTSARoot.cer")).First();
 
-            var tsaRootCertFile = Directory.GetFiles(dir, "tsaRoot.cer", SearchOption.TopDirectoryOnly).First();
-
-            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(primaryCertFile)))
-            using (var counterCertificate = new X509Certificate2(File.ReadAllBytes(counterCertFile)))
-            using (var tsaRootCertificate = new X509Certificate2(File.ReadAllBytes(tsaRootCertFile)))
+            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(authorCertFile)))
+            using (var counterCertificate = new X509Certificate2(File.ReadAllBytes(repoCertFile)))
+            using (var tsaRootCertificate = new X509Certificate2(File.ReadAllBytes(repoTsaRootCertFile)))
             using (var packageReader = new PackageArchiveReader(signedPackagePath))
             using (var store = new X509Store(StoreName.Root,
                 RuntimeEnvironmentHelper.IsWindows ? StoreLocation.LocalMachine : StoreLocation.CurrentUser))
@@ -369,24 +363,26 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
             var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
 
             var signedPackageFolder = Path.Combine(dir, caseName, "package");
-            var signedPackagePath = Directory.GetFiles(signedPackageFolder).First();
+            var signedPackagePath = Directory.GetFiles(signedPackageFolder).Where(f => f.StartsWith("package")).First();
 
             var certFolder = Path.Combine(dir, caseName, "cert");
-            var primaryCertFile = Directory.GetFiles(certFolder).First();
-            var counterCertFile = Directory.GetFiles(certFolder).Last();
+            var authorCertFile = Directory.GetFiles(certFolder).Where(f => f.Equals("Author.cer")).First();
+            var authorTsaRootCertFile = Directory.GetFiles(certFolder).Where(f => f.Equals("AuthorTSARoot.cer")).First();
+            var repoCertFile = Directory.GetFiles(certFolder).Where(f => f.Equals("Repo.cer")).First();
+            var repoTsaRootCertFile = Directory.GetFiles(certFolder).Where(f => f.Equals("RepoTSARoot.cer")).First();
 
-            var tsaRootCertFile = Directory.GetFiles(dir, "tsaRoot.cer", SearchOption.TopDirectoryOnly).First();
-
-            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(primaryCertFile)))
-            using (var counterCertificate = new X509Certificate2(File.ReadAllBytes(counterCertFile)))
-            using (var tsaRootCertificate = new X509Certificate2(File.ReadAllBytes(tsaRootCertFile)))
+            using (var primaryCertificate = new X509Certificate2(File.ReadAllBytes(authorCertFile)))
+            using (var authorTsaRootCertificate = new X509Certificate2(File.ReadAllBytes(authorTsaRootCertFile)))
+            using (var counterCertificate = new X509Certificate2(File.ReadAllBytes(repoCertFile)))
+            using (var repoTsaRootCertificate = new X509Certificate2(File.ReadAllBytes(repoTsaRootCertFile)))
             using (var packageReader = new PackageArchiveReader(signedPackagePath))
             using (var store = new X509Store(StoreName.Root,
                 RuntimeEnvironmentHelper.IsWindows ? StoreLocation.LocalMachine : StoreLocation.CurrentUser))
             {
                 AddCertificateToStore(primaryCertificate, store);
                 AddCertificateToStore(counterCertificate, store);
-                AddCertificateToStore(tsaRootCertificate, store);
+                AddCertificateToStore(authorTsaRootCertificate, store);
+                AddCertificateToStore(repoTsaRootCertificate, store);
 
                 var verifier = new PackageSignatureVerifier(_trustProviders);
                 // Act
@@ -407,28 +403,6 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
                 }
             }
         }
-        private static string GetPreGenPackageRootPath()
-        {
-            var root = TestFileSystemUtility.NuGetTestFolder;
-            var path = System.IO.Path.Combine(root, "PreGenPackages");
-            return path;
-        }
-
-        /*
-        private void CreateCertificateStore()
-        {
-            StoreName storeName = StoreName.Root;
-            StoreLocation storeLocation = StoreLocation.LocalMachine;
-
-            if (RuntimeEnvironmentHelper.IsLinux)
-            {
-                storeName = StoreName.Root;
-                storeLocation = StoreLocation.CurrentUser;
-            }
-
-            store = new X509Store(storeName, storeLocation);
-        }
-        */
 
         private void AddCertificateToStore(X509Certificate2 cert, X509Store store)
         {
@@ -456,6 +430,15 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
                 i++;
             }
             return sb.ToString();
+        }
+
+        private static string GetPreGenPackageRootPath()
+        {
+            var root = TestFileSystemUtility.NuGetTestFolder;
+            var path = System.IO.Path.Combine(root, "PreGenPackages");
+
+            return path;
+
         }
 
         public static TheoryData FolderForEachPlatform

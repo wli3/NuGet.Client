@@ -21,50 +21,47 @@ using BcAccuracy = Org.BouncyCastle.Asn1.Tsp.Accuracy;
 using DotNetUtilities = Org.BouncyCastle.Security.DotNetUtilities;
 namespace NuGet.Packaging.CrossVerify.Generate.Test
 {
-    [Collection(SigningTestCollection.Name)]
+    [Collection(CrossVerifyCollection.Name)]
     public class GenerateSignedPackages
     {
-        private const string _untrustedChainCertError = "A certificate chain processed, but terminated in a root certificate which is not trusted by the trust provider.";
-        private const string _preGeneratePackageFolderName = "PreGenPackages";
-        private readonly SignedPackageVerifierSettings _verifyCommandSettings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy(TestEnvironmentVariableReader.EmptyInstance);
-        private readonly SignedPackageVerifierSettings _defaultSettings = SignedPackageVerifierSettings.GetDefault(TestEnvironmentVariableReader.EmptyInstance);
-        private readonly SigningTestFixture _testFixture;
-        private readonly TrustedTestCert<TestCertificate> _trustedTestCert;
-        private readonly IList<ISignatureVerificationProvider> _trustProviders;
-        private readonly X509Certificate2 _trustedRootCertForTSA;
-        private readonly TrustedTestCert<TestCertificate> _trustedRepoTestCert;
+        private readonly GenerateFixture _generateFixture;
         private string _dir;
 
-        public GenerateSignedPackages()
+        private readonly SigningTestFixture _signingTestFixture_Author;
+        private readonly TrustedTestCert<TestCertificate> _authorSignningCert;
+        private readonly X509Certificate2 _authorTSARootCert;
+
+        private readonly SigningTestFixture _signingTestFixture_Repository;
+        private readonly TrustedTestCert<TestCertificate> _repoSignningCert;
+        private readonly X509Certificate2 _repoTSARootCert;
+        
+        public GenerateSignedPackages(GenerateFixture fixture)
         {
-            _testFixture = new SigningTestFixture();
-            _trustedTestCert = _testFixture.TrustedTestCertificate;
-            _trustedRepoTestCert = SigningTestUtility.GenerateTrustedTestCertificate();
-            _trustProviders = new List<ISignatureVerificationProvider>()
-            {
-                new IntegrityVerificationProvider(),
-                new SignatureTrustAndValidityVerificationProvider()
-            };
-            _dir = CreatePreGenPackageForEachPlatform();
+            _generateFixture = fixture;
+            _dir = _generateFixture._dir;
 
-            //generate TSA root cert file under each platform 
-            _trustedRootCertForTSA = _testFixture.TrustedServerRootCertificate;
-            var tsaRootCertPath = new FileInfo(Path.Combine(_dir, "tsaRoot.cer"));
-            var bytes = _trustedRootCertForTSA.RawData;
-            File.WriteAllBytes(tsaRootCertPath.FullName, bytes);
+            _signingTestFixture_Author = new SigningTestFixture();
+            _authorSignningCert = _signingTestFixture_Author.TrustedTestCertificate;
+            _authorTSARootCert = _signingTestFixture_Author.TrustedServerRootCertificate;
 
+            _signingTestFixture_Repository = new SigningTestFixture();
+            _repoSignningCert = _signingTestFixture_Repository.TrustedRepositoryCertificate;
+            _repoTSARootCert = _signingTestFixture_Repository.TrustedServerRootCertificate;
         }
         [Fact]
         public async Task PreGenerateSignedPackages_AuthorSigned()
         {
             // Arrange
             var caseName = "A";
+            string caseFolder = System.IO.Path.Combine(_dir, caseName);
+            Directory.CreateDirectory(caseFolder);
 
             var nupkg = new SimpleTestPackageContext();
 
-            using (var primaryCertificate = new X509Certificate2(_trustedTestCert.Source.Cert))
+            using (var primaryCertificate = new X509Certificate2(_authorSignningCert.Source.Cert))
             {
-                string packagePath = Path.Combine(_dir, caseName, "package");
+                //Creat signed package under _dir\package folder
+                string packagePath = Path.Combine(caseFolder, "package");
                 Directory.CreateDirectory(packagePath);
 
                 var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
@@ -72,15 +69,13 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
                     nupkg,
                     packagePath);
 
-                string certFolder = System.IO.Path.Combine(_dir, caseName, "cert");
+                //Creat certificate under _dir\cert folder
+                string certFolder = System.IO.Path.Combine(caseFolder, "cert");
                 Directory.CreateDirectory(certFolder);
 
-                var CertFile = new FileInfo(Path.Combine(certFolder, "A.cer"));
+                var CertFile = new FileInfo(Path.Combine(certFolder, "Author.cer"));
                 var bytes = primaryCertificate.RawData;
                 File.WriteAllBytes(CertFile.FullName, bytes);
-
-                Assert.Equal(Directory.GetFiles(certFolder).Length, 1);
-                Assert.Equal(Directory.GetFiles(packagePath).Length, 1);
             }
         }
 
@@ -89,14 +84,16 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
         {
             // Arrange
             var caseName = "AT";
+            string caseFolder = System.IO.Path.Combine(_dir, caseName);
+            Directory.CreateDirectory(caseFolder);
 
             var nupkg = new SimpleTestPackageContext();
 
-            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var timestampService = await _signingTestFixture_Author.GetDefaultTrustedTimestampServiceAsync();
 
-            using (var primaryCertificate = new X509Certificate2(_trustedTestCert.Source.Cert))
+            using (var primaryCertificate = new X509Certificate2(_authorSignningCert.Source.Cert))
             {
-                string packagePath = Path.Combine(_dir, caseName, "package");
+                string packagePath = Path.Combine(caseFolder, "package");
                 Directory.CreateDirectory(packagePath);
 
                 var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
@@ -105,15 +102,16 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
                     packagePath,
                     timestampService.Url);
 
-                string certFolder = System.IO.Path.Combine(_dir, caseName, "cert");
+                string certFolder = System.IO.Path.Combine(caseFolder, "cert");
                 Directory.CreateDirectory(certFolder);
 
-                var CertFile = new FileInfo(Path.Combine(certFolder, "A.cer"));
-                var bytes = primaryCertificate.RawData;
-                File.WriteAllBytes(CertFile.FullName, bytes);
+                var CertFile = new FileInfo(Path.Combine(certFolder, "Author.cer"));
+                var certbytes = primaryCertificate.RawData;
+                File.WriteAllBytes(CertFile.FullName, certbytes);
 
-                Assert.Equal(Directory.GetFiles(certFolder).Length, 1);
-                Assert.Equal(Directory.GetFiles(packagePath).Length, 1);
+                var tsaRootCertPath = new FileInfo(Path.Combine(certFolder, "AuthorTSARoot.cer"));
+                var tsaRootCertbytes = _authorTSARootCert.RawData;
+                File.WriteAllBytes(tsaRootCertPath.FullName, tsaRootCertbytes);
             }
         }
 
@@ -122,12 +120,14 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
         {
             // Arrange
             var caseName = "R";
+            string caseFolder = System.IO.Path.Combine(_dir, caseName);
+            Directory.CreateDirectory(caseFolder);
 
             var nupkg = new SimpleTestPackageContext();
 
-            using (var primaryCertificate = new X509Certificate2(_trustedTestCert.Source.Cert))
+            using (var primaryCertificate = new X509Certificate2(_repoSignningCert.Source.Cert))
             {
-                string packagePath = Path.Combine(_dir, caseName, "package");
+                string packagePath = Path.Combine(caseFolder, "package");
                 Directory.CreateDirectory(packagePath);
 
                 var signedPackagePath = await SignedArchiveTestUtility.RepositorySignPackageAsync(
@@ -136,15 +136,12 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
                     packagePath,
                     new Uri("https://v3serviceIndex.test/api/index.json"));
 
-                string certFolder = System.IO.Path.Combine(_dir, caseName, "cert");
+                string certFolder = System.IO.Path.Combine(caseFolder, "cert");
                 Directory.CreateDirectory(certFolder);
 
-                var CertFile = new FileInfo(Path.Combine(certFolder, "A.cer"));
+                var CertFile = new FileInfo(Path.Combine(certFolder, "Repo.cer"));
                 var bytes = primaryCertificate.RawData;
                 File.WriteAllBytes(CertFile.FullName, bytes);
-
-                Assert.Equal(Directory.GetFiles(certFolder).Length, 1);
-                Assert.Equal(Directory.GetFiles(packagePath).Length, 1);
             }
         }
 
@@ -153,14 +150,16 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
         {
             // Arrange
             var caseName = "RT";
+            string caseFolder = System.IO.Path.Combine(_dir, caseName);
+            Directory.CreateDirectory(caseFolder);
 
             var nupkg = new SimpleTestPackageContext();
 
-            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var timestampService = await _signingTestFixture_Repository.GetDefaultTrustedTimestampServiceAsync();
 
-            using (var testCertificate = new X509Certificate2(_trustedTestCert.Source.Cert))
+            using (var testCertificate = new X509Certificate2(_repoSignningCert.Source.Cert))
             {
-                string packagePath = Path.Combine(_dir, caseName, "package");
+                string packagePath = Path.Combine(caseFolder, "package");
                 Directory.CreateDirectory(packagePath);
 
                 var signedPackagePath = await SignedArchiveTestUtility.RepositorySignPackageAsync(
@@ -170,15 +169,17 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
                     new Uri("https://v3serviceIndex.test/api/index.json"),
                     timestampService.Url);
 
-                string certFolder = System.IO.Path.Combine(_dir, caseName, "cert");
+                string certFolder = System.IO.Path.Combine(caseFolder, "cert");
                 Directory.CreateDirectory(certFolder);
 
-                var CertFile = new FileInfo(Path.Combine(certFolder, "A.cer"));
+                var CertFile = new FileInfo(Path.Combine(certFolder, "Repo.cer"));
                 var bytes = testCertificate.RawData;
                 File.WriteAllBytes(CertFile.FullName, bytes);
 
-                Assert.Equal(Directory.GetFiles(certFolder).Length, 1);
-                Assert.Equal(Directory.GetFiles(packagePath).Length, 1);
+                var tsaRootCertPath = new FileInfo(Path.Combine(certFolder, "RepoTSARoot.cer"));
+                var tsaRootCertbytes = _repoTSARootCert.RawData;
+                File.WriteAllBytes(tsaRootCertPath.FullName, tsaRootCertbytes);
+
             }
         }
 
@@ -187,13 +188,15 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
         {
             // Arrange
             var caseName = "AR";
+            string caseFolder = System.IO.Path.Combine(_dir, caseName);
+            Directory.CreateDirectory(caseFolder);
 
             var nupkg = new SimpleTestPackageContext();
 
-            using (var primaryCertificate = new X509Certificate2(_testFixture.TrustedTestCertificate.Source.Cert))
-            using (var counterCertificate = new X509Certificate2(_trustedRepoTestCert.Source.Cert))
+            using (var primaryCertificate = new X509Certificate2(_authorSignningCert.Source.Cert))
+            using (var counterCertificate = new X509Certificate2(_repoSignningCert.Source.Cert))
             {
-                string packagePath = Path.Combine(_dir, caseName, "package");
+                string packagePath = Path.Combine(caseFolder, "package");
                 Directory.CreateDirectory(packagePath);
 
                 var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
@@ -207,44 +210,43 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
                     new Uri("https://v3serviceIndex.test/api/index.json"));
 
 
-                string certFolder = System.IO.Path.Combine(_dir, caseName, "cert");
+                string certFolder = System.IO.Path.Combine(caseFolder, "cert");
                 Directory.CreateDirectory(certFolder);
 
-                var CertFile1 = new FileInfo(Path.Combine(certFolder, "A.cer"));
+                var CertFile1 = new FileInfo(Path.Combine(certFolder, "Author.cer"));
                 var bytes1 = primaryCertificate.RawData;
                 File.WriteAllBytes(CertFile1.FullName, bytes1);
 
-                var CertFile2 = new FileInfo(Path.Combine(certFolder, "R.cer"));
+                var CertFile2 = new FileInfo(Path.Combine(certFolder, "Repo.cer"));
                 var bytes2 = counterCertificate.RawData;
                 File.WriteAllBytes(CertFile2.FullName, bytes2);
-
-                Assert.Equal(Directory.GetFiles(certFolder).Length, 2);
-                Assert.Equal(Directory.GetFiles(packagePath).Length, 1);
             }
         }
-   
+
 
         [Fact]
         public async Task PreGenerateSignedPackages_AuthorSigned_Timestamped_RepositoryCounterSigned()
         {
             // Arrange
             var caseName = "ATR";
+            string caseFolder = System.IO.Path.Combine(_dir, caseName);
+            Directory.CreateDirectory(caseFolder);
 
             var nupkg = new SimpleTestPackageContext();
 
-            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var timestampServicePrimary = await _signingTestFixture_Author.GetDefaultTrustedTimestampServiceAsync();
 
-            using (var primaryCertificate = new X509Certificate2(_testFixture.TrustedTestCertificate.Source.Cert))
-            using (var counterCertificate = new X509Certificate2(_trustedRepoTestCert.Source.Cert))
+            using (var primaryCertificate = new X509Certificate2(_authorSignningCert.Source.Cert))
+            using (var counterCertificate = new X509Certificate2(_repoSignningCert.Source.Cert))
             {
-                string packagePath = Path.Combine(_dir, caseName, "package");
+                string packagePath = Path.Combine(caseFolder, "package");
                 Directory.CreateDirectory(packagePath);
 
                 var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
                     primaryCertificate,
                     nupkg,
                     packagePath,
-                    timestampService.Url);
+                    timestampServicePrimary.Url);
 
                 var countersignedPackagePath = await SignedArchiveTestUtility.RepositorySignPackageAsync(
                     counterCertificate,
@@ -253,19 +255,20 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
                     new Uri("https://v3serviceIndex.test/api/index.json"));
 
 
-                string certFolder = System.IO.Path.Combine(_dir, caseName, "cert");
+                string certFolder = System.IO.Path.Combine(caseFolder, "cert");
                 Directory.CreateDirectory(certFolder);
 
-                var CertFile1 = new FileInfo(Path.Combine(certFolder, "A.cer"));
+                var CertFile1 = new FileInfo(Path.Combine(certFolder, "Author.cer"));
                 var bytes1 = primaryCertificate.RawData;
                 File.WriteAllBytes(CertFile1.FullName, bytes1);
 
-                var CertFile2 = new FileInfo(Path.Combine(certFolder, "R.cer"));
+                var CertFile2 = new FileInfo(Path.Combine(certFolder, "Repo.cer"));
                 var bytes2 = counterCertificate.RawData;
                 File.WriteAllBytes(CertFile2.FullName, bytes2);
 
-                Assert.Equal(Directory.GetFiles(certFolder).Length, 2);
-                Assert.Equal(Directory.GetFiles(packagePath).Length, 1);
+                var tsaRootCertPath = new FileInfo(Path.Combine(certFolder, "AuthorTSARoot.cer"));
+                var tsaRootCertbytes = _authorTSARootCert.RawData;
+                File.WriteAllBytes(tsaRootCertPath.FullName, tsaRootCertbytes);
             }
         }
 
@@ -274,15 +277,17 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
         {
             // Arrange
             var caseName = "ART";
+            string caseFolder = System.IO.Path.Combine(_dir, caseName);
+            Directory.CreateDirectory(caseFolder);
 
             var nupkg = new SimpleTestPackageContext();
 
-            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var timestampServiceCounter = await _signingTestFixture_Repository.GetDefaultTrustedTimestampServiceAsync();
 
-            using (var primaryCertificate = new X509Certificate2(_testFixture.TrustedTestCertificate.Source.Cert))
-            using (var counterCertificate = new X509Certificate2(_trustedRepoTestCert.Source.Cert))
+            using (var primaryCertificate = new X509Certificate2(_authorSignningCert.Source.Cert))
+            using (var counterCertificate = new X509Certificate2(_repoSignningCert.Source.Cert))
             {
-                string packagePath = Path.Combine(_dir, caseName, "package");
+                string packagePath = Path.Combine(caseFolder, "package");
                 Directory.CreateDirectory(packagePath);
 
                 var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
@@ -294,22 +299,24 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
                     counterCertificate, signedPackagePath,
                     packagePath,
                     new Uri("https://v3serviceIndex.test/api/index.json"),
-                    timestampService.Url);
+                    timestampServiceCounter.Url);
 
 
-                string certFolder = System.IO.Path.Combine(_dir, caseName, "cert");
+                string certFolder = System.IO.Path.Combine(caseFolder, "cert");
                 Directory.CreateDirectory(certFolder);
 
-                var CertFile1 = new FileInfo(Path.Combine(certFolder, "A.cer"));
+                var CertFile1 = new FileInfo(Path.Combine(certFolder, "Author.cer"));
                 var bytes1 = primaryCertificate.RawData;
                 File.WriteAllBytes(CertFile1.FullName, bytes1);
 
-                var CertFile2 = new FileInfo(Path.Combine(certFolder, "R.cer"));
+                var CertFile2 = new FileInfo(Path.Combine(certFolder, "Repo.cer"));
                 var bytes2 = counterCertificate.RawData;
                 File.WriteAllBytes(CertFile2.FullName, bytes2);
 
-                Assert.Equal(Directory.GetFiles(certFolder).Length, 2);
-                Assert.Equal(Directory.GetFiles(packagePath).Length, 1);
+                var tsaRootCertPath = new FileInfo(Path.Combine(certFolder, "RepoTSARoot.cer"));
+                var tsaRootCertbytes = _repoTSARootCert.RawData;
+                File.WriteAllBytes(tsaRootCertPath.FullName, tsaRootCertbytes);
+
             }
         }
 
@@ -318,83 +325,65 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
         {
             // Arrange
             var caseName = "ATRT";
+            string caseFolder = System.IO.Path.Combine(_dir, caseName);
+            Directory.CreateDirectory(caseFolder);
 
             var nupkg = new SimpleTestPackageContext();
 
-            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var timestampServicePrimary = await _signingTestFixture_Author.GetDefaultTrustedTimestampServiceAsync();
+            var timestampServiceCounter = await _signingTestFixture_Repository.GetDefaultTrustedTimestampServiceAsync();
 
-            using (var primaryCertificate = new X509Certificate2(_testFixture.TrustedTestCertificate.Source.Cert))
-            using (var counterCertificate = new X509Certificate2(_trustedRepoTestCert.Source.Cert))
+            using (var primaryCertificate = new X509Certificate2(_authorSignningCert.Source.Cert))
+            using (var counterCertificate = new X509Certificate2(_repoSignningCert.Source.Cert))
             {
-                string packagePath = Path.Combine(_dir, caseName, "package");
+                string packagePath = Path.Combine(caseFolder, "package");
                 Directory.CreateDirectory(packagePath);
 
                 var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
                     primaryCertificate,
                     nupkg,
                     packagePath,
-                    timestampService.Url);
+                    timestampServicePrimary.Url);
 
                 var countersignedPackagePath = await SignedArchiveTestUtility.RepositorySignPackageAsync(
                     counterCertificate, signedPackagePath,
                     packagePath,
                     new Uri("https://v3serviceIndex.test/api/index.json"),
-                    timestampService.Url);
+                    timestampServiceCounter.Url);
 
 
-                string certFolder = System.IO.Path.Combine(_dir, caseName, "cert");
+                string certFolder = System.IO.Path.Combine(caseFolder, "cert");
                 Directory.CreateDirectory(certFolder);
 
-                var CertFile1 = new FileInfo(Path.Combine(certFolder, "A.cer"));
+                var CertFile1 = new FileInfo(Path.Combine(certFolder, "Author.cer"));
                 var bytes1 = primaryCertificate.RawData;
                 File.WriteAllBytes(CertFile1.FullName, bytes1);
 
-                var CertFile2 = new FileInfo(Path.Combine(certFolder, "R.cer"));
+                var CertFile2 = new FileInfo(Path.Combine(certFolder, "Repo.cer"));
                 var bytes2 = counterCertificate.RawData;
                 File.WriteAllBytes(CertFile2.FullName, bytes2);
 
-                Assert.Equal(Directory.GetFiles(certFolder).Length, 2);
-                Assert.Equal(Directory.GetFiles(packagePath).Length, 1);
+                var authorTsaRootCertPath = new FileInfo(Path.Combine(certFolder, "AuthorTSARoot.cer"));
+                var authorTsaRootCertbytes = _authorTSARootCert.RawData;
+                File.WriteAllBytes(authorTsaRootCertPath.FullName, authorTsaRootCertbytes);
+
+                var repoTsaRootCertPath = new FileInfo(Path.Combine(certFolder, "RepoTSARoot.cer"));
+                var repoTsaRootCertbytes = _repoTSARootCert.RawData;
+                File.WriteAllBytes(repoTsaRootCertPath.FullName, repoTsaRootCertbytes);
+
             }
         }
-
-        private static string CreatePreGenPackageForEachPlatform()
+        private string GetFileList(string certfolder, string pkgfolder)
         {
-            var root = TestFileSystemUtility.NuGetTestFolder;
-            var path = Path.Combine(root, _preGeneratePackageFolderName);
-            if (!Directory.Exists(path))
+            var sb = new StringBuilder();
+            foreach (string cert in Directory.GetFiles(certfolder))
             {
-                Directory.CreateDirectory(path);
+                sb.AppendLine(cert);
             }
-
-            //Create a folder for a each platform, under PreGenPackages folder.
-            //For functional test on windows, 2 folders will be created.
-            var platform = "";
-#if IS_DESKTOP
-            platform = "Windows_NetFulFramework";
-#else
-            if (RuntimeEnvironmentHelper.IsWindows)
+            foreach (string pkg in Directory.GetFiles(pkgfolder))
             {
-                platform =  "Windows_NetCore";
+                sb.AppendLine(pkg);
             }
-            else if (RuntimeEnvironmentHelper.IsMacOSX)
-            {
-                platform = "Mac_NetCore";
-            }
-            else
-            {
-                platform = "Linux_NetCore";
-            }
-#endif
-            var pathForEachPlatform = Path.Combine(path, platform);
-
-            if (Directory.Exists(pathForEachPlatform))
-            {
-                Directory.Delete(pathForEachPlatform, recursive: true);
-            }
-            Directory.CreateDirectory(pathForEachPlatform);
-
-            return pathForEachPlatform;
         }
     }
 }

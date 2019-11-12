@@ -29,7 +29,10 @@ namespace NuGet.Packaging.Rules
             var warnings = new List<PackagingLogMessage>();
             foreach (var folder in _folders)
             {
-                var files = builder.GetFiles().Where(t => t.StartsWith(folder));
+                var files = builder.GetFiles()
+                                    .Select(t => PathUtility.GetPathWithDirectorySeparator(t))
+                                    .Where(t => t.StartsWith(folder + Path.DirectorySeparatorChar));
+
                 var packageId = builder.NuspecReader.GetId();
                 var conventionViolators = IdentifyViolators(files, packageId);
                 warnings.AddRange(GenerateWarnings(conventionViolators));
@@ -44,7 +47,14 @@ namespace NuGet.Packaging.Rules
             foreach (var folder in _folders)
             {
                 var warningMessage = new StringBuilder();
-                var currentConventionViolators = conventionViolators.Where(t => t.ExpectedPath.StartsWith(folder + '/'));
+                var currentConventionViolators = conventionViolators
+                                                    .Where(t =>
+                                                        PathUtility.GetPathWithDirectorySeparator(
+                                                            t.ExpectedPath
+                                                        )
+                                                        .StartsWith(folder + Path.DirectorySeparatorChar)
+                                                    );
+
                 foreach (var conViolator in currentConventionViolators)
                 {
                     warningMessage.AppendLine(string.Format(MessageFormat, conViolator.Extension, conViolator.Path, conViolator.ExpectedPath));

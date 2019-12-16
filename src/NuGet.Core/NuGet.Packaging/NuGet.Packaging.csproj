@@ -7,7 +7,7 @@
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
 
   <PropertyGroup>
-    <Description>NuGet's understanding of packages. Reading nuspec, nupkgs and package signing.</Description>
+    <Description>NuGet's implementation for reading nupkg package and nuspec package specification files.</Description>
     <TargetFrameworks>$(TargetFrameworksLibrary)</TargetFrameworks>
     <TargetFramework />
     <NoWarn>$(NoWarn);CS1591;CS1574;CS1573;CS1572</NoWarn>
@@ -44,14 +44,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersionCore)" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(IsCore)' == 'true' ">
-    <PackageReference Include="System.Dynamic.Runtime" />
-    <!-- TODO - remove this when temporary patching is no longer necessary. See https://github.com/NuGet/Home/issues/8508 -->
-    <PackageReference Include="System.Security.Cryptography.Pkcs" />
-    <PackageReference Include="System.Security.Cryptography.Cng" />
+    <PackageReference Include="System.Dynamic.Runtime" Version="$(SystemPackagesVersion)" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="5.0.0-alpha1.19473.1" />
+    <PackageReference Include="System.Security.Cryptography.Cng" Version="5.0.0-alpha1.19473.1" />
   </ItemGroup>
 
   <ItemGroup>

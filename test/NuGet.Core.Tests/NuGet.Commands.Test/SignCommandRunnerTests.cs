@@ -8,7 +8,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using NuGet.Common;
 using NuGet.Test.Utility;
-using Test.Utility.Signing;
 using Xunit;
 
 namespace NuGet.Commands.Test
@@ -35,7 +34,7 @@ namespace NuGet.Commands.Test
                     () => test.Runner.ExecuteCommandAsync(test.Args));
 
                 Assert.Equal(NuGetLogCode.NU3001, exception.AsLogMessage().Code);
-                Assert.Equal($"Certificate file '{certificateFilePath}' not found. For a list of accepted ways to provide a certificate, visit https://docs.nuget.org/docs/reference/command-line-reference", exception.Message);
+                Assert.Equal($"Certificate file '{certificateFilePath}' not found. For a list of accepted ways to provide a certificate, please visit https://docs.nuget.org/docs/reference/command-line-reference", exception.Message);
             }
         }
 
@@ -60,7 +59,7 @@ namespace NuGet.Commands.Test
                     () => test.Runner.ExecuteCommandAsync(test.Args));
 
                 Assert.Equal(NuGetLogCode.NU3001, exception.AsLogMessage().Code);
-                Assert.Equal($"Certificate file '{certificateFilePath}' is invalid. For a list of accepted ways to provide a certificate, visit https://docs.nuget.org/docs/reference/command-line-reference", exception.Message);
+                Assert.Equal($"Certificate file '{certificateFilePath}' is invalid. For a list of accepted ways to provide a certificate, please visit https://docs.nuget.org/docs/reference/command-line-reference", exception.Message);
             }
         }
 
@@ -77,7 +76,7 @@ namespace NuGet.Commands.Test
                     () => test.Runner.ExecuteCommandAsync(test.Args));
 
                 Assert.Equal(NuGetLogCode.NU3001, exception.AsLogMessage().Code);
-                Assert.Equal("No certificates were found that meet all the given criteria. For a list of accepted ways to provide a certificate, visit https://docs.nuget.org/docs/reference/command-line-reference", exception.Message);
+                Assert.Equal("No certificates were found that meet all the given criteria. For a list of accepted ways to provide a certificate, please visit https://docs.nuget.org/docs/reference/command-line-reference", exception.Message);
             }
         }
 
@@ -99,7 +98,7 @@ namespace NuGet.Commands.Test
                     () => test.Runner.ExecuteCommandAsync(test.Args));
 
                 Assert.Equal(NuGetLogCode.NU3001, exception.AsLogMessage().Code);
-                Assert.Equal($"Invalid password was provided for the certificate file '{certificateFilePath}'. Provide a valid password using the '-CertificatePassword' option", exception.Message);
+                Assert.Equal($"Invalid password was provided for the certificate file '{certificateFilePath}'. Please provide a valid password using the '-CertificatePassword' option", exception.Message);
             }
         }
 
@@ -109,8 +108,15 @@ namespace NuGet.Commands.Test
             using (var test = await Test.CreateAsync(_fixture.GetDefaultCertificate()))
             {
                 test.Args.CertificateSubjectName = "Root";
-                //X509 store is opened in ReadOnly mode in this code path. Hence StoreLocation is set to LocalMachine.
-                test.Args.CertificateStoreLocation = CertificateStoreUtilities.GetTrustedCertificateStoreLocation(readOnly: true);         
+                if (RuntimeEnvironmentHelper.IsWindows || RuntimeEnvironmentHelper.IsMacOSX)
+                {
+                    test.Args.CertificateStoreLocation = StoreLocation.LocalMachine;
+                }
+                else if (RuntimeEnvironmentHelper.IsLinux)
+                {
+                    test.Args.CertificateStoreLocation = StoreLocation.CurrentUser;
+                }
+                
                 test.Args.CertificateStoreName = StoreName.Root;
 
                 var exception = await Assert.ThrowsAsync<SignCommandException>(

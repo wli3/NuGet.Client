@@ -325,6 +325,47 @@ namespace NuGet.VisualStudio.Implementation.Test.Extensibility
         }
 
         [Fact]
+        public void CreateContext_WithSolutionFolder()
+        {
+            // Arrange
+            using (var testDirectory = TestDirectory.Create())
+            {
+                var currentDirectory = Directory.GetCurrentDirectory();
+
+                var settings = Mock.Of<ISettings>();
+                Mock.Get(settings)
+                    .Setup(x => x.GetSection("config"))
+                    .Returns(() => new VirtualSettingSection("config",
+                        new AddItem("globalPackagesFolder", "solution/packages")));
+                Mock.Get(settings);
+
+
+                var solutionManager = new Mock<IVsSolutionManager>();
+                solutionManager
+                    .Setup(x => x.SolutionDirectory)
+                    .Returns(testDirectory.Path + "/slnFolder");
+
+                var target = new VsPathContextProvider(
+                    settings,
+                    solutionManager.Object,
+                    Mock.Of<ILogger>(),
+                    getLockFileOrNullAsync: null);
+
+                var projectUniqueName = Guid.NewGuid().ToString();
+
+                var project = new TestPackageReferenceProject(projectUniqueName);
+                
+                // Act
+                var result = target.projectUniqueName, out var actual);
+
+                // Assert
+                Assert.True(result);
+                Assert.NotNull(actual);
+                Assert.Equal(Path.Combine(currentDirectory, "solution", "packages"), actual.UserPackageFolder);
+            }
+        }
+
+        [Fact]
         public void CreateSolutionContext_WithConfiguredFallbackPackageFolders()
         {
             // Arrange

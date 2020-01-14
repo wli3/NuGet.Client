@@ -362,8 +362,8 @@ namespace NuGet.PackageManagement.UI
         {
             if (Model.TabInitialLoadOverride.HasValue)
             {
-                _topPanel.SelectFilter(Model.TabInitialLoadOverride.Value);
-               
+                //_topPanel.SelectFilter(Model.TabInitialLoadOverride.Value);
+                _topPanel._labelUpgradeAvailable.Selected = true;
                 return true;
             }
 

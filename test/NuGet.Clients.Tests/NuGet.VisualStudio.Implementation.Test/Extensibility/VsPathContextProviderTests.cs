@@ -331,13 +331,8 @@ namespace NuGet.VisualStudio.Implementation.Test.Extensibility
             using (var testDirectory = TestDirectory.Create())
             {
                 var currentDirectory = Directory.GetCurrentDirectory();
+                var provider = Microsoft.VisualStudio.ComponentModelHost.ComponentModel.GetService<TService>();
 
-                var settings = Mock.Of<ISettings>();
-                Mock.Get(settings)
-                    .Setup(x => x.GetSection("config"))
-                    .Returns(() => new VirtualSettingSection("config",
-                        new AddItem("globalPackagesFolder", "solution/packages")));
-                Mock.Get(settings);
 
 
                 var solutionManager = new Mock<IVsSolutionManager>();
@@ -346,17 +341,19 @@ namespace NuGet.VisualStudio.Implementation.Test.Extensibility
                     .Returns(testDirectory.Path + "/slnFolder");
 
                 var target = new VsPathContextProvider(
-                    settings,
-                    solutionManager.Object,
-                    Mock.Of<ILogger>(),
-                    getLockFileOrNullAsync: null);
+                Mock.Of<ISettings>(),
+                solutionManager.Object,
+                Mock.Of<ILogger>(),
+                getLockFileOrNullAsync: null);
 
+               
+  
                 var projectUniqueName = Guid.NewGuid().ToString();
 
-                var project = new TestPackageReferenceProject(projectUniqueName);
+                //var project = new TestPackageReferenceProject(projectUniqueName);
                 
                 // Act
-                var result = target.projectUniqueName, out var actual);
+                var result = target.TryCreateContext(projectUniqueName, out var actual);
 
                 // Assert
                 Assert.True(result);

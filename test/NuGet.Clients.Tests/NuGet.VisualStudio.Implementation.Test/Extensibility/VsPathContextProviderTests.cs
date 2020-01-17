@@ -25,6 +25,8 @@ using NuGet.Versioning;
 using Test.Utility.Threading;
 using Xunit;
 
+using IAsyncServiceProvider = Microsoft.VisualStudio.Shell.IAsyncServiceProvider;
+
 namespace NuGet.VisualStudio.Implementation.Test.Extensibility
 {
     [Collection(DispatcherThreadCollection.CollectionName)]
@@ -331,23 +333,33 @@ namespace NuGet.VisualStudio.Implementation.Test.Extensibility
             using (var testDirectory = TestDirectory.Create())
             {
                 var currentDirectory = Directory.GetCurrentDirectory();
-                var provider = Microsoft.VisualStudio.ComponentModelHost.ComponentModel.GetService<TService>();
-
-
+                
 
                 var solutionManager = new Mock<IVsSolutionManager>();
                 solutionManager
                     .Setup(x => x.SolutionDirectory)
                     .Returns(testDirectory.Path + "/slnFolder");
 
+                var asyncServiceProvider = new Mock<IAsyncServiceProvider>();
+                //    Mock.Of<IAsyncServiceProvider>(a =>
+                //    a.GetDTEAsync() == Mock.Of<EnvDTE.DTE>(z =>
+                //        z.Solution.Projects == Mock.Of<EnvDTE.Project>()
+                //    )
+                //);
+
+                object testObject = new object();
+
+                asyncServiceProvider.Setup(s => s.GetServiceAsync(It.IsAny<Type>()))
+                             .ReturnsAsync(testObject);
+
                 var target = new VsPathContextProvider(
                 Mock.Of<ISettings>(),
                 solutionManager.Object,
                 Mock.Of<ILogger>(),
-                getLockFileOrNullAsync: null);
+                getLockFileOrNullAsync: null,
+                asyncServiceProvider.Object);
 
-               
-  
+                
                 var projectUniqueName = Guid.NewGuid().ToString();
 
                 //var project = new TestPackageReferenceProject(projectUniqueName);

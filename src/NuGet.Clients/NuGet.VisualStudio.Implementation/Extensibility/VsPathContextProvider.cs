@@ -86,8 +86,14 @@ namespace NuGet.VisualStudio
             ISettings settings,
             IVsSolutionManager solutionManager,
             NuGet.Common.ILogger logger,
-            Func<BuildIntegratedNuGetProject, Task<LockFile>> getLockFileOrNullAsync)
+            Func<BuildIntegratedNuGetProject, Task<LockFile>> getLockFileOrNullAsync,
+            IAsyncServiceProvider asyncServiceProvider = null)
         {
+            if (asyncServiceProvider == null)
+            {
+                throw new ArgumentNullException(nameof(asyncServiceProvider));
+            }
+
             if (settings == null)
             {
                 throw new ArgumentNullException(nameof(settings));
@@ -103,6 +109,7 @@ namespace NuGet.VisualStudio
                 throw new ArgumentNullException(nameof(logger));
             }
 
+            _asyncServiceprovider = asyncServiceProvider;
             _settings = new Lazy<ISettings>(() => settings);
             _solutionManager = new Lazy<IVsSolutionManager>(() => solutionManager);
             _logger = new Lazy<NuGet.Common.ILogger>(() => logger);

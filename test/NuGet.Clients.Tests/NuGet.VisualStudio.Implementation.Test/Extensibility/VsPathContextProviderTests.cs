@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
 using Moq;
 using NuGet.Common;
@@ -333,25 +334,52 @@ namespace NuGet.VisualStudio.Implementation.Test.Extensibility
             using (var testDirectory = TestDirectory.Create())
             {
                 var currentDirectory = Directory.GetCurrentDirectory();
-                
+
+                var projectUniqueName = Guid.NewGuid().ToString();
 
                 var solutionManager = new Mock<IVsSolutionManager>();
                 solutionManager
                     .Setup(x => x.SolutionDirectory)
                     .Returns(testDirectory.Path + "/slnFolder");
 
-                var asyncServiceProvider = new Mock<IAsyncServiceProvider>();
-                //    Mock.Of<IAsyncServiceProvider>(a =>
-                //    a.GetDTEAsync() == Mock.Of<EnvDTE.DTE>(z =>
-                //        z.Solution.Projects == Mock.Of<EnvDTE.Project>()
-                //    )
-                //);
+                var solutionObj = new Mock<IVsSolution>();
+                //IVsSolution pSolution = GetService(typeof(SVsSolution)) as IVsSolution;
 
-                object testObject = new object();
+                solutionObj.Object.GetProjectEnum((uint)__VSENUMPROJFLAGS.EPF_ALLPROJECTS, Guid.Empty, out var enumHierarchies);
 
-                asyncServiceProvider.Setup(s => s.GetServiceAsync(It.IsAny<Type>()))
-                             .ReturnsAsync(testObject);
+                //solutionManager.Object.
 
+                //var asyncServiceProvider = Mock.Of<IAsyncServiceProvider>();
+                ////    Mock.Of<IAsyncServiceProvider>(a =>
+                ////    a.GetDTEAsync() == Mock.Of<EnvDTE.DTE>(z =>
+                ////        z.Solution.Projects == Mock.Of<EnvDTE.Project>()
+                ////    )
+                ////);
+
+                //var mockProjects = Mock.Of<EnvDTE.Projects>();
+                //Mock.Get(mockProjects)
+                //    .Setup(x => x.)
+
+                //var mockSolution = Mock.Of<EnvDTE.Solution>();
+                //Mock.Get(mockSolution)
+                //    .Setup(x => x.Projects)
+                //    .Returns();
+
+                //var mockDte = Mock.Of<EnvDTE.DTE>();
+                //Mock.Get(mockDte)
+                //    .Setup(x => x.Solution)
+                //    .Returns(mockSolution);
+
+                //Mock.Get(asyncServiceProvider)
+                //    .Setup(x => x.GetDTEAsync())
+                //    .ReturnsAsync(EnvDTE.D)
+
+                //object testObject = new object();
+
+                //asyncServiceProvider.Setup(s => s.GetServiceAsync(It.IsAny<Type>()))
+                //             .ReturnsAsync(testObject);
+
+                //var thing = new VsPathContextProvider()
                 var target = new VsPathContextProvider(
                 Mock.Of<ISettings>(),
                 solutionManager.Object,
@@ -360,7 +388,7 @@ namespace NuGet.VisualStudio.Implementation.Test.Extensibility
                 asyncServiceProvider.Object);
 
                 
-                var projectUniqueName = Guid.NewGuid().ToString();
+                
 
                 //var project = new TestPackageReferenceProject(projectUniqueName);
                 

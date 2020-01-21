@@ -24,6 +24,8 @@ using NuGet.ProjectManagement.Projects;
 using NuGet.ProjectModel;
 using NuGet.VisualStudio.Implementation.Resources;
 
+using IVsSolution = Microsoft.VisualStudio.Shell.Interop.IVsSolution;
+
 namespace NuGet.VisualStudio
 {
     // Implementation of IVsPathContextProvider as a MEF-exported component.
@@ -35,21 +37,24 @@ namespace NuGet.VisualStudio
         private readonly IAsyncServiceProvider _asyncServiceprovider;
         private readonly Lazy<ISettings> _settings;
         private readonly Lazy<IVsSolutionManager> _solutionManager;
+        private readonly Lazy<IVsSolution> _vsSolution;
         private readonly Lazy<NuGet.Common.ILogger> _logger;
         private readonly Func<BuildIntegratedNuGetProject, Task<LockFile>> _getLockFileOrNullAsync;
 
         private readonly Lazy<INuGetProjectContext> _projectContext;
-        
+
 
         [ImportingConstructor]
         public VsPathContextProvider(
             Lazy<ISettings> settings,
             Lazy<IVsSolutionManager> solutionManager,
+            Lazy<IVsSolution> vsSolution,
             [Import("VisualStudioActivityLogger")]
             Lazy<NuGet.Common.ILogger> logger)
             : this(AsyncServiceProvider.GlobalProvider,
                   settings,
                   solutionManager,
+                  vsSolution,
                   logger)
         { }
 
@@ -57,9 +62,11 @@ namespace NuGet.VisualStudio
             IAsyncServiceProvider asyncServiceProvider,
             Lazy<ISettings> settings,
             Lazy<IVsSolutionManager> solutionManager,
+            Lazy<IVsSolution> vsSolution,
             Lazy<NuGet.Common.ILogger> logger)
         {
             _asyncServiceprovider = asyncServiceProvider ?? throw new ArgumentNullException(nameof(asyncServiceProvider));
+            _vsSolution = vsSolution ?? throw new ArgumentNullException(nameof(vsSolution));
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             _solutionManager = solutionManager ?? throw new ArgumentNullException(nameof(solutionManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -182,6 +189,10 @@ namespace NuGet.VisualStudio
             await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             var dte = await _asyncServiceprovider.GetDTEAsync();
+
+            //_solutionManager.Value.solution
+            _vsSolution.Value.GetProjectEnum((uint)Microsoft.VisualStudio.Shell.Interop.__VSENUMPROJFLAGS.EPF_ALLPROJECTS, Guid.Empty, out var enumHierarchies);
+
             var supportedProjects = dte.Solution.Projects.Cast<EnvDTE.Project>();
 
             foreach (var solutionProject in supportedProjects)

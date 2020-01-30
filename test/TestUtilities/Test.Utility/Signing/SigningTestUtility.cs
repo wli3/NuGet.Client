@@ -664,11 +664,20 @@ namespace Test.Utility.Signing
         //So if we use APIs above to verify the results of chain.build, we should use AssertOfflineRevocation 
         public static void AssertOfflineRevocation(IEnumerable<ILogMessage> issues, LogLevel logLevel)
         {
+            AssertOfflineRevocation(issues, logLevel, NuGetLogCode.NU3018);
+        }
+
+        public static void AssertOfflineRevocation(IEnumerable<ILogMessage> issues, LogLevel logLevel, NuGetLogCode code)
+        {
             string offlineRevocation;
 
             if (RuntimeEnvironmentHelper.IsWindows)
             {
+#if IS_DESKTOP
+                offlineRevocation = "The revocation function was unable to check revocation because the revocation server could not be reached.";
+#else
                 offlineRevocation = "The revocation function was unable to check revocation because the revocation server was offline";
+#endif
             }
             else if (RuntimeEnvironmentHelper.IsMacOSX)
             {
@@ -676,11 +685,11 @@ namespace Test.Utility.Signing
             }
             else
             {
-                offlineRevocation = "unable to get certificate CRL";
+                offlineRevocation = "The revocation function was unable to check revocation because the revocation server could not be reached.";
             }
 
             Assert.Contains(issues, issue =>
-                issue.Code == NuGetLogCode.NU3018 &&
+                issue.Code == code &&
                 issue.Level == logLevel &&
                 issue.Message.Contains(offlineRevocation));
         }
@@ -724,7 +733,7 @@ namespace Test.Utility.Signing
             {
                 revocationStatusUnknown = "unable to get certificate CRL";
             }
-            
+
             Assert.Contains(issues, issue =>
                 issue.Code == code &&
                 issue.Level == logLevel &&

@@ -40,16 +40,20 @@ namespace NuGet.Commands
             CompatibilityProfiles = new HashSet<FrameworkRuntimePair>();
             PackagesDirectory = dependencyProviders.GlobalPackages.RepositoryRoot;
             IsLowercasePackagesDirectory = true;
-
-            // Default to the project folder
-            RestoreOutputPath = Path.GetDirectoryName(Project.FilePath);
+            ProjectStyle = Project.RestoreMetadata?.ProjectStyle ?? ProjectStyle.Unknown;
+            // Project.json is special cased to put assets file and generated .props and targets in the project folder.
+            // Unknown is there mostly for test purposes.
+            RestoreOutputPath = ProjectStyle == ProjectStyle.ProjectJson || ProjectStyle == ProjectStyle.Unknown
+                ? Path.GetDirectoryName(Project.FilePath)
+                : Project.RestoreMetadata.OutputPath;
+            MSBuildProjectExtensionsPath = Project.RestoreMetadata?.OutputPath;
         }
 
         public DependencyGraphSpec DependencyGraphSpec { get; set; }
 
         public bool AllowNoOp { get; set; }
 
-        public SourceCacheContext CacheContext { get; set; }
+        public SourceCacheContext CacheContext { get; }
 
         public ILogger Log { get; set; }
 
@@ -143,17 +147,17 @@ namespace NuGet.Commands
         /// <summary>
         /// Defines the paths and behavior for outputs
         /// </summary>
-        public ProjectStyle ProjectStyle { get; set; } = ProjectStyle.Unknown;
+        public ProjectStyle ProjectStyle { get; }
 
         /// <summary>
         /// Restore output path
         /// </summary>
-        public string RestoreOutputPath { get; set; }
+        public string RestoreOutputPath { get; }
 
         /// <summary>
         /// MSBuildProjectExtensionsPath
         /// </summary>
-        public string MSBuildProjectExtensionsPath { get; set; }
+        public string MSBuildProjectExtensionsPath { get; }
 
         /// <summary>
         /// Compatibility options

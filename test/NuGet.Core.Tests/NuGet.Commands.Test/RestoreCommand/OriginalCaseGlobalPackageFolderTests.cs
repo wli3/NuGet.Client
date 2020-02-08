@@ -230,7 +230,8 @@ namespace NuGet.Commands.Test
             string source,
             PackageIdentity identity,
             FileInfo packagePath,
-            TestLogger logger)
+            TestLogger logger,
+            NuGetFramework nuGetFramework = null)
         {
             var libraryRange = new LibraryRange { Name = identity.Id };
             var libraryIdentity = new LibraryIdentity(identity.Id, identity.Version, LibraryType.Package);
@@ -275,7 +276,7 @@ namespace NuGet.Commands.Test
                 },
                 new TestRemoteWalkContext(),
                 logger,
-                FrameworkConstants.CommonFrameworks.NetStandard16);
+                nuGetFramework ?? FrameworkConstants.CommonFrameworks.NetStandard16);
 
             return graph;
         }

@@ -1600,7 +1600,7 @@ namespace NuGet.Packaging {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The reply from the timestamp server was invalid..
+        ///   Looks up a localized string similar to The reply from the timestamp server was invalid.HTTP status code &apos;{0}&apos; (&apos;{1}&apos;)..
         /// </summary>
         internal static string TimestampServiceRespondedInvalidFormat {
             get {

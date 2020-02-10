@@ -72,7 +72,12 @@ namespace NuGet.Packaging.Signing
 
                     if (!string.Equals(httpResponse.Content.Headers.ContentType.MediaType, "application/timestamp-response", StringComparison.OrdinalIgnoreCase))
                     {
-                        throw new CryptographicException(Strings.TimestampServiceRespondedInvalidFormat);
+                            throw new CryptographicException(
+                            string.Format(
+                                CultureInfo.CurrentCulture,
+                                Strings.TimestampServiceRespondedInvalidFormat,
+                                (int)httpResponse.StatusCode,
+                                httpResponse.ReasonPhrase + ":" + httpResonse.ToString()));
                     }
 
                     var data = await httpResponse.Content.ReadAsByteArrayAsync();

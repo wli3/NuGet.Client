@@ -77,7 +77,7 @@ namespace NuGet.Packaging.Signing
                                 CultureInfo.CurrentCulture,
                                 Strings.TimestampServiceRespondedInvalidFormat,
                                 (int)httpResponse.StatusCode,
-                                httpResponse.ReasonPhrase + ":" + httpResonse.ToString()));
+                                httpResponse.ReasonPhrase + ":" + httpResponse.ToString()));
                     }
 
                     var data = await httpResponse.Content.ReadAsByteArrayAsync();

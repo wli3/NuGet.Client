@@ -30,7 +30,7 @@ namespace NuGet.Packaging.Signing
             _rfc3161TimestampRequest = System.Security.Cryptography.Pkcs.Rfc3161TimestampRequest.CreateFromHash(
                 new ReadOnlyMemory<byte>(messageHash),
                 hashAlgorithm,
-                requestedPolicyId,
+                new Oid(Oids.Pkcs7Data),
                 nonce,
                 requestSignerCertificates,
                 extensions);

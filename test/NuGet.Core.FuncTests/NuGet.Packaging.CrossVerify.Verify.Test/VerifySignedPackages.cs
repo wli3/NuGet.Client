@@ -8,17 +8,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NuGet.Common;
+using NuGet.Packaging.FuncTest;
 using NuGet.Packaging.Signing;
 using NuGet.Test.Utility;
-using NuGet.Packaging.FuncTest;
-using Org.BouncyCastle.Asn1;
-using Org.BouncyCastle.Asn1.X509;
-using Org.BouncyCastle.Crypto.Parameters;
-using Test.Utility;
-using Test.Utility.Signing;
 using Xunit;
-using BcAccuracy = Org.BouncyCastle.Asn1.Tsp.Accuracy;
-using DotNetUtilities = Org.BouncyCastle.Security.DotNetUtilities;
 
 namespace NuGet.Packaging.CrossVerify.Verify.Test
 {
@@ -86,7 +79,7 @@ namespace NuGet.Packaging.CrossVerify.Verify.Test
         {
             // Arrange
             var caseName = "AT";
-            
+
             var settings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy();
 
             var signedPackageFolder = Path.Combine(dir, caseName, "package");

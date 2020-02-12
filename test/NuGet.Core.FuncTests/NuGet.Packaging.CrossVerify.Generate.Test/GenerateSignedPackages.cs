@@ -1,24 +1,12 @@
 #if IS_SIGNING_SUPPORTED
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography.X509Certificates;
-using System.Threading;
 using System.Threading.Tasks;
-using FluentAssertions;
-using NuGet.Common;
-using NuGet.Packaging.Signing;
-using NuGet.Test.Utility;
 using NuGet.Packaging.FuncTest;
-using Org.BouncyCastle.Asn1;
-using Org.BouncyCastle.Asn1.X509;
-using Org.BouncyCastle.Crypto.Parameters;
-using Test.Utility;
+using NuGet.Test.Utility;
 using Test.Utility.Signing;
 using Xunit;
-using BcAccuracy = Org.BouncyCastle.Asn1.Tsp.Accuracy;
-using DotNetUtilities = Org.BouncyCastle.Security.DotNetUtilities;
 namespace NuGet.Packaging.CrossVerify.Generate.Test
 {
     [Collection(CrossVerifyCollection.Name)]
@@ -371,18 +359,6 @@ namespace NuGet.Packaging.CrossVerify.Generate.Test
                 var repoTsaRootCertbytes = _repoTSARootCert.RawData;
                 File.WriteAllBytes(repoTsaRootCertPath.FullName, repoTsaRootCertbytes);
 
-            }
-        }
-        private string GetFileList(string certfolder, string pkgfolder)
-        {
-            var sb = new StringBuilder();
-            foreach (string cert in Directory.GetFiles(certfolder))
-            {
-                sb.AppendLine(cert);
-            }
-            foreach (string pkg in Directory.GetFiles(pkgfolder))
-            {
-                sb.AppendLine(pkg);
             }
         }
     }

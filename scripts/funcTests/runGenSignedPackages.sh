@@ -16,29 +16,21 @@ SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 DIR=$SCRIPTDIR/../../
 pushd $DIR
 
-NuGetExe="$DIR/.nuget/nuget.exe"
-#Get NuGet.exe
-curl -o $NuGetExe https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
-
 mono --version
-
-#restore solution packages
-mono $NuGetExe restore  "$DIR/.nuget/packages.config" -SolutionDirectory "$DIR"
-if [ $? -ne 0 ]; then
-	echo "Restore failed!!"
-	exit 1
-fi
 
 # Download the CLI install script to cli
 echo "Installing dotnet CLI"
 mkdir -p cli
-curl -o cli/dotnet-install.sh https://dot.net/v1/dotnet-install.sh
+# Issue 8936 - DISABLED TEMPORARILY curl -o cli/dotnet-install.sh -L https://dot.net/v1/dotnet-install.sh
 
 # Run install.sh
-chmod +x cli/dotnet-install.sh
+# Issue 8936 chmod +x cli/dotnet-install.sh
+chmod +x scripts/funcTests/dotnet-install.sh
 
 # Get recommended version for bootstrapping testing version
-cli/dotnet-install.sh -i cli -NoPath
+# Issue 8936 - DISABLED TEMPORARILY cli/dotnet-install.sh -i cli -c 2.2
+scripts/funcTests/dotnet-install.sh -i cli -c 2.2 -NoPath
+# cli/dotnet-install.sh -runtime dotnet -Channel 2.2 -i cli -NoPath
 
 DOTNET="$(pwd)/cli/dotnet"
 
@@ -75,6 +67,13 @@ echo "Deleting .NET Core temporary files"
 rm -rf "/tmp/"dotnet.*
 
 echo "================="
+
+#restore solution packages
+$DOTNET msbuild -t:restore "$DIR/build/bootstrap.proj"
+if [ $? -ne 0 ]; then
+	echo "Restore failed!!"
+	exit 1
+fi
 
 # init the repo
 

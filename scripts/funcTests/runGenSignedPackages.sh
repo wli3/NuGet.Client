@@ -52,7 +52,7 @@ do
 	fi
 	echo "Channel is: $Channel"
 	echo "Version is: $Version"
-	cli/dotnet-install.sh -i cli -c $Channel -v $Version -nopath
+	scripts/funcTests/dotnet-install.sh -i cli -c $Channel -v $Version -nopath
 
 	# Display current version
 	$DOTNET --version

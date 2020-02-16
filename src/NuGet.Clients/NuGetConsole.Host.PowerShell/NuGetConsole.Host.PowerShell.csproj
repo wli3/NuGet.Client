@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build">
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'README.md'))\build\common.legacy.props" />
   <PropertyGroup>
@@ -131,6 +131,11 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" NoWarn="NU1605" />
+	<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers">
+		<Version>2.9.8</Version>
+		<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		<PrivateAssets>all</PrivateAssets>
+	</PackageReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="Scripts\about_NuGet.PackageManagement.PowerShellCmdlets.help.txt" />
@@ -148,13 +153,11 @@
     <LocTargets>$(LocTargets);GetPowerShellCmdletsHelpFile</LocTargets>
     <GetLocalizedFilesForVsixDependsOn>GetLocalizedPowerShellCmdletHelpFile</GetLocalizedFilesForVsixDependsOn>
   </PropertyGroup>
-
   <Target Name="BeforeBuild">
     <ItemGroup>
       <PowerShellScripts Include="$(MSBuildProjectDirectory)\Scripts\*.ps*" Exclude="$(MSBuildProjectDirectory)\Scripts\NuGet.psd1" />
     </ItemGroup>
-    <Copy SourceFiles="@(PowerShellScripts)"
-          DestinationFolder="$(ArtifactsDirectory)Scripts" />
+    <Copy SourceFiles="@(PowerShellScripts)" DestinationFolder="$(ArtifactsDirectory)Scripts" />
     <Exec Command="powershell.exe -ExecutionPolicy Bypass &quot;$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'README.md'))\build\UpdateNuGetModuleManifest.ps1&quot; -NuGetPackageManagementPowerShellCmdletsFilePath &quot;$(ArtifactsDirectory)NuGet.PackageManagement.PowerShellCmdlets\$(VisualStudioVersion)\bin\$(Configuration)\NuGet.PackageManagement.PowerShellCmdlets.dll&quot; -ManifestModuleSourceFilePath &quot;$(MSBuildProjectDirectory)\Scripts\NuGet.psd1&quot; -ManifestModuleDestinationFilePath &quot;$(ArtifactsDirectory)Scripts\NuGet.psd1&quot;" />
   </Target>
   <Target Name="GetScriptsForSigning" Returns="@(ScriptsToSign)">

@@ -30,6 +30,13 @@ namespace NuGet.PackageManagement.VisualStudio
         // Non-unique names index. We need another dictionary for short names since there may be more than project name per short name
         private readonly Dictionary<string, HashSet<ProjectNames>> _shortNameCache = new Dictionary<string, HashSet<ProjectNames>>(StringComparer.OrdinalIgnoreCase);
 
+        //TODO: for debugging only (remove)
+        public ProjectSystemCache()
+        {
+
+        }
+
+
         // Returns the current value of _isCacheDirty.
         public int IsCacheDirty
         {
@@ -477,8 +484,25 @@ namespace NuGet.PackageManagement.VisualStudio
         {
             public NuGetProject NuGetProject { get; set; }
             public IVsProjectAdapter VsProjectAdapter { get; set; }
-            public DependencyGraphSpec ProjectRestoreInfo { get; set; }
+
+            //TODO: remove field
+            private DependencyGraphSpec _projectRestoreInfo;
+            public DependencyGraphSpec ProjectRestoreInfo {
+                get
+                {
+                    return _projectRestoreInfo;
+                }
+                set
+                {
+                    _projectRestoreInfo = value;
+                }
+            }
             public ProjectNames ProjectNames { get; set; }
+
+            public CacheEntry()
+            {
+
+            }
         }
 
         private void FireCacheUpdatedEvent(string projectFullName)

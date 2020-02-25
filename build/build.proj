@@ -403,4 +403,10 @@
     <Message Text="Desktop $(TestResultsFileName) tests passed! Results: $(TestResultsXunit)" Condition=" '$(SkipDesktopAssemblies)' != 'true' AND '$(DesktopTestErrorCode)' == '0' " Importance="High" />
     <Message Text="NETCore $(TestResultsFileName) tests passed! Results: $(TestResultsVsts)" Condition=" '$(SkipCoreAssemblies)' != 'true' AND '$(VSTestErrorCode)' == '0' " Importance="High" />
   </Target>
+
+
+  <Target Name="GenerateDoc">
+    <Message Text="@(AllSolutionProjects)" Importance="High" />
+    <XmlPeek Query="/Project/Description" XmlInputPath="@(AllSolutionProjects)" />
+  </Target>
 </Project>

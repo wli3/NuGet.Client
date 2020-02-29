@@ -40,7 +40,6 @@ Copyright (c) .NET Foundation. All rights reserved.
     <IsInnerBuild Condition="'$(TargetFramework)' != '' AND '$(TargetFrameworks)' != ''">true</IsInnerBuild>
     <SymbolPackageFormat Condition="'$(SymbolPackageFormat)' == ''">symbols.nupkg</SymbolPackageFormat>
     <AddPriFileDependsOn Condition="'$(MicrosoftPortableCurrentVersionPropsHasBeenImported)' == 'true'">DeterminePortableBuildCapabilities</AddPriFileDependsOn>
-    <NuspecOutputPath Condition="'$(NuspecOutputPath)' == ''">$(BaseIntermediateOutputPath)$(Configuration)\</NuspecOutputPath>
     <WarnOnPackingNonPackableProject Condition="'$(WarnOnPackingNonPackableProject)' == ''">false</WarnOnPackingNonPackableProject>
     <ImportNuGetBuildTasksPackTargetsFromSdk Condition="'$(ImportNuGetBuildTasksPackTargetsFromSdk)' == ''">false</ImportNuGetBuildTasksPackTargetsFromSdk>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>.dll; .exe; .winmd; .json; .pri; .xml; $(AllowedOutputExtensionsInPackageBuildOutputFolder)</AllowedOutputExtensionsInPackageBuildOutputFolder>
@@ -48,6 +47,13 @@ Copyright (c) .NET Foundation. All rights reserved.
     <AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder Condition="'$(SymbolPackageFormat)' == 'snupkg'">.pdb</AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder>
     <SuppressDependenciesWhenPacking Condition="'$(SuppressDependenciesWhenPacking)' == ''">false</SuppressDependenciesWhenPacking>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <RestoreOutputPath Condition="'$(RestoreOutputPath)' == ''">$(MSBuildProjectExtensionsPath)</RestoreOutputPath>
+    <PackageOutputPath Condition="'$(PackageOutputPath)' == ''">$(BaseOutputPath)$(Configuration)\</PackageOutputPath>
+    <NuspecOutputPath Condition="'$(NuspecOutputPath)' == ''">$(BaseIntermediateOutputPath)$(Configuration)\</NuspecOutputPath>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(NoBuild)' == 'true' or '$(GeneratePackageOnBuild)' == 'true'">
     <GenerateNuspecDependsOn>$(GenerateNuspecDependsOn)</GenerateNuspecDependsOn>
   </PropertyGroup>
@@ -145,10 +151,6 @@ Copyright (c) .NET Foundation. All rights reserved.
   <Target Name="_CalculateInputsOutputsForPack" DependsOnTargets="_GetOutputItemsFromPack">
     <PropertyGroup Condition="$(ContinuePackingAfterGeneratingNuspec) == '' ">
       <ContinuePackingAfterGeneratingNuspec>false</ContinuePackingAfterGeneratingNuspec>
-    </PropertyGroup>
-    <PropertyGroup>
-      <PackageOutputPath Condition=" '$(PackageOutputPath)' == '' ">$(OutputPath)</PackageOutputPath>
-      <RestoreOutputPath Condition=" '$(RestoreOutputPath)' == '' " >$(MSBuildProjectExtensionsPath)</RestoreOutputPath>
     </PropertyGroup>
 
     <ConvertToAbsolutePath Paths="$(NuspecOutputPath)">
@@ -282,8 +284,8 @@ Copyright (c) .NET Foundation. All rights reserved.
       <PackProjectInputFile>$(MSBuildProjectFullPath)</PackProjectInputFile>
     </PropertyGroup>
   </Target>
-  
-  <Target Name="_GetProjectReferenceVersions" 
+
+  <Target Name="_GetProjectReferenceVersions"
           Condition="'$(NuspecFile)' == ''"
           DependsOnTargets="_CalculateInputsOutputsForPack;$(GetPackageVersionDependsOn)">
     <ConvertToAbsolutePath Paths="$(RestoreOutputPath)">
@@ -407,7 +409,7 @@ Copyright (c) .NET Foundation. All rights reserved.
       </TfmSpecificFrameworkAssemblyReferences>
     </ItemGroup>
   </Target>
-  
+
   <Target Name="_GetBuildOutputFilesWithTfm"
           DependsOnTargets="BuiltProjectOutputGroup;DocumentationProjectOutputGroup;SatelliteDllsProjectOutputGroup;_AddPriFileToPackBuildOutput;$(TargetsForTfmSpecificBuildOutput)"
           Returns="@(BuildOutputInPackage)">

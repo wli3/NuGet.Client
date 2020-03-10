@@ -13,7 +13,6 @@ namespace Test.Utility.Signing
             // According to https://github.com/dotnet/runtime/blob/master/docs/design/features/cross-platform-cryptography.md#x509store   
             // use different approaches for Windows, Mac and Linux.
             return (RuntimeEnvironmentHelper.IsWindows || RuntimeEnvironmentHelper.IsMacOSX) ? StoreLocation.LocalMachine : StoreLocation.CurrentUser;
-            //return StoreLocation.LocalMachine;
         }
     }
 }

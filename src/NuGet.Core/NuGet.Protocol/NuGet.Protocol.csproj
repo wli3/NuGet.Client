@@ -50,7 +50,6 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(IsCore)' == 'true' ">
-  <ItemGroup Condition=" '$(TargetFramework)' == '$(NetStandardVersion)' ">
     <PackageReference Include="System.Dynamic.Runtime" />
   </ItemGroup>
 

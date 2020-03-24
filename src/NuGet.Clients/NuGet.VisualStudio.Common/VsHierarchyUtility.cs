@@ -42,6 +42,24 @@ namespace NuGet.VisualStudio
             return hierarchy;
         }
 
+        public static IVsHierarchy ToVsHierarchy(string projectUniqueName)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            IVsHierarchy hierarchy;
+
+            // Get the vs solution
+            var solution = ServiceLocator.GetInstance<IVsSolution>();
+            var hr = solution.GetProjectOfUniqueName(projectUniqueName, out hierarchy);
+
+            if (hr != VSConstants.S_OK)
+            {
+                Marshal.ThrowExceptionForHR(hr);
+            }
+
+            return hierarchy;
+        }
+
         public static string GetProjectPath(IVsHierarchy project)
         {
             ThreadHelper.ThrowIfNotOnUIThread();

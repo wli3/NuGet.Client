@@ -241,6 +241,16 @@
       <NgenArchitecture>X86</NgenArchitecture>
       <NgenPriority>$(NgenPriorityDefault)</NgenPriority>
     </ProjectReference>
+    <ProjectReference Include="..\NuGet.VisualStudio.Contracts\NuGet.VisualStudio.Contracts.csproj">
+      <Project>{e0839725-f8fe-4bc6-be6b-ff56b4ffe280}</Project>
+      <Name>NuGet.VisualStudio.Contracts</Name>
+      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup</IncludeOutputGroupsInVSIX>
+      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup</IncludeOutputGroupsInVSIXLocalOnly>
+      <Ngen>True</Ngen>
+      <NgenApplication>$(NgenApplicationDefault)</NgenApplication>
+      <NgenArchitecture>X86</NgenArchitecture>
+      <NgenPriority>$(NgenPriorityDefault)</NgenPriority>
+    </ProjectReference>
     <ProjectReference Include="..\NuGet.VisualStudio.Implementation\NuGet.VisualStudio.Implementation.csproj">
       <Project>{9623cf30-192c-4864-b419-29649169ae30}</Project>
       <Name>NuGet.VisualStudio.Implementation</Name>
@@ -323,6 +333,7 @@
     <PackageReference Include="Lucene.Net" ExcludeAssets="all" />
     <PackageReference Include="Newtonsoft.Json" NoWarn="NU1605" />
     <PackageReference Include="Microsoft.ServiceHub.Framework" NoWarn="NU1605"/>
+    <PackageReference Include="Microsoft.VSSDK.BuildTools" PrivateAssets="All" GeneratePathProperty="true" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="eula.rtf">
@@ -352,9 +363,6 @@
       </ItemGroup>
     </Otherwise>
   </Choose>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="$(VSSDKBuildToolsVersion)" PrivateAssets="All" GeneratePathProperty="true" />
-  </ItemGroup>
   <Import Project="$(BuildCommonDirectory)common.targets" />
   <Import Project="$(BuildCommonDirectory)embedinterop.targets" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

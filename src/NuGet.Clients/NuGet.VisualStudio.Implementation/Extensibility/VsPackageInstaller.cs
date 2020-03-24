@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using EnvDTE;
 using Microsoft.VisualStudio.ProjectSystem;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
 using NuGet.Common;
 using NuGet.Configuration;
@@ -23,6 +24,7 @@ using NuGet.ProjectManagement;
 using NuGet.Protocol.Core.Types;
 using NuGet.Resolver;
 using NuGet.Versioning;
+using NuGet.VisualStudio.Contracts;
 using NuGet.VisualStudio.Implementation.Resources;
 using Task = System.Threading.Tasks.Task;
 
@@ -30,7 +32,7 @@ namespace NuGet.VisualStudio
 {
     [Export(typeof(IVsPackageInstaller))]
     [Export(typeof(IVsPackageInstaller2))]
-    public class VsPackageInstaller : IVsPackageInstaller2
+    public class VsPackageInstaller : IVsPackageInstaller2, INuGetPackageInstaller
     {
         private readonly ISourceRepositoryProvider _sourceRepositoryProvider;
         private readonly ISettings _settings;
@@ -68,21 +70,42 @@ namespace NuGet.VisualStudio
                 NuGetUIThreadHelper.JoinableTaskFactory.Run(async () =>
                 {
                     await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
                     var vsHierarchy = VsHierarchyUtility.ToVsHierarchy(project);
-                    if (vsHierarchy != null &&
-                        VsHierarchyUtility.IsCPSCapabilityComplaint(vsHierarchy))
-                    {
-                        // Lazy load the CPS enabled JoinableTaskFactory for the UI.
-                        NuGetUIThreadHelper.SetJoinableTaskFactoryFromService(ProjectServiceAccessor.Value as IProjectServiceAccessor);
-
-                        PumpingJTF = new PumpingJTF(NuGetUIThreadHelper.JoinableTaskFactory);
-                        _isCPSJTFLoaded = true;
-                    }
+                    InitializeCPSPumpingJTF(vsHierarchy);
                 });
             }
 
             PumpingJTF.Run(asyncTask);
+        }
+
+        private async Task RunJTFWithCorrectContextAsync(string projectUniqueName, Func<Task> asyncTask)
+        {
+            if (!_isCPSJTFLoaded)
+            {
+                // TODO NK - Should the initialization be wrapped in a JTF instance?
+                NuGetUIThreadHelper.JoinableTaskFactory.Run(async () =>
+                {
+                    await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    var vsHierarchy = VsHierarchyUtility.ToVsHierarchy(projectUniqueName);
+                    InitializeCPSPumpingJTF(vsHierarchy);
+                });
+            }
+
+            await PumpingJTF.RunAsync(asyncTask);
+        }
+
+        private void InitializeCPSPumpingJTF(IVsHierarchy vsHierarchy)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+            if (vsHierarchy != null &&
+                VsHierarchyUtility.IsCPSCapabilityComplaint(vsHierarchy))
+            {
+                // Lazy load the CPS enabled JoinableTaskFactory for the UI.
+                NuGetUIThreadHelper.SetJoinableTaskFactoryFromService(ProjectServiceAccessor.Value as IProjectServiceAccessor);
+
+                PumpingJTF = new PumpingJTF(NuGetUIThreadHelper.JoinableTaskFactory);
+                _isCPSJTFLoaded = true;
+            }
         }
 
         public void InstallLatestPackage(
@@ -137,12 +160,27 @@ namespace NuGet.VisualStudio
                 ignoreDependencies: ignoreDependencies));
         }
 
+        // Calls from the sync APIs end up here.
         private Task InstallPackageAsync(string source, Project project, string packageId, NuGetVersion version, bool includePrerelease, bool ignoreDependencies)
         {
-            IEnumerable<string> sources = null;
+            (IEnumerable<string> sources, List<PackageIdentity> toInstall, VSAPIProjectContext projectContext) = PrepForInstallation(source, packageId, version, isAllRespected: false);
+            Task<NuGetProject> getNuGetProjectAsync(IVsSolutionManager vsSolutionManager) => GetNuGetProjectAsync(vsSolutionManager, project, projectContext);
+            return InstallInternalAsync(getNuGetProjectAsync, toInstall, GetSources(sources), projectContext, includePrerelease, ignoreDependencies, CancellationToken.None);
+        }
 
+        // Calls from the async APIs end up here.
+        private Task InstallPackageAsync(string source, string projectSafeName, string packageId, NuGetVersion version, bool includePrerelease, bool ignoreDependencies)
+        {
+            (IEnumerable<string> sources, List<PackageIdentity> toInstall, VSAPIProjectContext projectContext) = PrepForInstallation(source, packageId, version, isAllRespected: false);
+            Task<NuGetProject> getNuGetProjectAsync(IVsSolutionManager vsSolutionManager) => GetNuGetProjectAsync(vsSolutionManager, projectSafeName);
+            return InstallInternalAsync(getNuGetProjectAsync, toInstall, GetSources(sources), projectContext, includePrerelease, ignoreDependencies, CancellationToken.None);
+        }
+
+        private (IEnumerable<string>, List<PackageIdentity> toInstall, VSAPIProjectContext projectContext) PrepForInstallation(string source, string packageId, NuGetVersion version, bool isAllRespected)
+        {
+            string[] sources = null;
             if (!string.IsNullOrEmpty(source) &&
-                !StringComparer.OrdinalIgnoreCase.Equals("All", source)) // "All" was supported in V2
+                !(isAllRespected && StringComparer.OrdinalIgnoreCase.Equals("All", source))) // "All" was supported in V2
             {
                 sources = new[] { source };
             }
@@ -151,7 +189,6 @@ namespace NuGet.VisualStudio
             {
                 new PackageIdentity(packageId, version)
             };
-
             var projectContext = new VSAPIProjectContext
             {
                 PackageExtractionContext = new PackageExtractionContext(
@@ -160,8 +197,17 @@ namespace NuGet.VisualStudio
                     ClientPolicyContext.GetClientPolicy(_settings, NullLogger.Instance),
                     NullLogger.Instance)
             };
+            return (sources, toInstall, projectContext);
+        }
 
-            return InstallInternalAsync(project, toInstall, GetSources(sources), projectContext, includePrerelease, ignoreDependencies, CancellationToken.None);
+        private static async Task<NuGetProject> GetNuGetProjectAsync(IVsSolutionManager vsSolutionManager, Project project, INuGetProjectContext projectContext)
+        {
+            return await vsSolutionManager.GetOrCreateProjectAsync(project, projectContext);
+        }
+
+        private static async Task<NuGetProject> GetNuGetProjectAsync(IVsSolutionManager vsSolutionManager, string projectSafeName)
+        {
+            return await vsSolutionManager.GetNuGetProjectAsync(projectSafeName);
         }
 
         public void InstallPackage(IPackageRepository repository, Project project, string packageId, string version, bool ignoreDependencies, bool skipAssemblyReferences)
@@ -221,9 +267,11 @@ namespace NuGet.VisualStudio
                             ClientPolicyContext.GetClientPolicy(_settings, NullLogger.Instance),
                             NullLogger.Instance)
                     };
+                    Task<NuGetProject> getNuGetProjectAsync(IVsSolutionManager vsSolutionManager) => GetNuGetProjectAsync(vsSolutionManager, project, projectContext);
+
 
                     await InstallInternalAsync(
-                        project,
+                        getNuGetProjectAsync,
                         toInstall,
                         repoProvider,
                         projectContext,
@@ -280,8 +328,9 @@ namespace NuGet.VisualStudio
                             NullLogger.Instance)
                     };
 
+                    Task<NuGetProject> getNuGetProjectAsync(IVsSolutionManager vsSolutionManager) => GetNuGetProjectAsync(vsSolutionManager, project, projectContext);
                     return InstallInternalAsync(
-                        project,
+                        getNuGetProjectAsync,
                         toInstall,
                         repoProvider,
                         projectContext,
@@ -289,6 +338,30 @@ namespace NuGet.VisualStudio
                         ignoreDependencies: ignoreDependencies,
                         token: CancellationToken.None);
                 });
+        }
+
+        public async Task InstallPackageAsync(string source, string projectUniqueName, string packageId, string version, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            NuGetVersion nugetVersion = null;
+            if (version != null)
+            {
+                NuGetVersion.TryParse(version, out nugetVersion);
+            }
+            // TODO NK - Make sure all the exceptions are covered, and enumerated.
+            await RunJTFWithCorrectContextAsync(
+                projectUniqueName,
+                () => InstallPackageAsync(source, projectUniqueName, packageId, nugetVersion, includePrerelease: true, ignoreDependencies: false));
+        }
+
+        public async Task InstallLatestPackageAsync(string source, string projectUniqueName, string packageId, bool includePrerelease, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            await RunJTFWithCorrectContextAsync(
+                projectUniqueName,
+                () => InstallPackageAsync(source, projectUniqueName, packageId, version: null, includePrerelease: includePrerelease, ignoreDependencies: false));
         }
 
         private static List<PackageIdentity> GetIdentitiesFromDict(IDictionary<string, string> packageVersions)
@@ -377,7 +450,7 @@ namespace NuGet.VisualStudio
         /// Internal install method. All installs from the VS API and template wizard end up here.
         /// </summary>
         internal async Task InstallInternalAsync(
-            Project project,
+            Func<IVsSolutionManager, Task<NuGetProject>> getProjectAsync,
             List<PackageIdentity> packages,
             ISourceRepositoryProvider repoProvider,
             VSAPIProjectContext projectContext,
@@ -402,8 +475,8 @@ namespace NuGet.VisualStudio
 
                 var packageManager = CreatePackageManager(repoProvider);
 
-                // find the project
-                var nuGetProject = await _solutionManager.GetOrCreateProjectAsync(project, projectContext);
+                // Get the project - TODO NK - what if we can't get it.
+                NuGetProject nuGetProject = await getProjectAsync(_solutionManager);
 
                 var packageManagementFormat = new PackageManagementFormat(_settings);
                 // 1 means PackageReference
@@ -414,7 +487,7 @@ namespace NuGet.VisualStudio
                 if (preferPackageReference &&
                    (nuGetProject is MSBuildNuGetProject) &&
                    !(await nuGetProject.GetInstalledPackagesAsync(token)).Any() &&
-                   await NuGetProjectUpgradeUtility.IsNuGetProjectUpgradeableAsync(nuGetProject, project, needsAPackagesConfig: false))
+                   await NuGetProjectUpgradeUtility.IsNuGetProjectUpgradeableAsync(nuGetProject, needsAPackagesConfig: false))
                 {
                     nuGetProject = await _solutionManager.UpgradeProjectToPackageReferenceAsync(nuGetProject);
                 }
@@ -422,12 +495,18 @@ namespace NuGet.VisualStudio
                 // install the package
                 foreach (var package in packages)
                 {
-                    var installedPackageReferences = await nuGetProject.GetInstalledPackagesAsync(token);
-                    // Check if the package is already installed
-                    if (package.Version != null &&
-                        PackageServiceUtilities.IsPackageInList(installedPackageReferences, package.Id, package.Version))
+                    if(package.Version != null)
                     {
+                        var installedPackages = await nuGetProject.GetInstalledPackagesAsync(CancellationToken.None);
+                        // TODO NK - This can be simplified.
+                        var isInstalled = installedPackages.Any(p =>
+                        StringComparer.OrdinalIgnoreCase.Equals(p.PackageIdentity.Id, package.Id) &&
+                        VersionComparer.VersionRelease.Equals(p.PackageIdentity.Version, package.Version));
+
+                        if (isInstalled)
+                        {
                             continue;
+                        }
                     }
 
                     // Perform the install

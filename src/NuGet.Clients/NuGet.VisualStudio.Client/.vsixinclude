@@ -10,7 +10,11 @@ NuGet.VisualStudio.dll
 NuGet.VisualStudio.Common.dll
 NuGet.VisualStudio.Interop.dll
 NuGet.VisualStudio.Implementation.dll
+<<<<<<< HEAD
 NuGet.VisualStudio.OnlineEnvironment.Client.dll
+=======
+NuGet.VisualStudio.Contracts.dll
+>>>>>>> [skip ci] asychronous package installer installation
 
 # MS delay signed assemblies
 Microsoft.Build.NuGetSdkResolver.dll

@@ -1,10 +1,12 @@
-# assemblies not to be included in VSIX
-
 Ben.Demystifier.dll
 ICSharpCode.SharpZipLib.dll
 MessagePack.Annotations.dll
 MessagePack.dll
 Microsoft.Bcl.AsyncInterfaces.dll
+<<<<<<< HEAD
+=======
+Microsoft.IdentityModel.Clients.ActiveDirectory.dll
+>>>>>>> [skip ci] asychronous package installer installation
 Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll
 Microsoft.IdentityModel.Clients.ActiveDirectory.dll
 Microsoft.IdentityModel.JsonWebTokens.dll
@@ -13,11 +15,11 @@ Microsoft.IdentityModel.Tokens.dll
 Microsoft.Internal.VisualStudio.Shell.Embeddable.dll
 Microsoft.ServiceHub.Framework.dll
 Microsoft.ServiceHub.Framework.resources.dll
+Microsoft.TeamFoundation.Build2.WebApi.dll
 Microsoft.TeamFoundation.Build.Client.dll
 Microsoft.TeamFoundation.Build.Client.resources.dll
 Microsoft.TeamFoundation.Build.Common.dll
 Microsoft.TeamFoundation.Build.Common.resources.dll
-Microsoft.TeamFoundation.Build2.WebApi.dll
 Microsoft.TeamFoundation.Client.dll
 Microsoft.TeamFoundation.Client.resources.dll
 Microsoft.TeamFoundation.Common.dll
@@ -81,7 +83,10 @@ Microsoft.VisualStudio.Services.TestManagement.TestPlanning.WebApi.dll
 Microsoft.VisualStudio.Services.TestResults.WebApi.dll
 Microsoft.VisualStudio.Services.WebApi.dll
 Microsoft.VisualStudio.Services.WebApi.resources.dll
+<<<<<<< HEAD
 Microsoft.VisualStudio.Setup.Configuration.Interop.dll
+=======
+>>>>>>> [skip ci] asychronous package installer installation
 Microsoft.VisualStudio.Shell.Embeddable.dll
 Microsoft.VisualStudio.Shell.Interop.16.0.DesignTime.dll
 Microsoft.VisualStudio.Shell.Interop.16.3.DesignTime.dll
@@ -95,7 +100,10 @@ Microsoft.Win32.Registry.dll
 Nerdbank.Streams.dll
 System.Buffers.dll
 System.IO.Pipelines.dll
+<<<<<<< HEAD
 System.IdentityModel.Tokens.Jwt.dll
+=======
+>>>>>>> [skip ci] asychronous package installer installation
 System.Memory.dll
 System.Net.Http.Formatting.dll
 System.Numerics.Vectors.dll

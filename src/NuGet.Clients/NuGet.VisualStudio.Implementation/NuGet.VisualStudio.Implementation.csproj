@@ -29,6 +29,8 @@
     <ProjectReference Include="..\NuGet.PackageManagement.VisualStudio\NuGet.PackageManagement.VisualStudio.csproj" />
     <ProjectReference Include="..\NuGet.VisualStudio\NuGet.VisualStudio.csproj" />
     <ProjectReference Include="..\NuGet.VisualStudio.Common\NuGet.VisualStudio.Common.csproj" />
+    <ProjectReference Include="..\NuGet.VisualStudio.Contracts\NuGet.VisualStudio.Contracts.csproj" />
+
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" NoWarn="NU1605" />

@@ -17,6 +17,7 @@ using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
+using NuGetVSExtension.BrokeredServices;
 using NuGet.Options;
 using NuGet.PackageManagement;
 using NuGet.PackageManagement.UI;
@@ -30,6 +31,12 @@ using ISettings = NuGet.Configuration.ISettings;
 using Resx = NuGet.PackageManagement.UI.Resources;
 using Task = System.Threading.Tasks.Task;
 using UI = NuGet.PackageManagement.UI;
+// Duplicate type declarations due to Microsoft.Internal.VisualStudio.Shell.Embeddable.
+using ProvideBrokeredServiceAttribute = Microsoft.VisualStudio.Shell.ServiceBroker.ProvideBrokeredServiceAttribute;
+using ServiceAudience = Microsoft.VisualStudio.Shell.ServiceBroker.ServiceAudience;
+using IBrokeredServiceContainer = Microsoft.VisualStudio.Shell.ServiceBroker.IBrokeredServiceContainer;
+using SVsBrokeredServiceContainer = Microsoft.VisualStudio.Shell.ServiceBroker.SVsBrokeredServiceContainer;
+using NuGet.Shared;
 
 namespace NuGetVSExtension
 {
@@ -65,7 +72,8 @@ namespace NuGetVSExtension
         NuGetConsole.GuidList.GuidPackageManagerConsoleFontAndColorCategoryString,
         "{" + GuidList.guidNuGetPkgString + "}")]
     [Guid(GuidList.guidNuGetPkgString)]
-    public sealed class NuGetPackage : AsyncPackage, IVsPackageExtensionProvider, IVsPersistSolutionOpts
+    [ProvideBrokeredService(ServicesIdentityHelper.PackageInstallerServiceName, ServicesIdentityHelper.PackageInstallerServiceVersion, Audience = ServiceAudience.Process)]
+    public sealed partial class NuGetPackage : AsyncPackage, IVsPackageExtensionProvider, IVsPersistSolutionOpts
     {
         // It is displayed in the Help - About box of Visual Studio
         public const string ProductVersion = "5.6.0";
@@ -163,6 +171,10 @@ namespace NuGetVSExtension
                     return vsMonitorSelection;
                 },
                 ThreadHelper.JoinableTaskFactory);
+
+            // Set up brokered services
+            IBrokeredServiceContainer brokeredServiceContainer = await this.GetServiceAsync<SVsBrokeredServiceContainer, IBrokeredServiceContainer>();
+            brokeredServiceContainer.Proffer(NuGetServices.PackageInstallerService, factory: ServicesUtility.GetNuGetPackageInstallerFactory());
         }
 
         /// <summary>
@@ -859,13 +871,13 @@ namespace NuGetVSExtension
             {
                 if (ShouldMEFBeInitialized())
                 {
-                  await InitializeMEFAsync();
+                    await InitializeMEFAsync();
                 }
 
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
                 var command = (OleMenuCommand)sender;
-                
+
                 var isConsoleBusy = false;
                 if (ConsoleStatus != null)
                 {

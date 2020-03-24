@@ -19,10 +19,7 @@
     <VSSDKTargetPlatformRegRootSuffix>Exp</VSSDKTargetPlatformRegRootSuffix>
     <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
-<<<<<<< HEAD
-=======
     <IncludeNuGetSharedFiles>true</IncludeNuGetSharedFiles>
->>>>>>> [skip ci] asychronous package installer installation
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

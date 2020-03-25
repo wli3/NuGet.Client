@@ -59,47 +59,23 @@ namespace NuGet.Test.Server
 
                 // WaitForLockAsync prevents port contention with this app.
                 string portLockName = $"NuGet-Port-{port}";
-            
+
                 try
                 {
-                    var attemptedPort = port;
-                        
-                    return await ExecuteWithFileLockedAsync<T>(
-                        portLockName,
-                        t => action(attemptedPort, token));
+                    if (PortLock.TryAdd(portLockName, true))
+                    {
+                        // Run the action within the lock
+                        return await action(port, token);
+                    }
                 }
-                catch (OperationCanceledException)
+                catch (OverflowException)
                 {
+                    throw;
                 }
-            }
-        }
-        public async static Task<T> ExecuteWithFileLockedAsync<T>(string portLockName,
-           Func<CancellationToken, Task<T>> action)
-        {
-            if (string.IsNullOrEmpty(portLockName))
-            {
-                throw new ArgumentNullException(nameof(portLockName));
-            }
-
-            try
-            {
-                if (PortLock.TryAdd(portLockName, true))
+                finally
                 {
-                    // Run the action within the lock
-                    return await action(CancellationToken.None);
+                    PortLock.TryRemove(portLockName, out _);
                 }
-                else
-                {
-                    throw new OperationCanceledException();
-                }
-            }
-            catch (OverflowException)
-            {
-                throw;
-            }
-            finally
-            {
-                PortLock.TryRemove(portLockName, out _);
             }
         }
 

@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using NuGet.Client;
@@ -29,7 +30,14 @@ namespace NuGet.Packaging.Rules
             var warnings = new List<PackagingLogMessage>();
             foreach (var folder in _folders)
             {
-                var files = builder.GetFiles().Where(t => t.StartsWith(folder));
+                var files = builder.GetFiles()
+                    .Select(t => PathUtility.GetPathWithDirectorySeparator(t))
+                    .Where(t =>
+                        t.StartsWith(
+                            folder + Path.DirectorySeparatorChar,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    );
                 var packageId = builder.NuspecReader.GetId();
                 var conventionViolators = IdentifyViolators(files, packageId);
                 warnings.AddRange(GenerateWarnings(conventionViolators));
@@ -44,7 +52,11 @@ namespace NuGet.Packaging.Rules
             foreach (var folder in _folders)
             {
                 var warningMessage = new StringBuilder();
-                var currentConventionViolators = conventionViolators.Where(t => t.ExpectedPath.StartsWith(folder + '/'));
+                var currentConventionViolators = conventionViolators.Where(t => t.ExpectedPath.StartsWith(
+                    folder + Path.DirectorySeparatorChar,
+                    StringComparison.OrdinalIgnoreCase)
+                );
+
                 foreach (var conViolator in currentConventionViolators)
                 {
                     warningMessage.AppendLine(string.Format(MessageFormat, conViolator.Extension, conViolator.Path, conViolator.ExpectedPath));
@@ -75,7 +87,7 @@ namespace NuGet.Packaging.Rules
 
                         if (correctFiles.Count() == 0 && hasFiles)
                         {
-                            conventionViolators.Add(new ConventionViolator(group.First(), extension, correctFilePattern));
+                            conventionViolators.Add(new ConventionViolator(group.Key, extension, correctFilePattern));
                         }
                     }
                 }
@@ -85,12 +97,16 @@ namespace NuGet.Packaging.Rules
 
         internal string GetFolderName(string filePath)
         {
-            var hi = NuGetFramework.ParseFolder(filePath.Split('/')[1]).GetShortFolderName();
-            if (hi == "unsupported")
+            var parts = filePath.Split(Path.DirectorySeparatorChar);
+            var folder = parts[0];
+
+            var framework = NuGetFramework.ParseFolder(parts[1]);
+            if (framework != NuGetFramework.UnsupportedFramework)
             {
-                return filePath.Split('/')[0] + '/';
+                folder = Path.Combine(folder, framework.GetShortFolderName());
             }
-            return filePath.Split('/')[0] + '/' + hi + '/';
+
+            return PathUtility.EnsureTrailingSlash(folder);
         }
 
         internal class ConventionViolator
@@ -103,7 +119,7 @@ namespace NuGet.Packaging.Rules
 
             public ConventionViolator(string filePath, string extension, string expectedFile)
             {
-                Path = filePath.Replace(filePath.Split('/')[filePath.Count(p => p == '/')], string.Empty);
+                Path = filePath;
                 Extension = extension;
                 ExpectedPath = expectedFile;
             }

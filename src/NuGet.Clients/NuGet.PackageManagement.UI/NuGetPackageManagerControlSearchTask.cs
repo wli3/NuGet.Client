@@ -10,13 +10,12 @@ namespace NuGet.PackageManagement.UI
     {
         private PackageManagerControl _packageManagerControl;
         private IVsSearchCallback _searchCallback;
-        private IVsSearchQuery _searchQuery;
 
         public NuGetPackageManagerControlSearchTask(PackageManagerControl packageManagerControl, uint id, IVsSearchQuery pSearchQuery, IVsSearchCallback pSearchCallback)
         {
             _packageManagerControl = packageManagerControl;
             _searchCallback = pSearchCallback;
-            _searchQuery = pSearchQuery;
+            SearchQuery = pSearchQuery;
             Id = id;
             ErrorCode = 0;
             SetStatus(VsSearchTaskStatus.Created);
@@ -29,24 +28,14 @@ namespace NuGet.PackageManagement.UI
             {
                 await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-                await _packageManagerControl.SearchPackagesAndRefreshUpdateCountAsync(searchText: _searchQuery.SearchString, useCacheForUpdates: true, pSearchCallback: _searchCallback, searchTask: this);
+                await _packageManagerControl.SearchPackagesAndRefreshUpdateCountAsync(searchInput: SearchQuery.SearchString, useCacheForUpdates: true, pSearchCallback: _searchCallback, searchTask: this);
                 SetStatus(VsSearchTaskStatus.Completed);
             });
         }
 
         public uint Id { get; private set; }
 
-        public IVsSearchQuery SearchQuery
-        {
-            get
-            {
-                return _searchQuery;
-            }
-            set
-            {
-                _searchQuery = value;
-            }
-        }
+        public IVsSearchQuery SearchQuery { get; set; }
 
         public uint Status { get; private set; }
 

@@ -29,6 +29,7 @@ using Task = System.Threading.Tasks.Task;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Shell;
 using NuGet.Protocol;
+using Microsoft.VisualStudio;
 
 namespace NuGet.PackageManagement.UI
 {
@@ -59,7 +60,6 @@ namespace NuGet.PackageManagement.UI
         private PRMigratorBar _migratorBar;
 
         private readonly IVsWindowSearchHost _windowSearchHost;
-        private readonly IVsWindowSearchHostFactory _windowSearchHostFactory;
 
         internal readonly DetailControlModel _detailModel;
 
@@ -124,11 +124,9 @@ namespace NuGet.PackageManagement.UI
             }
 
             InitializeComponent();
-            _windowSearchHostFactory = searchFactory;
-            if (_windowSearchHostFactory != null)
+            if (searchFactory != null)
             {
-                _windowSearchHost = _windowSearchHostFactory.CreateWindowSearchHost(
-                    _topPanel.SearchControlParent);
+                _windowSearchHost = searchFactory.CreateWindowSearchHost(_topPanel.SearchControlParent);
                 _windowSearchHost.SetupSearch(this);
                 _windowSearchHost.IsVisible = true;
             }
@@ -710,8 +708,17 @@ namespace NuGet.PackageManagement.UI
             {
                 await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
+                /*
+                var searchQuery = new SearchQuery()
+                {
+                    SearchString = "_FAKE_",
+                    UseCachedUpdates = useCacheForUpdates,
+                };
+                CreateSearch(VSConstants.VSCOOKIE_NIL, searchQuery, null);
+                */
+
                 await SearchPackagesAndRefreshUpdateCountAsync(
-                    searchText: _windowSearchHost.SearchQuery.SearchString,
+                    searchInput: _windowSearchHost.SearchQuery.SearchString,
                     useCacheForUpdates: useCacheForUpdates,
                     pSearchCallback: null,
                     searchTask: null);
@@ -722,8 +729,10 @@ namespace NuGet.PackageManagement.UI
         /// <summary>
         /// This method is called from several event handlers. So, consolidating the use of JTF.Run in this method
         /// </summary>
-        internal async Task SearchPackagesAndRefreshUpdateCountAsync(string searchText, bool useCacheForUpdates, IVsSearchCallback pSearchCallback, IVsSearchTask searchTask)
+        internal async Task SearchPackagesAndRefreshUpdateCountAsync(string searchInput, bool useCacheForUpdates, IVsSearchCallback pSearchCallback, IVsSearchTask searchTask)
         {
+            var searchText = "_FAKE_".Equals(searchInput) && pSearchCallback == null ? string.Empty: searchInput;
+
             await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             var loadContext = new PackageLoadContext(ActiveSources, Model.IsSolution, Model.Context);
@@ -747,6 +756,11 @@ namespace NuGet.PackageManagement.UI
 
             // start SearchAsync task for initial loading of packages
             var searchResultTask = loader.SearchAsync(continuationToken: null, cancellationToken: _loadCts.Token);
+            if (pSearchCallback != null && searchTask != null)
+            {
+                pSearchCallback.ReportProgress(searchTask, 10, 100);
+            }
+
             // this will wait for searchResultTask to complete instead of creating a new task
             await _packageList.LoadItemsAsync(loader, loadingMessage, _uiLogger, searchResultTask, _loadCts.Token);
 
@@ -1002,7 +1016,10 @@ namespace NuGet.PackageManagement.UI
             {
                 var timeSpan = GetTimeSinceLastRefreshAndRestart();
                 _packageList.CheckBoxesEnabled = _topPanel.Filter == ItemFilter.UpdatesAvailable;
-                SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: true);
+                //SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: true);
+                var query = new SearchQuery();
+                query.SearchString = "_FAKE_";
+                _windowSearchHost.SearchAsync(query);
                 EmitRefreshEvent(timeSpan, RefreshOperationSource.FilterSelectionChanged, RefreshOperationStatus.Success);
 
                 _detailModel.OnFilterChanged(e.PreviousFilter, _topPanel.Filter);
@@ -1073,6 +1090,8 @@ namespace NuGet.PackageManagement.UI
             }
 
             public string SearchString { get; set; }
+
+            public bool UseCachedUpdates { get; set; }
         }
 
         public Guid Category

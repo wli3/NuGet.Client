@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Input;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
@@ -30,6 +31,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.Shell;
 using NuGet.Protocol;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.PlatformUI;
 
 namespace NuGet.PackageManagement.UI
 {
@@ -731,7 +733,15 @@ namespace NuGet.PackageManagement.UI
         /// </summary>
         internal async Task SearchPackagesAndRefreshUpdateCountAsync(string searchInput, bool useCacheForUpdates, IVsSearchCallback pSearchCallback, IVsSearchTask searchTask)
         {
-            var searchText = "_FAKE_".Equals(searchInput) && pSearchCallback == null ? string.Empty: searchInput;
+            var searchText = searchInput;
+            if ("_FAKE_".Equals(searchInput))
+            {
+                var txtSearch = _topPanel.FindDescendant<TextBox>();
+                if (txtSearch != null)
+                {
+                    txtSearch.Text = string.Empty;
+                }
+            }
 
             await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -1018,7 +1028,7 @@ namespace NuGet.PackageManagement.UI
                 _packageList.CheckBoxesEnabled = _topPanel.Filter == ItemFilter.UpdatesAvailable;
                 //SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: true);
                 var query = new SearchQuery();
-                query.SearchString = "_FAKE_";
+                query.SearchString = _windowSearchHost.SearchQuery.SearchString == "" ? "_FAKE_" : _windowSearchHost.SearchQuery.SearchString;
                 _windowSearchHost.SearchAsync(query);
                 EmitRefreshEvent(timeSpan, RefreshOperationSource.FilterSelectionChanged, RefreshOperationStatus.Success);
 

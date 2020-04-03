@@ -25,20 +25,14 @@
   -->
 
   <Target Name="MoveLocalizedFilesToLocalizedArtifacts" Condition="'$(BuildRTM)' == 'false' AND Exists($(LocalizationRootDirectory)) " BeforeTargets="GenerateNuspec">
-    <MakeDir  
-            Directories="$(LocalizationFilesDirectory)"/>
+    <MakeDir Directories="$(LocalizationFilesDirectory)" />
     <ItemGroup>
-      <LocalizationProjects Include="@(SolutionProjectsWithoutVSIX)" Exclude="$(NuGetCoreSrcDirectory)NuGet.Build.Tasks.Pack\NuGet.Build.Tasks.Pack.csproj"/>
+      <LocalizationProjects Include="@(SolutionProjectsWithoutVSIX)" Exclude="$(NuGetCoreSrcDirectory)NuGet.Build.Tasks.Pack\NuGet.Build.Tasks.Pack.csproj" />
     </ItemGroup>
     <Message Text="Localization Projects: @(LocalizationProjects, '%0a')" Importance="High" />
-    <MSBuild Projects="@(LocalizationProjects)"
-             Properties="BuildProjectReferences=false;
-                         Configuration=$(Configuration);
-                         AppendTargetFrameworkToOutputPath=false"
-             Targets="GetNetCoreLocalizedFilesInProjectOutputPath">
+    <MSBuild Projects="@(LocalizationProjects)" Properties="BuildProjectReferences=false;&#xD;&#xA;                         Configuration=$(Configuration);&#xD;&#xA;                         AppendTargetFrameworkToOutputPath=false" Targets="GetNetCoreLocalizedFilesInProjectOutputPath">
       
-      <Output TaskParameter="TargetOutputs" 
-              ItemName="_LocalizedFilesForLocalizationPackage" />
+      <Output TaskParameter="TargetOutputs" ItemName="_LocalizedFilesForLocalizationPackage" />
     </MSBuild>
 
     <ItemGroup>
@@ -50,6 +44,12 @@
     <Copy SourceFiles="@(_LocalizedFilePaths->'%(Identity)')" DestinationFiles="@(_LocalizedFilePaths->'%(TargetPath)')" />
   </Target>
   
-  <Import Project="$(BuildCommonDirectory)common.targets"/>
+  <Import Project="$(BuildCommonDirectory)common.targets" />
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 </Project>

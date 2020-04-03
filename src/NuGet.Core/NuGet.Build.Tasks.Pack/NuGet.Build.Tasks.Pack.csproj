@@ -31,6 +31,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\NuGet.Commands\NuGet.Commands.csproj" />
   </ItemGroup>
 
@@ -68,9 +75,7 @@
     <ItemGroup>
       <_PackResourceDlls Include="$(OutputPath)**\$(AssemblyName).resources.dll" />
     </ItemGroup>
-    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="ILMergeNuGetPackResources"
-             Properties="CurrentCulture=%(_PackResourceDlls.RecursiveDir);
-                         BuildProjectReferences=false">
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="ILMergeNuGetPackResources" Properties="CurrentCulture=%(_PackResourceDlls.RecursiveDir);&#xD;&#xA;                         BuildProjectReferences=false">
     </MSBuild>
   </Target>
 
@@ -146,7 +151,7 @@
 
   <Target Name="GetFinalBuildOutput" Returns="@(DllsToIndex)">
     <ItemGroup>
-      <DllsToIndex Include="$(OutputPath)ilmerge\NuGet.Build.Tasks.Pack.dll"/>
+      <DllsToIndex Include="$(OutputPath)ilmerge\NuGet.Build.Tasks.Pack.dll" />
     </ItemGroup>
   </Target>
 
@@ -182,7 +187,7 @@
     </ItemGroup>    
   </Target>
 
-  <Import Project="$(BuildCommonDirectory)common.targets"/>
+  <Import Project="$(BuildCommonDirectory)common.targets" />
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
   

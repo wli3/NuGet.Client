@@ -713,7 +713,7 @@ namespace NuGet.PackageManagement.UI
         /// <summary>
         /// This method is called from several event handlers. So, consolidating the use of JTF.Run in this method
         /// </summary>
-        private void SearchPackagesAndRefreshUpdateCount(bool useCacheForUpdates)
+        private void SearchPackagesAndRefreshUpdateCount(bool useCacheForUpdates, bool emitTimeSinceSearchCompleted = false)
         {
             NuGetUIThreadHelper.JoinableTaskFactory.RunAsync(async () =>
             {
@@ -724,6 +724,11 @@ namespace NuGet.PackageManagement.UI
                     useCacheForUpdates: useCacheForUpdates,
                     pSearchCallback: null,
                     searchTask: null);
+
+                if (emitTimeSinceSearchCompleted)
+                {
+                    _performanceMetrics.TimeSinceSearchCompleted = GetTimeSinceLastUserAction();
+                }
             })
             .FileAndForget(TelemetryUtility.CreateFileAndForgetEventName(nameof(PackageManagerControl), nameof(SearchPackagesAndRefreshUpdateCount)));
         }
@@ -1012,9 +1017,7 @@ namespace NuGet.PackageManagement.UI
             {
                 var timeSpan = GetTimeSinceLastRefreshAndRestart();
                 _packageList.CheckBoxesEnabled = _topPanel.Filter == ItemFilter.UpdatesAvailable;
-                SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: true);
-
-                _performanceMetrics.TimeSinceSearchCompleted = GetTimeSinceLastUserAction();
+                SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: true, emitTimeSinceSearchCompleted: true);
 
                 EmitRefreshEvent(timeSpan, RefreshOperationSource.FilterSelectionChanged, RefreshOperationStatus.Success);
 

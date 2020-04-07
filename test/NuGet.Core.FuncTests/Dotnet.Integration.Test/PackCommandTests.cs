@@ -4998,10 +4998,8 @@ namespace ClassLibrary
             }
         }
 
-        [PlatformTheory(Platform.Windows)]
-        [InlineData(false)]
-        [InlineData(true)]
-        public void PackCommand_RequireLicenseAcceptanceNotEmittedWhenUnspecified(bool withLicense)
+        [PlatformFact(Platform.Windows)]
+        public void PackCommand_RequireLicenseAcceptanceNotEmittedWhenUnspecified()
         {
             using (var testDirectory = TestDirectory.Create())
             {
@@ -5011,20 +5009,18 @@ namespace ClassLibrary
 
                 msbuildFixture.CreateDotnetNewProject(testDirectory.Path, projectName, " classlib");
 
+                XDocument xml;
                 using (var stream = new FileStream(projectFile, FileMode.Open, FileAccess.ReadWrite))
                 {
-                    var xml = XDocument.Load(stream);
+                    xml = XDocument.Load(stream);
                     ProjectFileUtils.SetTargetFrameworkForProject(xml, "TargetFramework", "netstandard1.4");
-
-                    if (withLicense)
-                    {
-                        ProjectFileUtils.AddProperty(xml, "PackageLicenseExpression", "MIT");
-                    }
 
                     ProjectFileUtils.WriteXmlToFile(xml, stream);
                 }
 
                 msbuildFixture.RestoreProject(workingDirectory, projectName, string.Empty);
+
+                // Test without a license
                 msbuildFixture.PackProject(workingDirectory, projectName, $"/p:PackageOutputPath={workingDirectory}");
 
                 var nupkgPath = Path.Combine(workingDirectory, $"{projectName}.1.0.0.nupkg");
@@ -5037,13 +5033,22 @@ namespace ClassLibrary
                 var ns = document.Root.GetDefaultNamespace();
 
                 Assert.Null(document.Root.Element(ns + "metadata").Element(ns + "requireLicenseAcceptance"));
+
+                // Test with a license
+                ProjectFileUtils.AddProperty(xml, "PackageLicenseExpression", "MIT");
+
+                using (var stream = File.Create(projectFile))
+                    ProjectFileUtils.WriteXmlToFile(xml, stream);
+
+                msbuildFixture.PackProject(workingDirectory, projectName, $"/p:PackageOutputPath={workingDirectory}");
+                document = XDocument.Load(nuspecPath);
+
+                Assert.Null(document.Root.Element(ns + "metadata").Element(ns + "requireLicenseAcceptance"));
             }
         }
 
-        [PlatformTheory(Platform.Windows)]
-        [InlineData(false)]
-        [InlineData(true)]
-        public void PackCommand_RequireLicenseAcceptanceNotEmittedWhenSpecifiedAsDefault(bool withLicense)
+        [PlatformFact(Platform.Windows)]
+        public void PackCommand_RequireLicenseAcceptanceNotEmittedWhenSpecifiedAsDefault()
         {
             using (var testDirectory = TestDirectory.Create())
             {
@@ -5053,22 +5058,20 @@ namespace ClassLibrary
 
                 msbuildFixture.CreateDotnetNewProject(testDirectory.Path, projectName, " classlib");
 
+                XDocument xml;
                 using (var stream = new FileStream(projectFile, FileMode.Open, FileAccess.ReadWrite))
                 {
-                    var xml = XDocument.Load(stream);
+                    xml = XDocument.Load(stream);
                     ProjectFileUtils.SetTargetFrameworkForProject(xml, "TargetFramework", "netstandard1.4");
 
                     ProjectFileUtils.AddProperty(xml, "PackageRequireLicenseAcceptance", "false");
-
-                    if (withLicense)
-                    {
-                        ProjectFileUtils.AddProperty(xml, "PackageLicenseExpression", "MIT");
-                    }
 
                     ProjectFileUtils.WriteXmlToFile(xml, stream);
                 }
 
                 msbuildFixture.RestoreProject(workingDirectory, projectName, string.Empty);
+
+                // Test without a license
                 msbuildFixture.PackProject(workingDirectory, projectName, $"/p:PackageOutputPath={workingDirectory}");
 
                 var nupkgPath = Path.Combine(workingDirectory, $"{projectName}.1.0.0.nupkg");
@@ -5079,6 +5082,17 @@ namespace ClassLibrary
 
                 var document = XDocument.Load(nuspecPath);
                 var ns = document.Root.GetDefaultNamespace();
+
+                Assert.Null(document.Root.Element(ns + "metadata").Element(ns + "requireLicenseAcceptance"));
+
+                // Test with a license
+                ProjectFileUtils.AddProperty(xml, "PackageLicenseExpression", "MIT");
+
+                using (var stream = File.Create(projectFile))
+                    ProjectFileUtils.WriteXmlToFile(xml, stream);
+
+                msbuildFixture.PackProject(workingDirectory, projectName, $"/p:PackageOutputPath={workingDirectory}");
+                document = XDocument.Load(nuspecPath);
 
                 Assert.Null(document.Root.Element(ns + "metadata").Element(ns + "requireLicenseAcceptance"));
             }

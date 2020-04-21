@@ -710,7 +710,7 @@ namespace NuGet.PackageManagement.UI
             {
                 await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-                await SearchPackagesAndRefreshUpdateCountAsync(
+                await  SearchPackagesAndRefreshUpdateCountAsync(
                     searchText: _windowSearchHost.SearchQuery.SearchString,
                     useCacheForUpdates: useCacheForUpdates,
                     pSearchCallback: null,

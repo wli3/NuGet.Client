@@ -85,7 +85,6 @@ namespace NuGet.PackageManagement.UI
 
         private void LoadingStatusIndicator_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            Mvs.ThreadHelper.ThrowIfNotOnUIThread();
             if (e.PropertyName == nameof(LoadingStatusIndicator.Status))
             {
                 if (LtbLoading.Text != _loadingStatusIndicator.LocalizedStatus)

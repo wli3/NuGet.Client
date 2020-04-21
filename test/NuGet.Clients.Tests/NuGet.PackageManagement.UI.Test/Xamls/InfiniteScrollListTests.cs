@@ -113,7 +113,7 @@ namespace NuGet.PackageManagement.UI.Test
             Assert.Equal("loader", exception.ParamName);
         }
 
-        [WpfTheory()]
+        [WpfTheory]
         [InlineData(null)]
         [InlineData("")]
         public async Task LoadItems_LoadingMessageIsNullOrEmpty_Throws(string loadingMessage)

@@ -5,6 +5,7 @@
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:nuget="clr-namespace:NuGet.PackageManagement.UI"
+  xmlns:vsuia="clr-namespace:Microsoft.Internal.VisualStudio.PlatformUI.Automation;assembly=Microsoft.VisualStudio.Shell.15.0"
   Background="{DynamicResource {x:Static nuget:Brushes.HeaderBackground}}"
   Foreground="{DynamicResource {x:Static nuget:Brushes.UIText}}"
   x:Name="_self"
@@ -104,6 +105,8 @@
               Grid.Row="0"
               x:Name="_packageList"
               AutomationProperties.Name="{x:Static nuget:Resources.Accessibility_PackagesList}"
+              vsuia:CustomAutomationProperties.LiveSetting="Polite"
+              AutomationProperties.ItemStatus="Constant status"
               SelectionChanged="PackageList_SelectionChanged"
               UpdateButtonClicked="PackageList_UpdateButtonClicked"
               Width="{Binding ActualWidth, ElementName=_leftSide}"/>

@@ -9,10 +9,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Automation.Peers;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using Microsoft.Internal.VisualStudio.PlatformUI.Automation;
 using Microsoft.VisualStudio.Threading;
 using NuGet.Common;
 using NuGet.PackageManagement.VisualStudio;
@@ -29,7 +31,7 @@ namespace NuGet.PackageManagement.UI
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001")]
     public partial class InfiniteScrollList : UserControl
     {
-        private readonly LoadingStatusIndicator _loadingStatusIndicator = new LoadingStatusIndicator();
+        internal readonly LoadingStatusIndicator _loadingStatusIndicator = new LoadingStatusIndicator();
         private ScrollViewer _scrollViewer;
 
         public event SelectionChangedEventHandler SelectionChanged;
@@ -87,11 +89,13 @@ namespace NuGet.PackageManagement.UI
         {
             if (e.PropertyName == nameof(LoadingStatusIndicator.Status))
             {
-                if (LtbLoading.Text != _loadingStatusIndicator.LocalizedStatus)
-                {
-                    LtbLoading.Text = _loadingStatusIndicator.LocalizedStatus;
-                }
+                AutomationHelpers.RaiseLiveRegionChangedEvent(_list);
             }
+        }
+
+        protected override AutomationPeer OnCreateAutomationPeer()
+        {
+            return new InfiniteScrollListAutomationPeer(this);
         }
 
         // Indicates wether check boxes are enabled on packages

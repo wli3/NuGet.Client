@@ -52,6 +52,7 @@
     <Compile Include="Actions\UIActionEngine.cs" />
     <Compile Include="Actions\UpdatePreviewResult.cs" />
     <Compile Include="Actions\UpgradeLogger.cs" />
+    <Compile Include="Automation\InfiniteScrollListAutomationPeer.cs" />
     <Compile Include="Automation\TabItemButtonAutomationPeer.cs" />
     <Compile Include="Common\ErrorFloodGate.cs" />
     <Compile Include="Common\NuGetEvent.cs" />

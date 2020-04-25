@@ -72,6 +72,7 @@ namespace NuGet.PackageManagement.UI
 
         public ISettings Settings { get; }
 
+        //ActiveFilter is utilized in UI testing outside of this assembly.
         internal ItemFilter ActiveFilter { get => _topPanel.Filter; set => _topPanel.SelectFilter(value); }
 
         internal InfiniteScrollList PackageList { get => _packageList; }
@@ -369,8 +370,8 @@ namespace NuGet.PackageManagement.UI
             // The loaded event is triggered once all the data binding has occurred, which effectively means we'll just display what was loaded earlier and not trigger another search
             if (!(_loadedAndInitialized && _topPanel.Filter == ItemFilter.All))
             {
-                _loadedAndInitialized = true;
                 SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: false);
+                _loadedAndInitialized = true; //Indiciate initialized only after the search logic has completed.
                 EmitRefreshEvent(timeSpan, RefreshOperationSource.PackageManagerLoaded, RefreshOperationStatus.Success);
             }
             else

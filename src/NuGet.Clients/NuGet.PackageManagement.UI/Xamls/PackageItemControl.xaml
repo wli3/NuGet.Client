@@ -25,6 +25,8 @@
         x:Key="StringFormatConverter" />
       <nuget:NullToBooleanConverter
         x:Key="NullToBooleanConverter" />
+      <nuget:BooleanToColumnWidthConverter
+        x:Key="BooleanToColumnWidthConverter"/>
 
       <!-- style for install, uninstall and update buttons -->
       <Style x:Key="buttonStyle" TargetType="{x:Type Button}">
@@ -75,7 +77,7 @@
     <Grid
                   Margin="16,0,7,0">
       <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="{Binding CheckBoxesEnabled, RelativeSource={RelativeSource AncestorType={x:Type nuget:InfiniteScrollList}}, Converter={StaticResource BooleanToColumnWidthConverter}}" />
         <ColumnDefinition Width="Auto" />
         <ColumnDefinition Width="*" />
         <ColumnDefinition Width="Auto" />

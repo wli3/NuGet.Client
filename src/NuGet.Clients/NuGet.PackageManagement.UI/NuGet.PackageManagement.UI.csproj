@@ -58,6 +58,7 @@
     <Compile Include="Common\NuGetEventTrigger.cs" />
     <Compile Include="Controls\TabItemButton.cs" />
     <Compile Include="Converters\AdditionConverter.cs" />
+    <Compile Include="Converters\BooleanToColumnWidthConverter.cs" />
     <Compile Include="Converters\BooleanToGridRowHeightConverter.cs" />
     <Compile Include="Converters\AccessibleConverter.cs" />
     <Compile Include="Converters\DateTimeConverter.cs" />

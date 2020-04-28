@@ -21,6 +21,7 @@ trap
     KillRunningInstancesOfVS
     exit 1
 }
+$VerbosePreference = "Continue"
 
 . "$PSScriptRoot\Utils.ps1"
 . "$PSScriptRoot\VSUtils.ps1"

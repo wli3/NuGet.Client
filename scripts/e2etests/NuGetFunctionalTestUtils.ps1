@@ -101,9 +101,17 @@ function RealTimeLogResults
             {
                 Write-Host "log : $log exists"
             }
+            else
+            {
+                Write-Host "log : $log doesn't exists"
+            }
             if (Test-Path $testResult)
             {
                 Write-Host "testResult : $testResults exists"
+            }
+            else
+            {
+                Write-Host "testResult : $testResults doesn't exists"
             }
             if ((Test-Path $log) -and (Test-Path $testResults))
             {
@@ -178,29 +186,34 @@ function RealTimeLogResults
                     break
                 }
             }
+            else
+            {
+                Write-Host "Eithor log or testResults doesn't exist!  log : $log  testResults : $testResults"
+            }
         }
 
         if ($currentTestTime -gt $EachTestTimeoutInSecs)
         {
-            $logLineEntries = $lastLogLine -split " "
-            $currentTestName = $logLineEntries[2].Replace("...", "")
+            #$logLineEntries = $lastLogLine -split " "
+            #$currentTestName = $logLineEntries[2].Replace("...", "")
 
-            $result = @{
-                Type = 'test result'
-                TestName = $currentTestName
-                Status = 'Failed'
-                Message = "Test timed out after $EachTestTimeoutInSecs seconds"
-                TimeInMilliseconds = $EachTestTimeoutInSecs * 1000
-            }
+            #$result = @{
+            #    Type = 'test result'
+            #    TestName = $currentTestName
+            #    Status = 'Failed'
+            #    Message = "Test timed out after $EachTestTimeoutInSecs seconds"
+            #    TimeInMilliseconds = $EachTestTimeoutInSecs * 1000
+            #}
 
-            $json = ConvertTo-Json $result -Compress
-            $json >> $testResults
+            #$json = ConvertTo-Json $result -Compress
+            #$json >> $testResults
 
-            $errorMessage = 'Run Failed - Results.html did not get created. ' `
-            + 'This indicates that the tests did not finish running. It could be that the VS crashed or a test timed out. Please investigate.'
-            CopyResultsToCI $NuGetDropPath $RunCounter $testResults
+            #$errorMessage = 'Run Failed - Results.html did not get created. ' `
+            #+ 'This indicates that the tests did not finish running. It could be that the VS crashed or a test timed out. Please investigate.'
+            #CopyResultsToCI $NuGetDropPath $RunCounter $testResults
 
-            Write-Error $errorMessage
+            #Write-Error $errorMessage
+            Write-Host "currentTestTime  : $currentTestTime greater than EachTestTimeoutInSecs : $EachTestTimeoutInSecs"
             return $null
         }
     }
@@ -210,10 +223,18 @@ function RealTimeLogResults
         {
             Write-Host "##vso[task.uploadfile]$log"
         }
+        else 
+        {
+            Write-Host "in finally, log $log does not exist"
+        }
 
         If (Test-Path $testResults)
         {
             Write-Host "##vso[task.uploadfile]$testResults"
+        }
+        else 
+        {
+            Write-Host "in finally, testResults $testResults does not exist"
         }
     }
 }

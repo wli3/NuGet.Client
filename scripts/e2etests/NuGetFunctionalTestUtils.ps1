@@ -82,7 +82,7 @@ function RealTimeLogResults
         Write-Error "Looks like no tests were run. There is no folder under $NuGetTestPath\bin. Please investigate!"
         return $null
     }
-
+    Write-Host "currentBinFolder : $currentBinFolder"
     $currentTestTime = 0
 
     $log = Join-Path $currentBinFolder.FullName "log.txt"
@@ -96,9 +96,20 @@ function RealTimeLogResults
         {
             Start-Sleep 1
             $currentTestTime++
+            Write-Host "currentTestTime : $currentTestTime  log : $log  testResults : $testResults"
+            if (Test-Path $log) 
+            {
+                Write-Host "log : $log exists"
+            }
+            if (Test-Path $testResult)
+            {
+                Write-Host "testResult : $testResults exists"
+            }
             if ((Test-Path $log) -and (Test-Path $testResults))
             {
+                Write-Host "Both log and testResults exist!  log : $log  testResults : $testResults"
                 $content = Get-Content $testResults
+                Write-Host "content : $content content.Count : $content.Count  currentTestId : $currentTestId"
                 if (($content.Count -gt 0) -and ($content.Count -gt $currentTestId))
                 {
                     $content[($currentTestId)..($content.Count - 1)] | % {
@@ -109,7 +120,7 @@ function RealTimeLogResults
                             # continues the while loop so that it can be tried again
                             continue
                         }
-
+                        Write-Host "testResult : $testResult"
                         If ($testResult['Type'] -eq 'test result')
                         {
                             WriteToCI $testResult

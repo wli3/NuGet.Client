@@ -29,6 +29,14 @@ function WriteToCI
     param (
     [Parameter(Mandatory=$true)]
     [System.Collections.Generic.Dictionary`2[System.String,System.Object]] $singleResult)
+    
+     trap
+    { 
+        Write-Host "WriteToCI threw an exception: " -ForegroundColor Red
+        Write-Error ($_.Exception | Format-List -Force | Out-String) -ErrorAction Continue
+        Write-Error ($_.InvocationInfo | Format-List -Force | Out-String) -ErrorAction Continue
+        exit 1
+    }
 
     $status = $singleResult.Status
     $testName = $singleResult.TestName
@@ -63,6 +71,14 @@ function RealTimeLogResults
     [string]$NuGetTestPath,
     [Parameter(Mandatory=$true)]
     [int] $EachTestTimeoutInSecs)
+
+    trap
+    { 
+        Write-Host "RealTimeLogResults threw an exception: " -ForegroundColor Red
+        Write-Error ($_.Exception | Format-List -Force | Out-String) -ErrorAction Continue
+        Write-Error ($_.InvocationInfo | Format-List -Force | Out-String) -ErrorAction Continue
+        exit 1
+    }
 
     $currentTestTime = 0
     $currentTestId = 0
@@ -105,7 +121,7 @@ function RealTimeLogResults
             {
                 Write-Host "log : $log doesn't exists"
             }
-            if (Test-Path $testResult)
+            if (Test-Path $testResults)
             {
                 Write-Host "testResult : $testResults exists"
             }
@@ -249,6 +265,14 @@ function CopyResultsToCI
     [Parameter(Mandatory=$true)]
     [string]$resultsFile)
 
+    trap
+    { 
+        Write-Host "CopyResultsToCI threw an exception: " -ForegroundColor Red
+        Write-Error ($_.Exception | Format-List -Force | Out-String) -ErrorAction Continue
+        Write-Error ($_.InvocationInfo | Format-List -Force | Out-String) -ErrorAction Continue
+        exit 1
+    }
+
     $DropPathFileInfo = Get-Item $NuGetDropPath
     $DropPathParent = $DropPathFileInfo.Parent
     $ResultsFileInfo = Get-Item $resultsFile
@@ -288,6 +312,14 @@ function OutputResultsForCI
     [Parameter(Mandatory=$true)]
     [string]$RealTimeResultsFilePath)
 
+    trap
+    { 
+        Write-Host "OutputResultsForCI threw an exception: " -ForegroundColor Red
+        Write-Error ($_.Exception | Format-List -Force | Out-String) -ErrorAction Continue
+        Write-Error ($_.InvocationInfo | Format-List -Force | Out-String) -ErrorAction Continue
+        exit 1
+    }
+
     $DropPathFileInfo = Get-Item $NuGetDropPath
     $DropPathParent = $DropPathFileInfo.Parent
 
@@ -305,6 +337,15 @@ Function Write-JunitXml
         [Parameter(Mandatory=$true)]
         [string]$XmlResultsFilePath
     )
+
+    trap
+    { 
+        Write-Host "Write-JunitXml threw an exception: " -ForegroundColor Red
+        Write-Error ($_.Exception | Format-List -Force | Out-String) -ErrorAction Continue
+        Write-Error ($_.InvocationInfo | Format-List -Force | Out-String) -ErrorAction Continue
+        exit 1
+    }
+    
 $template = @'
 <testsuite name="" file="">
 <testcase classname="" name="" time="">

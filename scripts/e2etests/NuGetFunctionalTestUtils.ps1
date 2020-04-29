@@ -210,25 +210,25 @@ function RealTimeLogResults
 
         if ($currentTestTime -gt $EachTestTimeoutInSecs)
         {
-            #$logLineEntries = $lastLogLine -split " "
-            #$currentTestName = $logLineEntries[2].Replace("...", "")
+            $logLineEntries = $lastLogLine -split " "
+            $currentTestName = $logLineEntries[2].Replace("...", "")
 
-            #$result = @{
-            #    Type = 'test result'
-            #    TestName = $currentTestName
-            #    Status = 'Failed'
-            #    Message = "Test timed out after $EachTestTimeoutInSecs seconds"
-            #    TimeInMilliseconds = $EachTestTimeoutInSecs * 1000
-            #}
+            $result = @{
+                Type = 'test result'
+                TestName = $currentTestName
+                Status = 'Failed'
+                Message = "Test timed out after $EachTestTimeoutInSecs seconds"
+                TimeInMilliseconds = $EachTestTimeoutInSecs * 1000
+            }
 
-            #$json = ConvertTo-Json $result -Compress
-            #$json >> $testResults
+            $json = ConvertTo-Json $result -Compress
+            $json >> $testResults
 
-            #$errorMessage = 'Run Failed - Results.html did not get created. ' `
-            #+ 'This indicates that the tests did not finish running. It could be that the VS crashed or a test timed out. Please investigate.'
-            #CopyResultsToCI $NuGetDropPath $RunCounter $testResults
+            $errorMessage = 'Run Failed - Results.html did not get created. ' `
+            + 'This indicates that the tests did not finish running. It could be that the VS crashed or a test timed out. Please investigate.'
+            CopyResultsToCI $NuGetDropPath $RunCounter $testResults
 
-            #Write-Error $errorMessage
+            Write-Error $errorMessage
             Write-Host "currentTestTime  : $currentTestTime greater than EachTestTimeoutInSecs : $EachTestTimeoutInSecs"
             return $null
         }

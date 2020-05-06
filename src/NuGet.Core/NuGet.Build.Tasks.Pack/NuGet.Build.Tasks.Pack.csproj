@@ -154,7 +154,7 @@
     </ItemGroup>
   </Target>
 
-  <!--These targets help get files for packing the first NuGet.Build.Tasks.Pack package, for netstandard2.1.-->
+  <!--These targets help get files for packing the first NuGet.Build.Tasks.Pack package, for net5.0.-->
   <Target Name="CreatePackNupkg">
     <PropertyGroup>
       <!-- Build from source can't use ILMerge. -->
@@ -168,7 +168,7 @@
         <PackagePath>Desktop/</PackagePath>
       </TfmSpecificPackageFile>
     </ItemGroup>
-    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+    <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
       <TfmSpecificPackageFile Include="$(OutputPath)\$(ILMergeSubpath)NuGet.Build.Tasks.Pack.dll">
         <PackagePath>CoreCLR/</PackagePath>
       </TfmSpecificPackageFile>

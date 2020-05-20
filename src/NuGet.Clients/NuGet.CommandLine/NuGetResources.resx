@@ -5408,6 +5408,10 @@ Oluşturma sırasında NuGet'in paketleri indirmesini önlemek için, Visual Stu
     <value>The action '{0}' is not recognized.</value>
     <comment>0 - action</comment>
   </data>
+  <data name="Error_ArgumentNotExpected" xml:space="preserve">
+    <value>The argument '{0}' is not expected.</value>
+    <comment>0 - argument name</comment>
+  </data>
   <data name="ProjectJsonPack_Deprecated" xml:space="preserve">
     <value>`project.json` pack is deprecated. Please consider migrating '{0}' to `PackageReference` and using the pack targets.</value>
     <comment>Do not localize project.json and `PackageReference` 
@@ -5416,5 +5420,8 @@ Oluşturma sırasında NuGet'in paketleri indirmesini önlemek için, Visual Stu
   <data name="Error_UnknownDependencyVersion" xml:space="preserve">
     <value>Invalid value given for 'DependencyVersion': "{0}".</value>
     <comment>Please don't localize "DependencyVersion".</comment>
+  </data>
+  <data name="Error_UpdateSelf_Source" xml:space="preserve">
+    <value>The `update -self` command only accepts one source as an argument. If the source option is not specified, the default NuGet source will be used.</value>
   </data>
 </root>

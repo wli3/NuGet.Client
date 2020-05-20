@@ -42,14 +42,13 @@ namespace NuGet.CommandLine.Test
     <id>Package</id>
     <version>1.0.0</version>
     <authors>{Environment.UserName}</authors>
-    <owners>{Environment.UserName}</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <license type=""expression"">MIT</license>
     <projectUrl>http://project_url_here_or_delete_this_line/</projectUrl>
     <iconUrl>http://icon_url_here_or_delete_this_line/</iconUrl>
     <description>Package description</description>
     <releaseNotes>Summary of changes made in this release of the package.</releaseNotes>
-    <copyright>Copyright {DateTime.Now.Year}</copyright>
+    <copyright>$copyright$</copyright>
     <tags>Tag1 Tag2</tags>
     <dependencies>
       <group targetFramework="".NETStandard2.1"">
@@ -85,14 +84,13 @@ namespace NuGet.CommandLine.Test
     <id>Whatnot</id>
     <version>1.0.0</version>
     <authors>{Environment.UserName}</authors>
-    <owners>{Environment.UserName}</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <license type=""expression"">MIT</license>
     <projectUrl>http://project_url_here_or_delete_this_line/</projectUrl>
     <iconUrl>http://icon_url_here_or_delete_this_line/</iconUrl>
     <description>Package description</description>
     <releaseNotes>Summary of changes made in this release of the package.</releaseNotes>
-    <copyright>Copyright {DateTime.Now.Year}</copyright>
+    <copyright>$copyright$</copyright>
     <tags>Tag1 Tag2</tags>
     <dependencies>
       <group targetFramework="".NETStandard2.1"">
@@ -141,14 +139,13 @@ namespace NuGet.CommandLine.Test
     <version>$version$</version>
     <title>$title$</title>
     <authors>$author$</authors>
-    <owners>$author$</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <license type=""expression"">MIT</license>
     <projectUrl>http://project_url_here_or_delete_this_line/</projectUrl>
     <iconUrl>http://icon_url_here_or_delete_this_line/</iconUrl>
     <description>$description$</description>
     <releaseNotes>Summary of changes made in this release of the package.</releaseNotes>
-    <copyright>Copyright {DateTime.Now.Year}</copyright>
+    <copyright>$copyright$</copyright>
     <tags>Tag1 Tag2</tags>
   </metadata>
 </package>".Replace("\r\n", "\n"), nuspec.Replace("\r\n", "\n"));

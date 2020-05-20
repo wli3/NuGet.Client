@@ -248,9 +248,9 @@
     <SolutionProjects Include="$(RepositoryRootDirectory)test\*\*\*.csproj"
                       Exclude="$(RepositoryRootDirectory)test\EndToEnd\*\*.csproj;
                                $(RepositoryRootDirectory)test\NuGet.Tests.Apex\*\NuGet.Tests.Apex.csproj"
-                      Condition=" '$(ExcludeTestProjects)' != 'true' " />
+                      Condition=" '$(ExcludeTestProjects)' != 'true' " /> 
 
-    <SolutionProjects Include="$(RepositoryRootDirectory)src\*\*\*.csproj" />
+    <!-- <SolutionProjects Include="$(RepositoryRootDirectory)src\*\*\*.csproj" /> -->
     <SolutionProjectsWithoutVSIX Include="@(SolutionProjects)"
                                 Exclude="$(VSIXProject)" />
   </ItemGroup>

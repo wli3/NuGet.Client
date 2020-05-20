@@ -2,7 +2,7 @@
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'common.props'))\common.props" />
 
   <Target Name="BeforeRestore" BeforeTargets="Restore">
-	<Message Text="$(RestoreGraphProjectInput)" Importance="high" />
+	<Message Text="Hello $(RestoreGraphProjectInput)" Importance="high" />
   </Target>
 
   <!-- Import the existing NuGet targets file -->

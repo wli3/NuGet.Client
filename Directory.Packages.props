@@ -1,0 +1,106 @@
+<Project>
+    <PropertyGroup>
+        <MicrosoftBuildPackageVersion Condition="'$(MicrosoftBuildPackageVersion)' == ''">16.5.0-preview-19606-01</MicrosoftBuildPackageVersion>
+        <NewtonsoftJsonPackageVersion Condition="$(NewtonsoftJsonPackageVersion) == ''">9.0.1</NewtonsoftJsonPackageVersion>
+        <SystemPackagesVersion>4.3.0</SystemPackagesVersion>
+        <VSComponentsVersion>16.4.280</VSComponentsVersion>
+        <VSFrameworkVersion>16.5.29714.20</VSFrameworkVersion>
+        <VSServicesVersion>16.153.0</VSServicesVersion>
+        <VSThreadingVersion>16.5.126</VSThreadingVersion>
+    </PropertyGroup>
+
+    <!-- Test and package versions -->
+    <PropertyGroup>
+        <FluentAssertionsVersion>4.19.4</FluentAssertionsVersion>
+        <MoqVersion>4.12.0</MoqVersion>
+        <TestSDKVersion>15.5.0</TestSDKVersion>
+        <XunitVersion>2.4.1</XunitVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageVersion Include="EnvDTE80" Version="8.0.3" />
+        <PackageVersion Include="Lucene.Net" Version="3.0.3" />
+        <PackageVersion Include="Microsoft.Build" Version="$(MicrosoftBuildPackageVersion)" />
+        <PackageVersion Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildPackageVersion)" />
+        <PackageVersion Include="Microsoft.Build.Locator" Version="1.2.2" />
+        <PackageVersion Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildPackageVersion)" />
+        <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildPackageVersion)" />
+        <PackageVersion Include="Microsoft.Extensions.CommandLineUtils" Version="1.0.1" />
+        <PackageVersion Include="Microsoft.Internal.VisualStudio.Shell.Embeddable" Version="16.4.29305.180" />
+        <PackageVersion Include="Microsoft.ServiceHub.Framework" Version="2.3.60" />
+        <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19351-01" />
+        <PackageVersion Include="Microsoft.TeamFoundationServer.ExtendedClient" Version="$(VSServicesVersion)" />
+        <PackageVersion Include="Microsoft.VSSDK.BuildTools" Version="16.4.1059" />
+        <PackageVersion Include="Microsoft.VisualStudio.ComponentModelHost" Version="$(VSComponentsVersion)" />
+        <PackageVersion Include="Microsoft.VisualStudio.CoreUtility" Version="$(VSComponentsVersion)" />
+        <PackageVersion Include="Microsoft.VisualStudio.Editor" Version="$(VSComponentsVersion)" />
+        <PackageVersion Include="Microsoft.VisualStudio.ImageCatalog" Version="$(VSFrameworkVersion)" />
+        <PackageVersion Include="Microsoft.VisualStudio.Language.Intellisense" Version="$(VSComponentsVersion)" />
+        <PackageVersion Include="Microsoft.VisualStudio.Language.StandardClassification" Version="$(VSComponentsVersion)" />
+        <PackageVersion Include="Microsoft.VisualStudio.RpcContracts" Version="16.5.33-alpha" />
+        <PackageVersion Include="Microsoft.VisualStudio.SDK" Version="16.0.204" />
+        <PackageVersion Include="Microsoft.VisualStudio.Services.Client" Version="$(VSServicesVersion)" />
+        <PackageVersion Include="Microsoft.VisualStudio.Services.InteractiveClient" Version="$(VSServicesVersion)" />
+        <PackageVersion Include="Microsoft.VisualStudio.Setup.Configuration.Interop" Version="1.16.30" />
+        <PackageVersion Include="Microsoft.VisualStudio.Shell.15.0" Version="$(VSFrameworkVersion)" />
+        <PackageVersion Include="Microsoft.VisualStudio.Shell.Embeddable" Version="$(VSFrameworkVersion)" />
+        <PackageVersion Include="Microsoft.VisualStudio.Shell.Immutable.15.0" Version="15.0.25123-Dev15Preview" />
+        <PackageVersion Include="Microsoft.VisualStudio.Shell.Interop.12.0" Version="12.0.30111" />
+        <PackageVersion Include="Microsoft.VisualStudio.Shell.Interop.16.0.DesignTime" Version="16.0.0" />
+        <PackageVersion Include="Microsoft.VisualStudio.Shell.Interop.16.3.DesignTime" Version="16.5.29616.81" />
+        <PackageVersion Include="Microsoft.VisualStudio.Telemetry" Version="16.3.2" />
+        <PackageVersion Include="Microsoft.VisualStudio.Text.Data" Version="$(VSComponentsVersion)" />
+        <PackageVersion Include="Microsoft.VisualStudio.Text.Logic" Version="$(VSComponentsVersion)" />
+        <PackageVersion Include="Microsoft.VisualStudio.Text.UI" Version="$(VSComponentsVersion)" />
+        <PackageVersion Include="Microsoft.VisualStudio.Text.UI.Wpf" Version="$(VSComponentsVersion)" />
+        <PackageVersion Include="Microsoft.VisualStudio.TextManager.Interop" Version="7.10.6071" />
+        <PackageVersion Include="Microsoft.VisualStudio.TextManager.Interop.10.0" Version="10.0.30319" />
+        <PackageVersion Include="Microsoft.VisualStudio.Threading" Version="$(VSThreadingVersion)" />
+        <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="$(VSThreadingVersion)" />
+        <PackageVersion Include="Microsoft.VisualStudio.Workspace.VSIntegration" Version="16.3.43" />
+        <PackageVersion Include="Microsoft.Web.Xdt" Version="2.1.2" />
+        <PackageVersion Include="Newtonsoft.Json" Version="$(NewtonsoftJsonPackageVersion)" />
+        <PackageVersion Include="System.Collections.Immutable" Version="1.5.0" />
+        <PackageVersion Include="System.Diagnostics.Process" Version="$(SystemPackagesVersion)" />
+        <PackageVersion Include="System.Dynamic.Runtime" Version="$(SystemPackagesVersion)" /> 
+        <PackageVersion Include="System.Runtime.Serialization.Formatters" Version="$(SystemPackagesVersion)" />
+        <PackageVersion Include="System.Runtime.Serialization.Primitives" Version="$(SystemPackagesVersion)" />
+        <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="$(SystemPackagesVersion)" />
+        <PackageVersion Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />
+        <PackageVersion Include="System.Threading.Thread" Version="$(SystemPackagesVersion)" />
+        <PackageVersion Include="VSLangProj" Version="7.0.3301" />
+        <PackageVersion Include="VSLangProj110" Version="11.0.61031" />
+        <PackageVersion Include="VSLangProj157" Version="15.7.0" />
+        <PackageVersion Include="VSLangProj2" Version="7.0.5001" />
+        <PackageVersion Include="VSSDK.TemplateWizardInterface" Version="12.0.4" />
+	      <PackageVersion Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" />
+    </ItemGroup>
+
+    <!-- Test and utility packages -->
+    <ItemGroup>
+        <PackageVersion Include="EnvDTE" Version="8.0.2" />
+        <PackageVersion Include="FluentAssertions" Version="$(FluentAssertionsVersion)" />
+        <PackageVersion Include="Microsoft.Build.Runtime" Version="$(MicrosoftBuildPackageVersion)" />
+        <PackageVersion Include="Microsoft.CSharp" Version="$(SystemPackagesVersion)" />
+        <PackageVersion Include="Microsoft.CodeAnalysis" Version="3.0.0" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.Build.Tasks" Version="3.0.0-dev-61717-03" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="3.0.0-dev-61717-03" />
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="$(TestSDKVersion)" />
+        <PackageVersion Include="Microsoft.Net.Compilers.netcore" Version="3.0.0-dev-61717-03" />
+        <PackageVersion Include="Microsoft.PowerShell.3.ReferenceAssemblies" Version="1.0.0" />
+        <PackageVersion Include="Microsoft.Test.Apex.VisualStudio" Version="16.3.29131.53-pre" />
+        <PackageVersion Include="Microsoft.VisualStudio.ProjectSystem" Version="15.0.751" PrivateAssets="All" />
+        <PackageVersion Include="Microsoft.VisualStudio.Shell.Interop.15.0.DesignTime" Version="15.0.26932" />
+        <PackageVersion Include="Moq" Version="$(MoqVersion)" />
+        <PackageVersion Include="NuGet.Core" Version="2.14.0-rtm-832" />
+        <PackageVersion Include="Portable.BouncyCastle" Version="1.8.1.3" />
+        <PackageVersion Include="System.Diagnostics.TraceSource" Version="$(SystemPackagesVersion)" />
+        <PackageVersion Include="System.IO.Compression.ZipFile" Version="$(SystemPackagesVersion)" />
+        <PackageVersion Include="System.Runtime.Loader" Version="$(SystemPackagesVersion)" />
+        <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="4.5.2" />
+        <PackageVersion Include="System.Threading.Tasks.Parallel" Version="$(SystemPackagesVersion)" />
+        <PackageVersion Include="Xunit.StaFact" Version="0.2.9" />
+        <PackageVersion Include="xunit" Version="$(XunitVersion)" />
+        <PackageVersion Include="xunit.runner.visualstudio" Version="$(XunitVersion)" />
+    </ItemGroup>
+</Project>

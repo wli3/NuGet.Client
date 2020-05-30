@@ -2,7 +2,4 @@
 <PropertyGroup>
 	<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
 </PropertyGroup>
-<ItemGroup>
-    <!-- <PackageReference Include="Newtonsoft.Json" NoWarn="NU1605" /> -->
- </ItemGroup>
 </Project>

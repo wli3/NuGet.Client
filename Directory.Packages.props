@@ -25,12 +25,13 @@
         <PackageVersion Include="Microsoft.Build.Locator" Version="1.2.2" />
         <PackageVersion Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildPackageVersion)" />
         <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildPackageVersion)" />
+<PackageVersion Include="Microsoft.DataAI.NuGetRecommender.Contracts" Version="2.1.0" />
         <PackageVersion Include="Microsoft.Extensions.CommandLineUtils" Version="1.0.1" />
         <PackageVersion Include="Microsoft.Internal.VisualStudio.Shell.Embeddable" Version="16.4.29305.180" />
         <PackageVersion Include="Microsoft.ServiceHub.Framework" Version="2.3.60" />
         <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19351-01" />
         <PackageVersion Include="Microsoft.TeamFoundationServer.ExtendedClient" Version="$(VSServicesVersion)" />
-        <PackageVersion Include="Microsoft.VSSDK.BuildTools" Version="16.4.1059" />
+        <PackageVersion Include="Microsoft.VSSDK.BuildTools" Version="16.7.11" />
         <PackageVersion Include="Microsoft.VisualStudio.ComponentModelHost" Version="$(VSComponentsVersion)" />
         <PackageVersion Include="Microsoft.VisualStudio.CoreUtility" Version="$(VSComponentsVersion)" />
         <PackageVersion Include="Microsoft.VisualStudio.Editor" Version="$(VSComponentsVersion)" />
@@ -48,6 +49,7 @@
         <PackageVersion Include="Microsoft.VisualStudio.Shell.Interop.12.0" Version="12.0.30111" />
         <PackageVersion Include="Microsoft.VisualStudio.Shell.Interop.16.0.DesignTime" Version="16.0.0" />
         <PackageVersion Include="Microsoft.VisualStudio.Shell.Interop.16.3.DesignTime" Version="16.5.29616.81" />
+        <PackageVersion Include="Microsoft.VisualStudio.Shell.Interop.16.6.DesignTime" Version="16.7.30014.49" />
         <PackageVersion Include="Microsoft.VisualStudio.Telemetry" Version="16.3.2" />
         <PackageVersion Include="Microsoft.VisualStudio.Text.Data" Version="$(VSComponentsVersion)" />
         <PackageVersion Include="Microsoft.VisualStudio.Text.Logic" Version="$(VSComponentsVersion)" />
@@ -58,6 +60,7 @@
         <PackageVersion Include="Microsoft.VisualStudio.Threading" Version="$(VSThreadingVersion)" />
         <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="$(VSThreadingVersion)" />
         <PackageVersion Include="Microsoft.VisualStudio.Workspace.VSIntegration" Version="16.3.43" />
+<PackageVersion Include="Microsoft.VisualStudio.Utilities" Version="16.5.29714.20" />
         <PackageVersion Include="Microsoft.Web.Xdt" Version="2.1.2" />
         <PackageVersion Include="Newtonsoft.Json" Version="$(NewtonsoftJsonPackageVersion)" />
         <PackageVersion Include="System.Collections.Immutable" Version="1.5.0" />

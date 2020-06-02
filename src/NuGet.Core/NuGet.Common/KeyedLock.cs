@@ -40,12 +40,12 @@ namespace NuGet.Common
 
             try
             {
-                using (CancellationTokenSource source = new CancellationTokenSource())
-                {
-                    token = source.Token;
-                    source.Cancel();
+                //using (CancellationTokenSource source = new CancellationTokenSource())
+                //{
+                //    token = source.Token;
+                //    source.Cancel();
                     await lockState.Semaphore.WaitAsync(token);
-                }
+                //}
             }
             catch
             {

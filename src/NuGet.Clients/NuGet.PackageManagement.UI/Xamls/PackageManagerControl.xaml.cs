@@ -8,9 +8,12 @@ using System.Globalization;
 using System.Linq;
 using System.Security;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Microsoft.VisualStudio.Experimentation;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
 using NuGet.Common;
@@ -19,18 +22,15 @@ using NuGet.PackageManagement.Telemetry;
 using NuGet.PackageManagement.VisualStudio;
 using NuGet.Packaging.Core;
 using NuGet.ProjectManagement;
+using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using NuGet.Resolver;
 using NuGet.Versioning;
 using NuGet.VisualStudio;
 using NuGet.VisualStudio.Telemetry;
 using Resx = NuGet.PackageManagement.UI;
-using VSThreadHelper = Microsoft.VisualStudio.Shell.ThreadHelper;
 using Task = System.Threading.Tasks.Task;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.Shell;
-using NuGet.Protocol;
-using Microsoft.VisualStudio.Experimentation;
+using VSThreadHelper = Microsoft.VisualStudio.Shell.ThreadHelper;
 
 namespace NuGet.PackageManagement.UI
 {
@@ -1458,6 +1458,52 @@ namespace NuGet.PackageManagement.UI
                             TelemetryUtility.CreateFileAndForgetEventName(
                                 nameof(PackageManagerControl),
                                 nameof(UpgradeButton_Click)));
+        }
+
+        private void GridSplitter_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            var exception = new Exception("cool message");
+            var faultedTask = Task.FromException(exception);
+            faultedTask.DonnieAndForget("/vs/nuget/test");
+
+            var nameOfEvent = TelemetryUtility.CreateFileAndForgetEventName("blah", "thing");
+            faultedTask.FileAndForget(nameOfEvent);
+        }
+
+       
+    }
+
+    public static class DonnieExtensions
+    {
+        public static void DonnieAndForget(this System.Threading.Tasks.Task task, string faultEventName, string faultDescription = null, Func<Exception, bool> fileOnlyIf = null)
+        {
+            string thing = faultEventName;
+            Debug.WriteLine(faultEventName);
+
+            ThreadHelper.JoinableTaskFactory.RunAsync(async delegate
+            {
+                try
+                {
+#pragma warning disable VSTHRD003 // As a fire-and-forget continuation, deadlocks can't happen.
+                    await task.ConfigureAwait(false);
+#pragma warning restore VSTHRD003
+                }
+                catch (Exception ex) when (fileOnlyIf?.Invoke(ex) ?? true)
+                {
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+                    // Post a fault event for the task exception. We turn off Watson sampling to prevent WER from causing a UI delay
+                    // because FileAndForget is called from various components, sometimes with a relatively high exception rate.
+                    var nameOfEvent = TelemetryUtility.CreateFileAndForgetEventName("blah", "thing");
+                    Microsoft.VisualStudio.Telemetry.FaultEvent faultEvent = new Microsoft.VisualStudio.Telemetry.FaultEvent(nameOfEvent, null);
+                    faultEvent.IsIncludedInWatsonSample = false;
+                    Microsoft.Internal.VisualStudio.Shell.TelemetryHelper.DataModelTelemetrySession?.PostEvent(faultEvent);
+
+                    string message = faultDescription != null ? faultDescription + Environment.NewLine : string.Empty;
+                    message += ex;
+                    ActivityLog.TryLogError(faultEventName, message);
+                }
+            });
         }
     }
 }

@@ -83,9 +83,12 @@ namespace NuGet.Packaging.FuncTest
                     var errors = logs.Where(l => l.Level == LogLevel.Error);
 
                     errors.Count().Should().Be(RuntimeEnvironmentHelper.IsMacOSX ? 1 : 2);
-
-                    SigningTestUtility.AssertOfflineRevocation(errors, LogLevel.Error, NuGetLogCode.NU3028);
                     SigningTestUtility.AssertRevocationStatusUnknown(errors, LogLevel.Error, NuGetLogCode.NU3028);
+
+                    if (!RuntimeEnvironmentHelper.IsMacOSX)
+                    {
+                        SigningTestUtility.AssertOfflineRevocationOnlineMode(errors, LogLevel.Error, NuGetLogCode.NU3028);
+                    }
                 }
             }
         }

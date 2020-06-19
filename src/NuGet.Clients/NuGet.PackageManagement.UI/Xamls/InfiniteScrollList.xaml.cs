@@ -203,7 +203,7 @@ namespace NuGet.PackageManagement.UI
             _selectedCount = 0;
 
             // triggers the package list loader
-            LoadItems(selectedPackageItem, token);
+            await LoadItems(selectedPackageItem, token);
         }
 
         /// <summary>
@@ -224,7 +224,7 @@ namespace NuGet.PackageManagement.UI
             _list.SelectedItem = selectedItem ?? PackageItemsFiltered.FirstOrDefault();
         }
 
-        private void LoadItems(PackageItemListViewModel selectedPackageItem, CancellationToken token)
+        private async Task LoadItems(PackageItemListViewModel selectedPackageItem, CancellationToken token)
         {
             // If there is another async loading process - cancel it.
             var loadCts = CancellationTokenSource.CreateLinkedTokenSource(token);
@@ -232,13 +232,13 @@ namespace NuGet.PackageManagement.UI
 
             var currentLoader = _loader;
 
-            _joinableTaskFactory.Value.RunAsync(
-                    () => RepopulatePackageList(selectedPackageItem, currentLoader, loadCts)
-                )
-                .FileAndForget(TelemetryUtility.CreateFileAndForgetEventName(
-                    nameof(InfiniteScrollList),
-                    nameof(RepopulatePackageList)
-                ));
+            await _joinableTaskFactory.Value.RunAsync(
+                    async () => await RepopulatePackageList(selectedPackageItem, currentLoader, loadCts)
+                );
+                //.FileAndForget(TelemetryUtility.CreateFileAndForgetEventName(
+                //    nameof(InfiniteScrollList),
+                //    nameof(RepopulatePackageList)
+                //));
         }
 
         private async Task RepopulatePackageList(PackageItemListViewModel selectedPackageItem, IPackageItemLoader currentLoader, CancellationTokenSource loadCts)
@@ -769,7 +769,9 @@ namespace NuGet.PackageManagement.UI
                 var last = _scrollViewer.ViewportHeight + first;
                 if (_scrollViewer.ViewportHeight > 0 && last >= Items.Count)
                 {
-                    LoadItems(selectedPackageItem: null, token: CancellationToken.None);
+                    NuGetUIThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+                        await LoadItems(selectedPackageItem: null, token: CancellationToken.None)
+                    );
                 }
             }
         }

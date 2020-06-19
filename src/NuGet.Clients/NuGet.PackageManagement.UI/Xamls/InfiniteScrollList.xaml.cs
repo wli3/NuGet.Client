@@ -99,33 +99,60 @@ namespace NuGet.PackageManagement.UI
             });
         }
 
-        // Indicates wether check boxes are enabled on packages
-        private bool _checkBoxesEnabled;
-
-        public bool CheckBoxesEnabled
-        {
-            get
-            {
-                return _checkBoxesEnabled;
-            }
-            set
-            {
-                _checkBoxesEnabled = value;
-
-                if (!_checkBoxesEnabled)
-                {
-                    // the current tab is not "updates", so the container
-                    // should become invisible.
-                    _updateButtonContainer.Visibility = Visibility.Collapsed;
-                }
-            }
-        }
+        public bool CheckBoxesEnabled { get; set; }
 
         public bool IsSolution { get; set; }
 
         public ObservableCollection<object> Items { get; } = new ObservableCollection<object>();
+        private ICollectionView CollectionView
+        {
+            get
+            {
+                return CollectionViewSource.GetDefaultView(Items);
+            }
+        }
 
+        /// <summary>
+        /// Count of Items (excluding Loading indicator) that are currently shown after applying any UI filtering.
+        /// </summary>
+        private int FilterCount
+        {
+            get
+            {
+                if (CollectionView.Filter != null)
+                {
+                    var listCollectionView = (ListCollectionView)CollectionView;
+                    return listCollectionView.OfType<PackageItemListViewModel>().Count();
+                }
+                else
+                {
+                    return Items.OfType<PackageItemListViewModel>().Count();
+                }
+            }
+        }
+
+        /// <summary>
+        /// All loaded Items (excluding Loading indicator) regardless of filtering.
+        /// </summary>
         public IEnumerable<PackageItemListViewModel> PackageItems => Items.OfType<PackageItemListViewModel>().ToArray();
+
+        /// <summary>
+        /// Items (excluding Loading indicator) that are currently shown after applying any UI filtering.
+        /// </summary>
+        public IEnumerable<PackageItemListViewModel> PackageItemsFiltered
+        {
+            get
+            {
+                if (CollectionView.Filter != null)
+                {
+                    return CollectionView.OfType<PackageItemListViewModel>();
+                }
+                else
+                {
+                    return PackageItems;
+                }
+            }
+        }
 
         public PackageItemListViewModel SelectedPackageItem => _list.SelectedItem as PackageItemListViewModel;
 
@@ -189,12 +216,12 @@ namespace NuGet.PackageManagement.UI
             if (selectedItem != null)
             {
                 // select the the previously selected item if it still exists.
-                selectedItem = PackageItems
+                selectedItem = PackageItemsFiltered
                     .FirstOrDefault(item => item.Id.Equals(selectedItem.Id, StringComparison.OrdinalIgnoreCase));
             }
 
             // select the first item if none was selected before
-            _list.SelectedItem = selectedItem ?? PackageItems.FirstOrDefault();
+            _list.SelectedItem = selectedItem ?? PackageItemsFiltered.FirstOrDefault();
         }
 
         private void LoadItems(PackageItemListViewModel selectedPackageItem, CancellationToken token)
@@ -232,6 +259,9 @@ namespace NuGet.PackageManagement.UI
                 await LoadItemsCoreAsync(currentLoader, loadCts.Token);
 
                 await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
+
+                //Any UI filter should be cleared when Loading.
+                ClearItemsFilter();
 
                 if (selectedPackageItem != null)
                 {
@@ -298,6 +328,99 @@ namespace NuGet.PackageManagement.UI
             UpdateCheckBoxStatus();
 
             LoadItemsCompleted?.Invoke(this, EventArgs.Empty);
+        }
+
+        internal void FilterItems(ItemFilter itemFilter, CancellationToken token)
+        {
+            // If there is another async loading process - cancel it.
+            var loadCts = CancellationTokenSource.CreateLinkedTokenSource(token);
+            Interlocked.Exchange(ref _loadCts, loadCts)?.Cancel();
+
+            //_joinableTaskFactory.Value.RunAsync(async () =>
+            //{
+            try
+            {
+                //        await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
+
+                if (itemFilter == ItemFilter.UpdatesAvailable)
+                    {
+                        ApplyItemsFilterForUpdatesAvailable();
+                    }
+                    else
+                    {
+                        //Show all the items, without an Update filter.
+                        ClearItemsFilter();
+                    }
+                }
+                catch (OperationCanceledException) when (!loadCts.IsCancellationRequested)
+                {
+                    loadCts.Cancel();
+                    loadCts.Dispose();
+
+                    //await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
+
+                    // The user cancelled the login, but treat as a load error in UI
+                    // So the retry button and message is displayed
+                    // Do not log to the activity log, since it is not a NuGet error
+                    _logger.Log(ProjectManagement.MessageLevel.Error, Resx.Resources.Text_UserCanceled);
+
+                    _loadingStatusIndicator.SetError(Resx.Resources.Text_UserCanceled);
+
+                    _loadingStatusBar.SetCancelled();
+                    _loadingStatusBar.Visibility = Visibility.Visible;
+                }
+                catch (Exception ex) when (!loadCts.IsCancellationRequested)
+                {
+                    loadCts.Cancel();
+                    loadCts.Dispose();
+
+                    // Write stack to activity log
+                    Mvs.ActivityLog.LogError(LogEntrySource, ex.ToString());
+
+                    //await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
+
+                    var errorMessage = ExceptionUtilities.DisplayMessage(ex);
+                    _logger.Log(ProjectManagement.MessageLevel.Error, errorMessage);
+
+                    _loadingStatusIndicator.SetError(errorMessage);
+
+                    _loadingStatusBar.SetError();
+                    _loadingStatusBar.Visibility = Visibility.Visible;
+                }
+                finally
+                {
+                    //If no items are shown in the filter, indicate in the list that no packages are found.
+                    if (FilterCount == 0)
+                    {
+                        if (!Items.Contains(_loadingStatusIndicator))
+                        {
+                            Items.Add(_loadingStatusIndicator);
+                        }
+                        _loadingStatusIndicator.Status = LoadingStatus.NoItemsFound;
+                    }
+                    else
+                    {
+                        //There are packages, but since no loading will occur, there's no need for an indicator.
+                        if (Items.Contains(_loadingStatusIndicator))
+                        {
+                            Items.Remove(_loadingStatusIndicator);
+                        }
+                    }
+                }
+
+                UpdateCheckBoxStatus();
+
+                LoadItemsCompleted?.Invoke(this, EventArgs.Empty);
+            //});
+        }
+
+        private void ApplyItemsFilterForUpdatesAvailable()
+        {
+            CollectionView.Filter = (item) => item == _loadingStatusIndicator || (item as PackageItemListViewModel).IsUpdateAvailable;
+        }
+        private void ClearItemsFilter()
+        {
+            CollectionView.Filter = null;
         }
 
         private async Task LoadItemsCoreAsync(IPackageItemLoader currentLoader, CancellationToken token)
@@ -522,7 +645,7 @@ namespace NuGet.PackageManagement.UI
         {
             // in this case, we only need to update PackageStatus of
             // existing items in the package list
-            foreach (var package in PackageItems)
+            foreach (var package in PackageItemsFiltered)
             {
                 package.UpdatePackageStatus(installedPackages);
             }
@@ -549,31 +672,16 @@ namespace NuGet.PackageManagement.UI
         // Update the status of the _selectAllPackages check box and the Update button.
         private void UpdateCheckBoxStatus()
         {
+            // The current tab is not "Updates".
             if (!CheckBoxesEnabled)
             {
-                // the current tab is not "updates"
                 _updateButtonContainer.Visibility = Visibility.Collapsed;
                 return;
             }
 
-            int packageCount;
-            if (Items.Count == 0)
-            {
-                packageCount = 0;
-            }
-            else
-            {
-                if (Items[Items.Count - 1] == _loadingStatusIndicator)
-                {
-                    packageCount = Items.Count - 1;
-                }
-                else
-                {
-                    packageCount = Items.Count;
-                }
-            }
+            //Are any packages shown with the current filter?
+            int packageCount = FilterCount;
 
-            // update the container's visibility
             _updateButtonContainer.Visibility =
                 packageCount > 0 ?
                 Visibility.Visible :
@@ -695,7 +803,7 @@ namespace NuGet.PackageManagement.UI
 
         private void _updateButton_Click(object sender, RoutedEventArgs e)
         {
-            var selectedPackages = PackageItems.Where(p => p.Selected).ToArray();
+            var selectedPackages = PackageItemsFiltered.Where(p => p.Selected).ToArray();
             UpdateButtonClicked(selectedPackages);
         }
 

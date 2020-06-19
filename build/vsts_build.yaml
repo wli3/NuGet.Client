@@ -552,7 +552,7 @@ jobs:
   variables:
     BuildNumber: $[dependencies.Initialize_Build.outputs['updatebuildnumber.BuildNumber']]
     FullVstsBuildNumber: $[dependencies.Initialize_Build.outputs['updatebuildnumber.FullVstsBuildNumber']]
-  condition: "and(succeeded(),eq(variables['RunFunctionalTestsOnWindows'], 'true')) "
+  condition: "failed() "
   pool:
     name: VSEng-MicroBuildVS2019
     demands:
@@ -635,7 +635,7 @@ jobs:
   variables:
     FULLVSTSBUILDNUMBER: $[dependencies.Initialize_Build.outputs['updatebuildnumber.FullVstsBuildNumber']]
     MSBUILDDISABLENODEREUSE: 1
-  condition: "and(succeeded(),eq(variables['RunTestsOnLinux'], 'true')) "
+  condition: "failed() "
   pool:
     vmImage: ubuntu-latest
     demands: sh
@@ -685,7 +685,7 @@ jobs:
   timeoutInMinutes: 75
   variables:
     FULLVSTSBUILDNUMBER: $[dependencies.Initialize_Build.outputs['updatebuildnumber.FullVstsBuildNumber']]
-  condition: "and(succeeded(),eq(variables['RunTestsOnMac'], 'true')) "
+  condition: "failed() "
   pool:
     vmImage: macos-latest
 
@@ -746,7 +746,7 @@ jobs:
     name: DDNuGet-Windows
     demands:
     - DotNetFramework
-    - Allow_NuGet_E2E_Tests -equals true
+    - Agent.Name -equals DDNuGetW001
 
   steps:
   - task: PowerShell@1
@@ -845,7 +845,7 @@ jobs:
     name: DDNuGet-Windows
     demands:
     - DotNetFramework
-    - Allow_NuGet_Apex_Tests -equals true
+    - Agent.Name -equals DDNuGetW001
 
   steps:
   - checkout: self

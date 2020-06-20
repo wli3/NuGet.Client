@@ -13,7 +13,7 @@ namespace NuGet.Tests.Apex
     public class NuGetUIProjectTestExtension : NuGetBaseTestExtension<object, NuGetUIProjectTestExtensionVerifier>
     {
         private ApexTestUIProject _uiproject;
-        private TimeSpan _timeout = TimeSpan.FromSeconds(15);
+        private TimeSpan _timeout = TimeSpan.FromSeconds(10);
 
         public bool IsSolution { get => _uiproject.IsSolution; }
 

@@ -29,7 +29,7 @@ However NuGet is also considered a system component which means it cannot be man
 
 #### Installing a custom version of the NuGet extension in Visual Studio
 
-The build generates a vsix artifact in the `artifacts/VS15/` folder. From the [Developer Command Prompt for VS](https://docs.microsoft.com/en-us/dotnet/framework/tools/developer-command-prompt-for-vs) run the `VSIXInstaller.exe` with the vsix path as the first argument. Alternatively VS configures the default action for VSIX files.
+The build generates a vsix artifact in the `artifacts/` folder. From the [Developer Command Prompt for VS](https://docs.microsoft.com/en-us/dotnet/framework/tools/developer-command-prompt-for-vs) run the `VSIXInstaller.exe` with the vsix path as the first argument. Alternatively VS configures the default action for VSIX files.
 
 #### Uninstalling a custom version of the NuGet extension from Visual Studio
 

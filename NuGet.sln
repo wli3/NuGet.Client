@@ -233,6 +233,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NuGet.VisualStudio.OnlineEn
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.VisualStudio.Internal.Contracts", "src\NuGet.Clients\NuGet.VisualStudio.Internal.Contracts\NuGet.VisualStudio.Internal.Contracts.csproj", "{DEEBF1A1-1C21-4E9E-8CE3-1EB21381FF1E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Bechmarking", "Bechmarking", "{CDB88762-FBE7-4342-9AA7-4B50D1EA7E26}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Nuget.Protocol.Benchmarking", "Nuget.Protocol.Benchmarking", "{0A386A03-0936-4D1D-8BBF-A4BDD921AE3F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nuget.Protocol.Benchmarking", "test\Benchmarking\Nuget.Protocol.Benchmarking\Nuget.Protocol.Benchmarking.csproj", "{4F1DE44C-5948-4D31-8DA1-50242B96A268}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -563,6 +569,10 @@ Global
 		{DEEBF1A1-1C21-4E9E-8CE3-1EB21381FF1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DEEBF1A1-1C21-4E9E-8CE3-1EB21381FF1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DEEBF1A1-1C21-4E9E-8CE3-1EB21381FF1E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F1DE44C-5948-4D31-8DA1-50242B96A268}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F1DE44C-5948-4D31-8DA1-50242B96A268}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F1DE44C-5948-4D31-8DA1-50242B96A268}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F1DE44C-5948-4D31-8DA1-50242B96A268}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -659,6 +669,9 @@ Global
 		{2011B5A4-2184-4F94-9897-E5BC2425DCDA} = {7323F93B-D141-4001-BB9E-7AF14031143E}
 		{290DB64D-74BA-45C5-BAC0-6E31A8AFD5CB} = {08F523EC-3C2A-4A00-A54C-2E54C5AC856B}
 		{DEEBF1A1-1C21-4E9E-8CE3-1EB21381FF1E} = {08F523EC-3C2A-4A00-A54C-2E54C5AC856B}
+		{CDB88762-FBE7-4342-9AA7-4B50D1EA7E26} = {D1549653-9631-4E16-9967-55427174A0DC}
+		{0A386A03-0936-4D1D-8BBF-A4BDD921AE3F} = {CDB88762-FBE7-4342-9AA7-4B50D1EA7E26}
+		{4F1DE44C-5948-4D31-8DA1-50242B96A268} = {0A386A03-0936-4D1D-8BBF-A4BDD921AE3F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3747A66A-00D1-41B8-A9C5-ED0D7BEA9D25}

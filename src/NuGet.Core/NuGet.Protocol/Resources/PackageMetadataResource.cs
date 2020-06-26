@@ -10,6 +10,8 @@ namespace NuGet.Protocol.Core.Types
 {
     public abstract class PackageMetadataResource : INuGetResource
     {
+        public int UseNew { get; set; } = 1;
+
         /// <summary>
         /// Returns all versions of a package
         /// </summary>

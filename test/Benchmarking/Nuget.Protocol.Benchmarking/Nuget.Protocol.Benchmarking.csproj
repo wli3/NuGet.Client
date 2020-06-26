@@ -1,0 +1,103 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="CortonaIndex.json" />
+    <None Remove="dotnetfeed.blob.core.windows.net.json" />
+    <None Remove="fak19.json" />
+    <None Remove="fake1.json" />
+    <None Remove="fake10.json" />
+    <None Remove="fake11.json" />
+    <None Remove="fake12.json" />
+    <None Remove="fake13.json" />
+    <None Remove="fake14.json" />
+    <None Remove="fake15.json" />
+    <None Remove="fake16.json" />
+    <None Remove="fake17.json" />
+    <None Remove="fake18.json" />
+    <None Remove="fake2.json" />
+    <None Remove="fake20.json" />
+    <None Remove="fake21.json" />
+    <None Remove="fake22.json" />
+    <None Remove="fake23.json" />
+    <None Remove="fake24.json" />
+    <None Remove="fake25.json" />
+    <None Remove="fake26.json" />
+    <None Remove="fake27.json" />
+    <None Remove="fake3.json" />
+    <None Remove="fake4.json" />
+    <None Remove="fake5.json" />
+    <None Remove="fake6.json" />
+    <None Remove="fake7.json" />
+    <None Remove="fake8.json" />
+    <None Remove="fake9.json" />
+    <None Remove="fakeIndex.json" />
+    <None Remove="list_microsoft.cortana.runtime.framework_index.json" />
+    <None Remove="nuget-org.json" />
+    <None Remove="NugetIndex.json" />
+    <None Remove="_Index.json" />
+    <None Remove="_Page.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="CortonaIndex.json" />
+    <EmbeddedResource Include="fak19.json" />
+    <EmbeddedResource Include="fake1.json" />
+    <EmbeddedResource Include="fake10.json" />
+    <EmbeddedResource Include="fake11.json" />
+    <EmbeddedResource Include="fake12.json" />
+    <EmbeddedResource Include="fake13.json" />
+    <EmbeddedResource Include="fake14.json" />
+    <EmbeddedResource Include="fake15.json" />
+    <EmbeddedResource Include="fake16.json" />
+    <EmbeddedResource Include="fake17.json" />
+    <EmbeddedResource Include="fake18.json" />
+    <EmbeddedResource Include="fake2.json" />
+    <EmbeddedResource Include="fake20.json" />
+    <EmbeddedResource Include="fake21.json" />
+    <EmbeddedResource Include="fake22.json" />
+    <EmbeddedResource Include="fake23.json" />
+    <EmbeddedResource Include="fake24.json" />
+    <EmbeddedResource Include="fake25.json" />
+    <EmbeddedResource Include="fake26.json" />
+    <EmbeddedResource Include="fake27.json" />
+    <EmbeddedResource Include="fake3.json" />
+    <EmbeddedResource Include="fake4.json" />
+    <EmbeddedResource Include="fake5.json" />
+    <EmbeddedResource Include="fake6.json" />
+    <EmbeddedResource Include="fake7.json" />
+    <EmbeddedResource Include="fake8.json" />
+    <EmbeddedResource Include="fake9.json" />
+    <EmbeddedResource Include="fakeIndex.json" />
+    <EmbeddedResource Include="list_microsoft.cortana.runtime.framework_index.json" />
+    <EmbeddedResource Include="NugetIndex.json" />
+    <EmbeddedResource Include="_Index.json" />
+    <EmbeddedResource Include="_Page.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+    <PackageReference Include="Moq" Version="4.14.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\NuGet.Clients\NuGet.Tools\NuGet.Tools.csproj" />
+    <ProjectReference Include="..\..\..\src\NuGet.Core\NuGet.Common\NuGet.Common.csproj" />
+    <ProjectReference Include="..\..\..\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj" />
+    <ProjectReference Include="..\..\..\src\NuGet.Core\NuGet.Protocol\NuGet.Protocol.csproj" />
+    <ProjectReference Include="..\..\..\src\NuGet.Core\NuGet.Versioning\NuGet.Versioning.csproj" />
+    <ProjectReference Include="..\..\TestUtilities\Test.Utility\Test.Utility.csproj" />
+  </ItemGroup>
+
+</Project>

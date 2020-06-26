@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NuGet.Common;
 using NuGet.Packaging.Core;
 using NuGet.Protocol.Core.Types;
@@ -51,7 +52,33 @@ namespace NuGet.Protocol
             Common.ILogger log,
             CancellationToken token)
         {
-            return await GetMetadataAsync(packageId, includePrerelease, includeUnlisted, range : VersionRange.All, sourceCacheContext, log, token);
+            if (UseNew==1)
+            {
+                return await GetMetadataAsync(packageId, includePrerelease, includeUnlisted, range : VersionRange.All, sourceCacheContext, log, token);
+            }
+            else
+            {
+                return await GetMetadataOldAsync(packageId, includePrerelease, includeUnlisted, sourceCacheContext, log, token);
+            }
+        }
+
+        private async Task<IEnumerable<IPackageSearchMetadata>> GetMetadataOldAsync(
+            string packageId,
+            bool includePrerelease,
+            bool includeUnlisted,
+            SourceCacheContext sourceCacheContext,
+            Common.ILogger log,
+            CancellationToken token)
+        {
+            var metadataCache = new MetadataReferenceCache();
+
+            var packages =
+                (await _regResource.GetPackageMetadata(packageId, includePrerelease, includeUnlisted, sourceCacheContext, log, token))
+                    .Select(ParseMetadata)
+                    .Select(m => metadataCache.GetObject(m))
+                    .ToArray();
+
+            return packages;
         }
 
         /// <summary>
@@ -273,10 +300,18 @@ namespace NuGet.Protocol
                 {
                     catalogEntry.ReportAbuseUrl = _reportAbuseResource?.GetReportAbuseUrl(catalogEntry.PackageId, catalogEntry.Version);
                     catalogEntry.PackageDetailsUrl = _packageDetailsUriResource?.GetUri(catalogEntry.PackageId, catalogEntry.Version);
-                    catalogEntry = metadataCache.GetObject(catalogEntry);
+                    metadataCache.GetObject(catalogEntry);
                     results.Add(catalogEntry);
                 }
             }
+        }
+
+        private PackageSearchMetadataRegistration ParseMetadata(JObject metadata)
+        {
+            var parsed = metadata.FromJToken<PackageSearchMetadataRegistration>();
+            parsed.ReportAbuseUrl = _reportAbuseResource?.GetReportAbuseUrl(parsed.PackageId, parsed.Version);
+            parsed.PackageDetailsUrl = _packageDetailsUriResource?.GetUri(parsed.PackageId, parsed.Version);
+            return parsed;
         }
     }
 }

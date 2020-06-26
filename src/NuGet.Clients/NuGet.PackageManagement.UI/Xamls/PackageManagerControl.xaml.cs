@@ -381,6 +381,7 @@ namespace NuGet.PackageManagement.UI
             if (!(_loadedAndInitialized && _topPanel.Filter == ItemFilter.All))
             {
                 _loadedAndInitialized = true;
+                ResetTabLoadFlags();
                 SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: false);
                 EmitRefreshEvent(timeSpan, RefreshOperationSource.PackageManagerLoaded, RefreshOperationStatus.Success);
             }
@@ -477,6 +478,8 @@ namespace NuGet.PackageManagement.UI
             // search when needed by itself.
             _dontStartNewSearch = true;
             var timeSpan = GetTimeSinceLastRefreshAndRestart();
+            ResetTabLoadFlags();
+
             try
             {
                 var prevSelectedItem = SelectedSource;
@@ -1120,6 +1123,8 @@ namespace NuGet.PackageManagement.UI
         private void SourceRepoList_SelectionChanged(object sender, EventArgs e)
         {
             var timeSpan = GetTimeSinceLastRefreshAndRestart();
+            ResetTabLoadFlags();
+
             if (_dontStartNewSearch || !_initialized)
             {
                 EmitRefreshEvent(timeSpan, RefreshOperationSource.SourceSelectionChanged, RefreshOperationStatus.NoOp);
@@ -1189,6 +1194,8 @@ namespace NuGet.PackageManagement.UI
         /// </summary>
         private void Refresh()
         {
+            ResetTabLoadFlags();
+
             if (_topPanel.Filter != ItemFilter.All)
             {
                 // refresh the whole package list
@@ -1227,6 +1234,7 @@ namespace NuGet.PackageManagement.UI
             {
                 return;
             }
+            ResetTabLoadFlags();
             var timeSpan = GetTimeSinceLastRefreshAndRestart();
             RegistrySettingUtility.SetBooleanSetting(
                 Constants.IncludePrereleaseRegistryName,
@@ -1257,6 +1265,7 @@ namespace NuGet.PackageManagement.UI
 
         public void ClearSearch()
         {
+            ResetTabLoadFlags();
             EmitRefreshEvent(GetTimeSinceLastRefreshAndRestart(), RefreshOperationSource.ClearSearch, RefreshOperationStatus.Success);
             SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: true);
         }
@@ -1482,6 +1491,7 @@ namespace NuGet.PackageManagement.UI
         private void ExecuteRestartSearchCommand(object sender, ExecutedRoutedEventArgs e)
         {
             EmitRefreshEvent(GetTimeSinceLastRefreshAndRestart(), RefreshOperationSource.RestartSearchCommand, RefreshOperationStatus.Success);
+            ResetTabLoadFlags();
             try
             {
                 SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: false);

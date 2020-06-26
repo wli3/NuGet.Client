@@ -2,50 +2,9 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="CortonaIndex.json" />
-    <None Remove="dotnetfeed.blob.core.windows.net.json" />
-    <None Remove="fak19.json" />
-    <None Remove="fake1.json" />
-    <None Remove="fake10.json" />
-    <None Remove="fake11.json" />
-    <None Remove="fake12.json" />
-    <None Remove="fake13.json" />
-    <None Remove="fake14.json" />
-    <None Remove="fake15.json" />
-    <None Remove="fake16.json" />
-    <None Remove="fake17.json" />
-    <None Remove="fake18.json" />
-    <None Remove="fake19.json" />
-    <None Remove="fake2.json" />
-    <None Remove="fake20.json" />
-    <None Remove="fake21.json" />
-    <None Remove="fake22.json" />
-    <None Remove="fake23.json" />
-    <None Remove="fake24.json" />
-    <None Remove="fake25.json" />
-    <None Remove="fake26.json" />
-    <None Remove="fake27.json" />
-    <None Remove="fake28.json" />
-    <None Remove="fake29.json" />
-    <None Remove="fake3.json" />
-    <None Remove="fake4.json" />
-    <None Remove="fake5.json" />
-    <None Remove="fake6.json" />
-    <None Remove="fake7.json" />
-    <None Remove="fake8.json" />
-    <None Remove="fake9.json" />
-    <None Remove="fakeIndex.json" />
-    <None Remove="list_microsoft.cortana.runtime.framework_index.json" />
-    <None Remove="nuget-org.json" />
-    <None Remove="NugetIndex.json" />
-    <None Remove="_Index.json" />
-    <None Remove="_Page.json" />
-  </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="CortonaIndex.json" />
@@ -83,7 +42,7 @@
     <EmbeddedResource Include="_Page.json" />
   </ItemGroup>
 
-  <ItemGroup>
+   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
     <PackageReference Include="Moq" Version="4.14.4" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />

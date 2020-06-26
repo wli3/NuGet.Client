@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Order;
 using NuGet.Common;
 using NuGet.Configuration;
@@ -16,13 +15,9 @@ using Xunit;
 
 namespace Nuget.Protocol.Benchmarking
 {
-    [SimpleJob(RuntimeMoniker.Net47)]
-    [SimpleJob(RuntimeMoniker.Net48)]
-    [SimpleJob(RuntimeMoniker.NetCoreApp21)]
-    [SimpleJob(RuntimeMoniker.NetCoreApp31)]
     [MemoryDiagnoser]
     [Orderer(SummaryOrderPolicy.FastestToSlowest)]
-    //[RankColumn]
+    [RankColumn]
     public class PerformanceJsonParseTests
     {
         private static Stream GetEmbeddedSource(string resoucename)
@@ -38,8 +33,8 @@ namespace Nuget.Protocol.Benchmarking
             return stream;
         }
 
-        [Params("S","M","L","XL")]
-        public string Load { get; set; } = "S";
+        [Params("S", "M", "L")]
+        public string Load { get; set; } = "XL";
 
         private string ResourceName()
         {
@@ -55,17 +50,18 @@ namespace Nuget.Protocol.Benchmarking
             {
               return  @"Fake";
             }
-            else
+            else if(Load == "AZDEV")
             {
                 return @"Microsoft.Cortana.Runtime.Framework";
             }
+            return @"Microsoft.Cortana.Runtime.Framework";
         }
 
         [Theory]
         [InlineData(0)]
         public async Task PackageMetadataResourceV3_UnitTestAsync(int testNo)
         {
-            await PackageMetadataResourceV3_TestAsync(testNo);
+            PackageMetadataResourceV3_TestAsync(testNo);
         }
 
         public async Task PackageMetadataResourceV3_TestAsync(int testNo)
@@ -342,103 +338,103 @@ namespace Nuget.Protocol.Benchmarking
                         responseString = reader.ReadToEnd();
                         break;
                     case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/1.74.147/1.74.239.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake4.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/1.74.241/2.0.83-alpha.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake5.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/2.0.84-alpha/2.1.126-alpha.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake6.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/2.1.128-alpha/2.1.218-alpha.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake7.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/2.1.219-alpha/2.1.320-alpha.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake8.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/2.1.321-alpha/2.1.395-alpha.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake9.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/2.1.396-alpha/2.1.482-alpha.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake10.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/2.1.483-alpha/2.1.568-alpha.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake11.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/2.1.569-alpha/2.1.645-alpha.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake12.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/2.1.646-alpha/2.1.748-alpha.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake13.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/2.1.750-alpha/2.3.41-alpha.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake14.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/2.3.43-alpha/2.5.31-alpha.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake15.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/2.5.32-alpha/2.7.0.24-alpha.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake16.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/2.7.0.25-alpha/2.9.24-alpha.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake17.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/2.9.26-alpha/2.11.22-alpha.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake18.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/2.11.25-alpha/3.0.0-alpha5.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake18.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/3.0.0-alpha6/3.7.4.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake19.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/3.7.5/3.18.1.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake20.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/3.18.2/3.34.7.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake21.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/3.35.0/4.9.3.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake22.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/4.9.5/4.23.5.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake23.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/4.23.6/4.44.3.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake24.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/4.44.4/4.64.12.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake25.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/fake/page/4.64.13/5.16.0.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake26.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/_/page/2.11.25-alpha/3.0.0-alpha5.json":
-                        reader = new StreamReader(GetEmbeddedSource("fake3.json"));
+                        reader = new StreamReader(GetEmbeddedSource("fake27.json"));
                         responseString = reader.ReadToEnd();
                         break;
                    case "https://api.nuget.org/v3/registration5-gz-semver2/_/index.json":

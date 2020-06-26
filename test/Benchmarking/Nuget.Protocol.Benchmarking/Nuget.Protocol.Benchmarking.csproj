@@ -20,6 +20,7 @@
     <None Remove="fake16.json" />
     <None Remove="fake17.json" />
     <None Remove="fake18.json" />
+    <None Remove="fake19.json" />
     <None Remove="fake2.json" />
     <None Remove="fake20.json" />
     <None Remove="fake21.json" />
@@ -29,6 +30,8 @@
     <None Remove="fake25.json" />
     <None Remove="fake26.json" />
     <None Remove="fake27.json" />
+    <None Remove="fake28.json" />
+    <None Remove="fake29.json" />
     <None Remove="fake3.json" />
     <None Remove="fake4.json" />
     <None Remove="fake5.json" />
@@ -46,7 +49,6 @@
 
   <ItemGroup>
     <EmbeddedResource Include="CortonaIndex.json" />
-    <EmbeddedResource Include="fak19.json" />
     <EmbeddedResource Include="fake1.json" />
     <EmbeddedResource Include="fake10.json" />
     <EmbeddedResource Include="fake11.json" />
@@ -57,6 +59,7 @@
     <EmbeddedResource Include="fake16.json" />
     <EmbeddedResource Include="fake17.json" />
     <EmbeddedResource Include="fake18.json" />
+    <EmbeddedResource Include="fake19.json" />
     <EmbeddedResource Include="fake2.json" />
     <EmbeddedResource Include="fake20.json" />
     <EmbeddedResource Include="fake21.json" />

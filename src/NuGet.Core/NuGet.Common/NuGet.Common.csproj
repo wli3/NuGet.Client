@@ -46,7 +46,10 @@
       <LastGenOutput>Strings.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Telemetry" />
+  </ItemGroup>
 
-  <Import Project="$(BuildCommonDirectory)common.targets"/>
+  <Import Project="$(BuildCommonDirectory)common.targets" />
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 </Project>

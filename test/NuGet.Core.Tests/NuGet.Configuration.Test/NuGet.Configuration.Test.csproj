@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
   <PropertyGroup>
     <RequiresSigningXplatAPIs>true</RequiresSigningXplatAPIs>
   </PropertyGroup>
@@ -20,7 +20,7 @@
 
   <ItemGroup Condition=" '$(IsCore)' == 'true' ">
     <PackageReference Include="System.Diagnostics.TraceSource" />
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" NoWarn="NU1605"/>
     <PackageReference Include="System.Threading.Tasks.Parallel" />
   </ItemGroup>
 

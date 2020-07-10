@@ -48,6 +48,8 @@ namespace NuGet.Commands
             RestoreArgs restoreContext,
             CancellationToken token)
         {
+            StandaloneTelemetry.Start();
+
             var maxTasks = GetMaxTaskCount(restoreContext);
 
             var log = restoreContext.Log;
@@ -91,6 +93,8 @@ namespace NuGet.Commands
                 var restoreSummary = await CompleteTaskAsync(restoreTasks);
                 restoreSummaries.Add(restoreSummary);
             }
+
+            StandaloneTelemetry.Stop();
 
             // Summary
             return restoreSummaries;

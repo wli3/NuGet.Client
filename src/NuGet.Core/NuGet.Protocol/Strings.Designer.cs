@@ -385,11 +385,47 @@ namespace NuGet.Protocol {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to load the service index for source {0}..
+        ///   Looks up a localized string similar to Unable to load the service index for source &apos;{0}&apos;..
         /// </summary>
         internal static string Log_FailedToReadServiceIndex {
             get {
                 return ResourceManager.GetString("Log_FailedToReadServiceIndex", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to load the service index for source &apos;{0}&apos;..
+        /// </summary>
+        internal static string Log_FailedToReadServiceIndex1300 {
+            get {
+                return ResourceManager.GetString("Log_FailedToReadServiceIndex1300", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Valid user credentials need to be provided, but were not - so source is inaccessible: &apos;{0}&apos;..
+        /// </summary>
+        internal static string Log_FailedToReadServiceIndex401 {
+            get {
+                return ResourceManager.GetString("Log_FailedToReadServiceIndex401", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Valid user credentials were provided, but user doesn&apos;t have access to source: &apos;{0}&apos;..
+        /// </summary>
+        internal static string Log_FailedToReadServiceIndex403 {
+            get {
+                return ResourceManager.GetString("Log_FailedToReadServiceIndex403", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Valid user credentials were provided, but the server couldn&apos;t find the URL requested - so source is inaccessible: &apos;{0}&apos;..
+        /// </summary>
+        internal static string Log_FailedToReadServiceIndex404 {
+            get {
+                return ResourceManager.GetString("Log_FailedToReadServiceIndex404", resourceCulture);
             }
         }
         

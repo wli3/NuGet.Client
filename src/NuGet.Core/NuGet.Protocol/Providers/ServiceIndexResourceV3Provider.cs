@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.IO;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -155,6 +156,47 @@ namespace NuGet.Protocol
                         var message = ExceptionUtilities.DisplayMessage(ex);
                         log.LogMinimal(message);
                         throw;
+                    }
+                    catch (HttpRequestException ex) when (retry < maxRetries)
+                    {
+                        NuGetLogCode logCode = NuGetLogCode.NU1000;
+
+                        // HttpRequestException (until .net 5.0, doesn't have ability get status code from http response), so we parse exception string.
+                        const string messagePrefix = "Response status code does not indicate success: ";
+
+                        string message = null;
+                        if (ex.Message.StartsWith(messagePrefix, StringComparison.OrdinalIgnoreCase)
+                            && ex.Message.Length > messagePrefix.Length + 2)
+                        {
+                            string errorCode = ex.Message.Substring(messagePrefix.Length, 3);
+                            switch (errorCode)
+                            {
+                                case "401":
+                                    logCode = NuGetLogCode.NU1301;
+                                    message = string.Format(CultureInfo.CurrentCulture, Strings.Log_FailedToReadServiceIndex401, url);
+                                    break;
+                                case "403":
+                                    logCode = NuGetLogCode.NU1303;
+                                    message = string.Format(CultureInfo.CurrentCulture, Strings.Log_FailedToReadServiceIndex403, url);
+                                    break;
+                                case "404":
+                                    logCode = NuGetLogCode.NU1304;
+                                    message = string.Format(CultureInfo.CurrentCulture, Strings.Log_FailedToReadServiceIndex404, url);
+                                    break;
+                            }
+                        }
+
+                        if (logCode >= NuGetLogCode.NU1301 && logCode < NuGetLogCode.NU1401)
+                        {
+                            throw new FatalProtocolException(message + " " + ex.Message, logCode);
+                        }
+                        else
+                        {
+                            message = string.Format(CultureInfo.CurrentCulture, Strings.Log_RetryingServiceIndex, url)
+                                + Environment.NewLine
+                                + ExceptionUtilities.DisplayMessage(ex);
+                            log.LogMinimal(message);
+                        }
                     }
                     catch (Exception ex) when (retry < maxRetries)
                     {

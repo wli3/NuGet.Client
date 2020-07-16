@@ -77,7 +77,7 @@ namespace NuGet.Protocol.Tests
             });
 
             Assert.IsType<HttpRequestException>(exception.InnerException);
-            Assert.Equal(exception.LogCode, NuGetLogCode.1304);
+            Assert.Equal(exception.LogCode, NuGetLogCode.NU1304);
         }
 
         [Theory]

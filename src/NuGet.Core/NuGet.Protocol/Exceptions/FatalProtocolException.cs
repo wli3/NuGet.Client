@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Net;
 using NuGet.Common;
 
 namespace NuGet.Protocol.Core.Types
@@ -16,16 +17,17 @@ namespace NuGet.Protocol.Core.Types
         {
         }
 
-        public FatalProtocolException(string message, NuGetLogCode logCode) : base(message)
+        public FatalProtocolException(string message, HttpStatusCode statusCode) : base(message)
         {
-            LogCode = logCode;
+            _statusCode = statusCode;
         }
 
-        public FatalProtocolException(string message, Exception innerException, NuGetLogCode logCode) : base(message, innerException)
+        public FatalProtocolException(string message, Exception innerException, HttpStatusCode statusCode) : base(message, innerException)
         {
-            LogCode = logCode;
+            _statusCode = statusCode;
         }
 
-        public NuGetLogCode LogCode { private set; get; }
+        public HttpStatusCode? StatusCode { get { return _statusCode; } }
+        private HttpStatusCode? _statusCode;
     }
 }

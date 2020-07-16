@@ -5,7 +5,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.IO;
+using System.Net;
 using System.Net.Http;
+using System.Runtime.Serialization.Formatters;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -159,36 +161,58 @@ namespace NuGet.Protocol
                     }
                     catch (HttpRequestException ex) when (retry < maxRetries)
                     {
-                        NuGetLogCode logCode = NuGetLogCode.NU1000;
-
+                        HttpStatusCode? statusCode = null;
+#if NETCOREAPP5_0
+                        statusCode = ex.StatusCode;
+#else
                         // HttpRequestException (until .net 5.0, doesn't have ability get status code from http response), so we parse exception string.
-                        const string messagePrefix = "Response status code does not indicate success: ";
+                        var searchFor = ": 40";
+                        int searchForLength = searchFor.Length;
+                        int statusCodeStart = ex.Message.IndexOf(searchFor, 0, StringComparison.OrdinalIgnoreCase);
 
-                        string message = null;
-                        if (ex.Message.StartsWith(messagePrefix, StringComparison.OrdinalIgnoreCase)
-                            && ex.Message.Length > messagePrefix.Length + 2)
+                        if (statusCodeStart >= 0
+                            && ex.Message.Length > statusCodeStart + searchForLength + 1)
                         {
-                            string errorCode = ex.Message.Substring(messagePrefix.Length, 3);
+                            string errorCode = ex.Message.Substring(statusCodeStart + searchForLength, 1);
                             switch (errorCode)
                             {
-                                case "401":
-                                    logCode = NuGetLogCode.NU1301;
-                                    message = string.Format(CultureInfo.CurrentCulture, Strings.Log_FailedToReadServiceIndex401, url);
+                                case "1":
+                                    statusCode = HttpStatusCode.Unauthorized;
                                     break;
-                                case "403":
-                                    logCode = NuGetLogCode.NU1303;
-                                    message = string.Format(CultureInfo.CurrentCulture, Strings.Log_FailedToReadServiceIndex403, url);
+                                case "3":
+                                    statusCode = HttpStatusCode.Forbidden;
                                     break;
-                                case "404":
-                                    logCode = NuGetLogCode.NU1304;
-                                    message = string.Format(CultureInfo.CurrentCulture, Strings.Log_FailedToReadServiceIndex404, url);
+                                case "4":
+                                    statusCode = HttpStatusCode.NotFound;
+                                    break;
+                                case "7":
+                                    statusCode = HttpStatusCode.ProxyAuthenticationRequired;
                                     break;
                             }
                         }
+#endif
 
-                        if (logCode >= NuGetLogCode.NU1301 && logCode < NuGetLogCode.NU1401)
+                        string message = null;
+
+                        switch (statusCode)
                         {
-                            throw new FatalProtocolException(message + " " + ex.Message, logCode);
+                            case HttpStatusCode.Unauthorized:
+                                message = string.Format(CultureInfo.CurrentCulture, Strings.Http_CredentialsForUnauthorized, url);
+                                break;
+                            case HttpStatusCode.Forbidden:
+                                message = string.Format(CultureInfo.CurrentCulture, Strings.Http_CredentialsForForbidden, url);
+                                break;
+                            case HttpStatusCode.NotFound:
+                                message = string.Format(CultureInfo.CurrentCulture, Strings.Http_CredentialsForNotFound, url);
+                                break;
+                            case HttpStatusCode.ProxyAuthenticationRequired:
+                                message = string.Format(CultureInfo.CurrentCulture, Strings.Http_CredentialsForProxy, url);
+                                break;
+                        }
+
+                        if (statusCode.HasValue)
+                        {
+                            throw new FatalProtocolException(message + " " + ex.Message, statusCode.Value);
                         }
                         else
                         {

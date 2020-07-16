@@ -179,6 +179,11 @@ namespace NuGet.Common
         NU1213 = 1213,
 
         /// <summary>
+        /// Feed problems
+        /// </summary>
+        NU1300 = 1300,
+
+        /// <summary>
         /// Feed was Unauthorized
         /// </summary>
         NU1301 = 1301,
@@ -192,6 +197,11 @@ namespace NuGet.Common
         /// Feed was Not Found
         /// </summary>
         NU1304 = 1304,
+
+        /// <summary>
+        /// Feed needs Proxy Authentication
+        /// </summary>
+        NU1307 = 1307,
 
         /// <summary>
         /// Package MinClientVersion did not match.

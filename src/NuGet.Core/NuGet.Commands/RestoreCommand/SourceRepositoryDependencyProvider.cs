@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Common;
@@ -240,23 +241,45 @@ namespace NuGet.Commands
                     };
                 }
             }
-            catch (FatalProtocolException e) when (_ignoreFailedSources)
+            catch (FatalProtocolException e)
             {
-                await LogWarningAsync(libraryRange.Name, e);
-            }
-            catch (FatalProtocolException e) when (!_ignoreFailedSources)
-            {
-                RestoreLogMessage logMessage = null;
-                if (e.InnerException != null)
+                if (_ignoreFailedSources)
                 {
-                    logMessage = RestoreLogMessage.CreateError(e.LogCode, e.Message + Environment.NewLine + e.InnerException.Message);
+                    await LogWarningAsync(libraryRange.Name, e);
                 }
                 else
                 {
-                    logMessage = RestoreLogMessage.CreateError(e.LogCode, e.Message);
-                }
+                    NuGetLogCode logCode = NuGetLogCode.NU1300;
+                    if (e.StatusCode.HasValue)
+                    {
+                        switch (e.StatusCode.Value)
+                        {
+                            case HttpStatusCode.Unauthorized:
+                                logCode = NuGetLogCode.NU1301;
+                                break;
+                            case HttpStatusCode.Forbidden:
+                                logCode = NuGetLogCode.NU1303;
+                                break;
+                            case HttpStatusCode.NotFound:
+                                logCode = NuGetLogCode.NU1304;
+                                break;
+                           case HttpStatusCode.ProxyAuthenticationRequired:
+                                logCode = NuGetLogCode.NU1307;
+                                break;
+                        }
+                    }
+                    RestoreLogMessage logMessage = null;
+                    if (e.InnerException != null)
+                    {
+                        logMessage = RestoreLogMessage.CreateError(logCode, e.Message + Environment.NewLine + e.InnerException.Message);
+                    }
+                    else
+                    {
+                        logMessage = RestoreLogMessage.CreateError(logCode, e.Message);
+                    }
 
-                await logger.LogAsync(logMessage);
+                    await logger.LogAsync(logMessage);
+                }
             }
             return null;
         }

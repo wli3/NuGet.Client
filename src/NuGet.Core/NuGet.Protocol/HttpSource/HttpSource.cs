@@ -232,7 +232,6 @@ namespace NuGet.Protocol
         {
 #if !NETCOREAPP5_0
             // Before calling EnsureSuccessStatusCode(), squirrel away statuscode, in order to add it to exception.
-            HttpStatusCode statusCode = response.StatusCode;
             try
             {
 #endif
@@ -241,11 +240,11 @@ namespace NuGet.Protocol
             }
             catch (HttpRequestException ex)
             {
-                ex.Data["StatusCode"] = statusCode;
+                ex.Data["StatusCode"] = response.StatusCode;
                 throw;
             }
 #endif
-            return statusCode;
+            return response.StatusCode;
         }
 
 

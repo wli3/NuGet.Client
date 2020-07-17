@@ -54,7 +54,7 @@ namespace NuGet.Protocol.Core.Types
 
             if (message != null)
             {
-                throw new FatalProtocolException(message + " " + ex.Message, statusCode.Value);
+                throw new FatalProtocolException(message + " " + ex.Message, ex, statusCode.Value);
             }
         }
     }

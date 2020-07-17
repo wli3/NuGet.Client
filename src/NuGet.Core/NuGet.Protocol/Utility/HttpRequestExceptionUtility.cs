@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
@@ -17,32 +18,13 @@ namespace NuGet.Protocol.Core.Types
 #if NETCOREAPP5_0
             statusCode = ex.StatusCode;
 #else
-            // HttpRequestException (until .net 5.0, doesn't have ability get status code from http response), so we parse exception string.
-            var searchFor = ": 40";
-            int searchForLength = searchFor.Length;
-            int statusCodeStart = ex.Message.IndexOf(searchFor, 0, StringComparison.OrdinalIgnoreCase);
-
-            if (statusCodeStart >= 0
-                && ex.Message.Length > statusCodeStart + searchForLength + 1)
+            // All places which might raise an HttpRequestException need to put StatusCode in exception object.
+            if (ex.Data.Contains("StatusCode"))
             {
-                string errorCode = ex.Message.Substring(statusCodeStart + searchForLength, 1);
-                switch (errorCode)
-                {
-                    case "1":
-                        statusCode = HttpStatusCode.Unauthorized;
-                        break;
-                    case "3":
-                        statusCode = HttpStatusCode.Forbidden;
-                        break;
-                    case "4":
-                        statusCode = HttpStatusCode.NotFound;
-                        break;
-                    case "7":
-                        statusCode = HttpStatusCode.ProxyAuthenticationRequired;
-                        break;
-                }
+                statusCode = (HttpStatusCode)ex.Data["StatusCode"];
             }
 #endif
+
             return statusCode;
         }
 

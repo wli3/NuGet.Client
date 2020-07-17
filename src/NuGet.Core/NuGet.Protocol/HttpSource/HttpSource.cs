@@ -151,7 +151,7 @@ namespace NuGet.Protocol
                             return await processAsync(httpSourceResult);
                         }
 
-                        throttledResponse.Response.EnsureSuccessStatusCode();
+                        EnsureSuccessStatusCode(throttledResponse.Response);
 
                         if (!request.CacheContext.DirectDownload)
                         {
@@ -214,7 +214,7 @@ namespace NuGet.Protocol
                         return await processAsync(null);
                     }
 
-                    response.EnsureSuccessStatusCode();
+                    EnsureSuccessStatusCode(response);
 
                     return await processAsync(response);
                 },
@@ -222,6 +222,32 @@ namespace NuGet.Protocol
                 log,
                 token);
         }
+
+        /// <summary>
+        /// Wraps the call to response EnsureSuccessStatusCode and adds status code data to the exception, to work well pre .NET 5.0
+        /// </summary>
+        /// <param name="response"></param>
+        /// <returns>Response StatusCode</returns>
+        private static HttpStatusCode EnsureSuccessStatusCode(HttpResponseMessage response)
+        {
+#if !NETCOREAPP5_0
+            // Before calling EnsureSuccessStatusCode(), squirrel away statuscode, in order to add it to exception.
+            HttpStatusCode statusCode = response.StatusCode;
+            try
+            {
+#endif
+                response.EnsureSuccessStatusCode();
+#if !NETCOREAPP5_0
+            }
+            catch (HttpRequestException ex)
+            {
+                ex.Data["StatusCode"] = statusCode;
+                throw;
+            }
+#endif
+            return statusCode;
+        }
+
 
         public async Task<T> ProcessStreamAsync<T>(
             HttpSourceRequest request,
@@ -240,7 +266,7 @@ namespace NuGet.Protocol
                         return await processAsync(null);
                     }
 
-                    response.EnsureSuccessStatusCode();
+                    EnsureSuccessStatusCode(response);
 
                     var networkStream = await response.Content.ReadAsStreamAsync();
                     return await processAsync(networkStream);

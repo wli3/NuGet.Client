@@ -147,7 +147,6 @@ namespace NuGet.Protocol
                             async httpSourceResult =>
                             {
                                 var result = await ConsumeServiceIndexStreamAsync(httpSourceResult.Stream, utcNow, token);
-
                                 return result;
                             },
                             log,
@@ -161,84 +160,30 @@ namespace NuGet.Protocol
                     }
                     catch (HttpRequestException ex) when (retry < maxRetries)
                     {
-                        HttpStatusCode? statusCode = null;
-#if NETCOREAPP5_0
-                        statusCode = ex.StatusCode;
-#else
-                        // HttpRequestException (until .net 5.0, doesn't have ability get status code from http response), so we parse exception string.
-                        var searchFor = ": 40";
-                        int searchForLength = searchFor.Length;
-                        int statusCodeStart = ex.Message.IndexOf(searchFor, 0, StringComparison.OrdinalIgnoreCase);
-
-                        if (statusCodeStart >= 0
-                            && ex.Message.Length > statusCodeStart + searchForLength + 1)
-                        {
-                            string errorCode = ex.Message.Substring(statusCodeStart + searchForLength, 1);
-                            switch (errorCode)
-                            {
-                                case "1":
-                                    statusCode = HttpStatusCode.Unauthorized;
-                                    break;
-                                case "3":
-                                    statusCode = HttpStatusCode.Forbidden;
-                                    break;
-                                case "4":
-                                    statusCode = HttpStatusCode.NotFound;
-                                    break;
-                                case "7":
-                                    statusCode = HttpStatusCode.ProxyAuthenticationRequired;
-                                    break;
-                            }
-                        }
-#endif
-
-                        string message = null;
-
-                        switch (statusCode)
-                        {
-                            case HttpStatusCode.Unauthorized:
-                                message = string.Format(CultureInfo.CurrentCulture, Strings.Http_CredentialsForUnauthorized, url);
-                                break;
-                            case HttpStatusCode.Forbidden:
-                                message = string.Format(CultureInfo.CurrentCulture, Strings.Http_CredentialsForForbidden, url);
-                                break;
-                            case HttpStatusCode.NotFound:
-                                message = string.Format(CultureInfo.CurrentCulture, Strings.Http_CredentialsForNotFound, url);
-                                break;
-                            case HttpStatusCode.ProxyAuthenticationRequired:
-                                message = string.Format(CultureInfo.CurrentCulture, Strings.Http_CredentialsForProxy, url);
-                                break;
-                        }
-
-                        if (statusCode.HasValue)
-                        {
-                            throw new FatalProtocolException(message + " " + ex.Message, statusCode.Value);
-                        }
-                        else
-                        {
-                            message = string.Format(CultureInfo.CurrentCulture, Strings.Log_RetryingServiceIndex, url)
-                                + Environment.NewLine
-                                + ExceptionUtilities.DisplayMessage(ex);
-                            log.LogMinimal(message);
-                        }
+                        HttpRequestExceptionUtility.ThrowFatalProtocolExceptionIfCritical(ex, url);
+                        LogRetryMessage(ex, url, log);
                     }
                     catch (Exception ex) when (retry < maxRetries)
                     {
-                        var message = string.Format(CultureInfo.CurrentCulture, Strings.Log_RetryingServiceIndex, url)
-                            + Environment.NewLine
-                            + ExceptionUtilities.DisplayMessage(ex);
-                        log.LogMinimal(message);
+                        LogRetryMessage(ex, url, log);
                     }
                     catch (Exception ex) when (retry == maxRetries)
                     {
                         var message = string.Format(CultureInfo.CurrentCulture, Strings.Log_FailedToReadServiceIndex, url);
-
                         throw new FatalProtocolException(message, ex);
                     }
                 }
             }
 
             return null;
+        }
+
+        private static void LogRetryMessage(Exception ex, string url, ILogger log)
+        {
+            var message = string.Format(CultureInfo.CurrentCulture, Strings.Log_RetryingServiceIndex, url)
+                                        + Environment.NewLine
+                                        + ExceptionUtilities.DisplayMessage(ex);
+            log.LogMinimal(message);
         }
 
         private async Task<ServiceIndexResourceV3> ConsumeServiceIndexStreamAsync(Stream stream, DateTime utcNow, CancellationToken token)

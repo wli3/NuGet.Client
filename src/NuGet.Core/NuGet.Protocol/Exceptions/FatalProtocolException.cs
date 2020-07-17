@@ -19,15 +19,14 @@ namespace NuGet.Protocol.Core.Types
 
         public FatalProtocolException(string message, HttpStatusCode statusCode) : base(message)
         {
-            _statusCode = statusCode;
+            StatusCode = statusCode;
         }
 
         public FatalProtocolException(string message, Exception innerException, HttpStatusCode statusCode) : base(message, innerException)
         {
-            _statusCode = statusCode;
+            StatusCode = statusCode;
         }
 
-        public HttpStatusCode? StatusCode { get { return _statusCode; } }
-        private HttpStatusCode? _statusCode;
+        public HttpStatusCode? StatusCode { get; }
     }
 }

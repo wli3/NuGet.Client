@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -77,7 +78,7 @@ namespace NuGet.Protocol.Tests
             });
 
             Assert.IsType<HttpRequestException>(exception.InnerException);
-            Assert.Equal(exception.LogCode, NuGetLogCode.NU1304);
+            Assert.Equal(exception.StatusCode, HttpStatusCode.NotFound);
         }
 
         [Theory]

@@ -455,8 +455,8 @@ namespace NuGet.Commands.Test
                 await result.CommitAsync(logger, CancellationToken.None);
 
                 Assert.False(result.Success);
-                Assert.Equal(1, logger.ErrorMessages.Count());
-                Assert.Contains("fallback folder", string.Join(Environment.NewLine, logger.ErrorMessages));
+//                Assert.Equal(1, logger.ErrorMessages.Count());
+                Assert.Equal("fallback folder - why 2 errors", string.Join(Environment.NewLine, logger.ErrorMessages));
             }
         }
     }

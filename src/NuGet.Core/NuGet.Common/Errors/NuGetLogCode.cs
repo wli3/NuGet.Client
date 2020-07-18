@@ -199,9 +199,14 @@ namespace NuGet.Common
         NU1303 = 1303,
 
         /// <summary>
-        /// Feed was Not Found
+        /// Feed was Not Found, server exists
         /// </summary>
         NU1304 = 1304,
+
+        /// <summary>
+        /// Host name not resolved
+        /// </summary>
+        NU1305 = 1305,
 
         /// <summary>
         /// Feed needs Proxy Authentication

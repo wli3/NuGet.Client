@@ -1956,8 +1956,7 @@ namespace NuGet.Commands.FuncTest
             // Arrange
             var sources = new List<PackageSource>
             {
-                new PackageSource("https://failingSource"),
-                new PackageSource(NuGetConstants.V3FeedUrl)
+                new PackageSource("https://failingSource")
             };
 
             using (var packagesDir = TestDirectory.Create())
@@ -1983,11 +1982,14 @@ namespace NuGet.Commands.FuncTest
                     LockFilePath = Path.Combine(projectDir, "project.lock.json")
                 };
 
-                var command = new RestoreCommand(request);
-
                 // Act & Assert
-                var ex = await Assert.ThrowsAsync<FatalProtocolException>(async () => await command.ExecuteAsync());
-                Assert.NotNull(ex);
+                var command = new RestoreCommand(request);
+                var result = await command.ExecuteAsync();
+                await result.CommitAsync(logger, CancellationToken.None);
+
+                Assert.False(result.Success);
+                Assert.Equal(1, logger.ErrorMessages.Count());
+                Assert.Contains("fallback folder", string.Join(Environment.NewLine, logger.ErrorMessages));
             }
         }
 

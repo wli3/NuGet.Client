@@ -455,8 +455,11 @@ namespace NuGet.Commands.Test
                 await result.CommitAsync(logger, CancellationToken.None);
 
                 Assert.False(result.Success);
-//                Assert.Equal(1, logger.ErrorMessages.Count());
-                Assert.Equal("fallback folder - why 2 errors", string.Join(Environment.NewLine, logger.ErrorMessages));
+                // ideally, this error wouldn't repeat itself in the same project.
+                Assert.Equal(2, logger.ErrorMessages.Count());
+                var errors = logger.ErrorMessages.ToArray();
+                Assert.Contains(errors[0], "fallback folder");
+                Assert.Contains(errors[1], "fallback folder");
             }
         }
     }

@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
@@ -559,13 +560,24 @@ namespace NuGet.Protocol
                 }
                 catch (Exception ex) when (retry == maxRetries)
                 {
-                    var message = string.Format(
-                        CultureInfo.CurrentCulture,
-                        Strings.Log_FailedToRetrievePackage,
-                        id,
-                        uri);
-
-                    throw new FatalProtocolException(message, ex);
+                    WebException webEx = ex.InnerException as WebException;
+                    if (webEx != null && webEx.Status == WebExceptionStatus.NameResolutionFailure)
+                    {
+                        var message = string.Format(
+                            CultureInfo.CurrentCulture,
+                            Strings.Http_HostNotFound,
+                            uri);
+                        throw new FatalProtocolException(message, ex, NuGetLogCode.NU1305);
+                    }
+                    else
+                    {
+                        var message = string.Format(
+                            CultureInfo.CurrentCulture,
+                            Strings.Log_FailedToRetrievePackage,
+                            id,
+                            uri);
+                        throw new FatalProtocolException(message, ex);
+                    }
                 }
             }
 

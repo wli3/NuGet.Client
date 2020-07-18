@@ -3,6 +3,7 @@
 
 using System;
 using System.Globalization;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,9 +41,20 @@ static internal class ODataServiceDocumentUtils
         }
         catch (Exception ex) when (!(ex is FatalProtocolException) && (!(ex is OperationCanceledException)))
         {
-            string message = String.Format(CultureInfo.CurrentCulture, Strings.Log_FailedToReadServiceIndex, url);
-
-            throw new FatalProtocolException(message, ex);
+            WebException webEx = ex.InnerException as WebException;
+            if (webEx != null && webEx.Status == WebExceptionStatus.NameResolutionFailure)
+            {
+                var message = string.Format(
+                    CultureInfo.CurrentCulture,
+                    Strings.Http_HostNotFound,
+                    url);
+                throw new FatalProtocolException(message, ex, NuGetLogCode.NU1305);
+            }
+            else
+            {
+                string message = string.Format(CultureInfo.CurrentCulture, Strings.Log_FailedToReadServiceIndex, url);
+                throw new FatalProtocolException(message, ex);
+            }
         }
 
         // Trim the query string or any trailing slash.

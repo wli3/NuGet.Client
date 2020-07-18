@@ -59,7 +59,7 @@ namespace NuGet.Protocol.FuncTest
                 await repo.GetResourceAsync<ODataServiceDocumentResourceV2>());
 
             Assert.NotNull(ex);
-            Assert.Equal(ex.LogCode, NuGetLogCode.NU1304);
+            Assert.Equal(NuGetLogCode.NU1305, ex.LogCode);
             Assert.NotNull(ex.InnerException);
             Assert.IsType<HttpRequestException>(ex.InnerException);
         }

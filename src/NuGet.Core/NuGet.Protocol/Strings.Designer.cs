@@ -250,6 +250,15 @@ namespace NuGet.Protocol {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The server name could not be resolved when attempting to access source &apos;{0}&apos;. This suggests that the server doesn&apos;t exist, or is not reachable..
+        /// </summary>
+        internal static string Http_HostNotFound {
+            get {
+                return ResourceManager.GetString("Http_HostNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} {1}.
         /// </summary>
         internal static string Http_RequestLog {

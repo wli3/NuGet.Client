@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -450,7 +451,12 @@ namespace NuGet.Commands.Test
 
                 // Act & Assert
                 var command = new RestoreCommand(request);
-                await Assert.ThrowsAsync<FatalProtocolException>(async () => await command.ExecuteAsync());
+                var result = await command.ExecuteAsync();
+                await result.CommitAsync(logger, CancellationToken.None);
+
+                Assert.False(result.Success);
+                Assert.Equal(1, logger.ErrorMessages.Count());
+                Assert.Contains("fallback folder", string.Join(Environment.NewLine, logger.ErrorMessages));
             }
         }
     }

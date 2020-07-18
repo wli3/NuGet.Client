@@ -23,7 +23,7 @@ namespace NuGet.CommandLine.Test
             var hostName = Guid.NewGuid().ToString();
             var fullHostName = "https://" + hostName + "/";
             var expected = "NuGet.Protocol.Core.Types.FatalProtocolException: Unable to load the service index for source " +
-                           $"{fullHostName}";
+                           $"'{fullHostName}'.";
 
             var args = new[] { "list", "-Source", fullHostName };
 
@@ -850,7 +850,7 @@ namespace NuGet.CommandLine.Test
                 result.Item1 != 0,
                 "The run did not fail as desired. Simply got this output:" + result.Item2);
 
-                Assert.Contains($"Unable to load the service index for source {invalidInput}.", result.Item3);
+                Assert.Contains($"Unable to load the service index for source '{invalidInput}'.", result.Item3);
         }
 
         [Theory]
@@ -902,7 +902,7 @@ namespace NuGet.CommandLine.Test
                 "The run did not fail as desired. Simply got this output:" + result.Item2);
 
             Assert.True(
-                result.Item3.Contains($"Unable to load the service index for source {invalidInput}."),
+                result.Item3.Contains($"Unable to load the service index for source '{invalidInput}'."),
                 "Expected error message not found in " + result.Item3
                 );
         }

@@ -179,7 +179,7 @@ namespace NuGet.Common
         NU1213 = 1213,
 
         /// <summary>
-        /// Feed problems
+        /// Uncategorized FatalProtocolException
         /// </summary>
         NU1300 = 1300,
 
@@ -187,6 +187,11 @@ namespace NuGet.Common
         /// Feed was Unauthorized
         /// </summary>
         NU1301 = 1301,
+
+        /// <summary>
+        /// Fallback folder or local feed folder does not exist
+        /// </summary>
+        NU1302 = 1302,
 
         /// <summary>
         /// Feed was Forbidden

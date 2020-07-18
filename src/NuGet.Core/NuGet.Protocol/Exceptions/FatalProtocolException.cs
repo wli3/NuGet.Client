@@ -11,22 +11,24 @@ namespace NuGet.Protocol.Core.Types
     {
         public FatalProtocolException(string message) : base(message)
         {
+            LogCode = NuGetLogCode.NU1300;
         }
 
         public FatalProtocolException(string message, Exception innerException) : base(message, innerException)
         {
+            LogCode = NuGetLogCode.NU1300;
         }
 
-        public FatalProtocolException(string message, HttpStatusCode statusCode) : base(message)
+        public FatalProtocolException(string message, NuGetLogCode logCode) : base(message)
         {
-            StatusCode = statusCode;
+            LogCode = logCode;
         }
 
-        public FatalProtocolException(string message, Exception innerException, HttpStatusCode statusCode) : base(message, innerException)
+        public FatalProtocolException(string message, Exception innerException, NuGetLogCode logCode) : base(message, innerException)
         {
-            StatusCode = statusCode;
+            LogCode = logCode;
         }
 
-        public HttpStatusCode? StatusCode { get; }
+        public NuGetLogCode LogCode { get; }
     }
 }

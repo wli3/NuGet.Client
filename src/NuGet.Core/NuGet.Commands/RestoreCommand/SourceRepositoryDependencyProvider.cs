@@ -249,25 +249,8 @@ namespace NuGet.Commands
                 }
                 else
                 {
-                    NuGetLogCode logCode = NuGetLogCode.NU1300;
-                    if (e.StatusCode.HasValue)
-                    {
-                        switch (e.StatusCode.Value)
-                        {
-                            case HttpStatusCode.Unauthorized:
-                                logCode = NuGetLogCode.NU1301;
-                                break;
-                            case HttpStatusCode.Forbidden:
-                                logCode = NuGetLogCode.NU1303;
-                                break;
-                            case HttpStatusCode.NotFound:
-                                logCode = NuGetLogCode.NU1304;
-                                break;
-                           case HttpStatusCode.ProxyAuthenticationRequired:
-                                logCode = NuGetLogCode.NU1307;
-                                break;
-                        }
-                    }
+                    NuGetLogCode logCode = e.LogCode;
+
                     RestoreLogMessage logMessage = null;
                     if (e.InnerException != null)
                     {
@@ -577,10 +560,29 @@ namespace NuGet.Commands
                     logger,
                     cancellationToken);
             }
-            catch (FatalProtocolException e) when (_ignoreFailedSources)
+            catch (FatalProtocolException e)
             {
-                await LogWarningAsync(id, e);
-                return null;
+                if (_ignoreFailedSources)
+                {
+                    await LogWarningAsync(id, e);
+                    return null;
+                }
+                else
+                {
+                    NuGetLogCode logCode = e.LogCode;
+
+                    RestoreLogMessage logMessage = null;
+                    if (e.InnerException != null)
+                    {
+                        logMessage = RestoreLogMessage.CreateError(logCode, e.Message + Environment.NewLine + e.InnerException.Message);
+                    }
+                    else
+                    {
+                        logMessage = RestoreLogMessage.CreateError(logCode, e.Message);
+                    }
+
+                    await logger.LogAsync(logMessage);
+                }
             }
             finally
             {

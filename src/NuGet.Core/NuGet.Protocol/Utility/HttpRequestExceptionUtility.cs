@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
+using NuGet.Common;
 
 namespace NuGet.Protocol.Core.Types
 {
@@ -31,6 +32,7 @@ namespace NuGet.Protocol.Core.Types
         internal static void ThrowFatalProtocolExceptionIfCritical(HttpRequestException ex, string url)
         {
             HttpStatusCode? statusCode = GetHttpStatusCode(ex);
+            NuGetLogCode? logCode = null;
             string message = null;
 
             // For these status codes, we throw exception.
@@ -40,21 +42,25 @@ namespace NuGet.Protocol.Core.Types
             {
                 case HttpStatusCode.Unauthorized:
                     message = string.Format(CultureInfo.CurrentCulture, Strings.Http_CredentialsForUnauthorized, url);
+                    logCode = NuGetLogCode.NU1301;
                     break;
                 case HttpStatusCode.Forbidden:
                     message = string.Format(CultureInfo.CurrentCulture, Strings.Http_CredentialsForForbidden, url);
+                    logCode = NuGetLogCode.NU1303;
                     break;
                 case HttpStatusCode.NotFound:
                     message = string.Format(CultureInfo.CurrentCulture, Strings.Http_CredentialsForNotFound, url);
+                    logCode = NuGetLogCode.NU1304;
                     break;
                 case HttpStatusCode.ProxyAuthenticationRequired:
                     message = string.Format(CultureInfo.CurrentCulture, Strings.Http_CredentialsForProxy, url);
+                    logCode = NuGetLogCode.NU1307;
                     break;
             }
 
             if (message != null)
             {
-                throw new FatalProtocolException(message, ex, statusCode.Value);
+                throw new FatalProtocolException(message, ex, logCode.Value);
             }
         }
     }

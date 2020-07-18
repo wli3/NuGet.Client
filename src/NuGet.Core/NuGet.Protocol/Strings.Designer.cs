@@ -457,7 +457,7 @@ namespace NuGet.Protocol {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The local source &apos;{0}&apos; doesn&apos;t exist..
+        ///   Looks up a localized string similar to The local source or fallback folder &apos;{0}&apos; doesn&apos;t exist. Create directory, or fix packageSource/fallbackPackageFolder declarations..
         /// </summary>
         internal static string Log_LocalSourceNotExist {
             get {

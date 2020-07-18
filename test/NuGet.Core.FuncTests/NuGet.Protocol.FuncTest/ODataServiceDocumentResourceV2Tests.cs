@@ -55,12 +55,11 @@ namespace NuGet.Protocol.FuncTest
             var repo = Repository.Factory.GetCoreV3($"https://www.{randomName}.org/api/v2");
 
             // Act & Assert
-            Exception ex = await Assert.ThrowsAsync<FatalProtocolException>(async () =>
+            FatalProtocolException ex = await Assert.ThrowsAsync<FatalProtocolException>(async () =>
                 await repo.GetResourceAsync<ODataServiceDocumentResourceV2>());
 
-            Assert.Equal(
-                $"Unable to load the service index for source 'https://www.{randomName}.org/api/v2'.",
-                ex.Message);
+            Assert.NotNull(ex);
+            Assert.Equal(ex.LogCode, NuGetLogCode.NU1304);
             Assert.NotNull(ex.InnerException);
             Assert.IsType<HttpRequestException>(ex.InnerException);
         }

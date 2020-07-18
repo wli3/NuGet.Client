@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -560,6 +561,7 @@ namespace NuGet.Protocol
                 }
                 catch (Exception ex) when (retry == maxRetries)
                 {
+#if NET472
                     WebException webEx = ex.InnerException as WebException;
                     if (webEx != null && webEx.Status == WebExceptionStatus.NameResolutionFailure)
                     {
@@ -569,6 +571,17 @@ namespace NuGet.Protocol
                             uri);
                         throw new FatalProtocolException(message, ex, NuGetLogCode.NU1305);
                     }
+#elif NETSTANDARD2_0 || NETCOREAPP5_0
+                    SocketException sockEx = ex.InnerException as SocketException;
+                    if (sockEx != null && sockEx.SocketErrorCode == SocketError.HostNotFound)
+                    {
+                        var message = string.Format(
+                            CultureInfo.CurrentCulture,
+                            Strings.Http_HostNotFound,
+                            uri);
+                        throw new FatalProtocolException(message, ex, NuGetLogCode.NU1305);
+                    }
+#endif
                     else
                     {
                         var message = string.Format(

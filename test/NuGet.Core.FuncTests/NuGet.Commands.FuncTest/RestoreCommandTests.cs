@@ -1988,8 +1988,11 @@ namespace NuGet.Commands.FuncTest
                 await result.CommitAsync(logger, CancellationToken.None);
 
                 Assert.False(result.Success);
-                Assert.Equal(1, logger.ErrorMessages.Count());
-                Assert.Contains("fallback folder", string.Join(Environment.NewLine, logger.ErrorMessages));
+                Assert.Equal(3, logger.ErrorMessages.Count());
+                var errors = logger.ErrorMessages.ToArray();
+                Assert.Contains("server name could not be resolved", errors[0]);
+                Assert.Contains("server name could not be resolved", errors[1]);
+                Assert.Contains("No packages exist with this id in source(s): https://failingSource", errors[2]);
             }
         }
 

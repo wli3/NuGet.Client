@@ -458,8 +458,8 @@ namespace NuGet.Commands.Test
                 // ideally, this error wouldn't repeat itself in the same project.
                 Assert.Equal(2, logger.ErrorMessages.Count());
                 var errors = logger.ErrorMessages.ToArray();
-                Assert.Contains(errors[0], "fallback folder");
-                Assert.Contains(errors[1], "fallback folder");
+                Assert.Contains("fallback folder", errors[0]);
+                Assert.Contains("fallback folder", errors[1]);
             }
         }
     }

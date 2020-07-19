@@ -223,7 +223,7 @@ namespace NuGet.Protocol {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Communication failed to the package source with &apos;{1}&apos; error.  Source: &apos;{0}&apos;..
+        ///   Looks up a localized string similar to Communication failed to the package source with &quot;{1}&quot; error.  Package source: &apos;{0}&apos;..
         /// </summary>
         internal static string Http_CommunicationFailedWithDetails {
             get {

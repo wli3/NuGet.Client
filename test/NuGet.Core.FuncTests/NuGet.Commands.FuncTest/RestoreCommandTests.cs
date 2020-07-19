@@ -1946,7 +1946,7 @@ namespace NuGet.Commands.FuncTest
                 var result = await command.ExecuteAsync();
 
                 // Assert
-                Assert.False(result.Success);
+                Assert.True(result.Success);
             }
         }
 
@@ -1990,8 +1990,8 @@ namespace NuGet.Commands.FuncTest
                 Assert.False(result.Success);
                 Assert.Equal(3, logger.ErrorMessages.Count());
                 var errors = logger.ErrorMessages.ToArray();
-                Assert.Contains("server name could not be resolved", errors[0]);
-                Assert.Contains("server name could not be resolved", errors[1]);
+                Assert.Contains("Communication failed to the package source", errors[0]);
+                Assert.Contains("Communication failed to the package source", errors[1]);
                 Assert.Contains("No packages exist with this id in source(s): https://failingSource", errors[2]);
             }
         }

@@ -42,27 +42,26 @@ static internal class ODataServiceDocumentUtils
         }
         catch (Exception ex) when (!(ex is FatalProtocolException) && (!(ex is OperationCanceledException)))
         {
-#if NET472
             WebException webEx = ex.InnerException as WebException;
             if (webEx != null && webEx.Status == WebExceptionStatus.NameResolutionFailure)
             {
                 var message = string.Format(
                     CultureInfo.CurrentCulture,
-                    Strings.Http_HostNotFound,
-                    url);
+                    Strings.Http_CommunicationFailedWithDetails,
+                    url,
+                    webEx.Message);
                 throw new FatalProtocolException(message, ex, NuGetLogCode.NU1305);
             }
-#elif NETSTANDARD2_0 || NETCOREAPP5_0
             SocketException sockEx = ex.InnerException as SocketException;
-            if (sockEx != null && sockEx.SocketErrorCode == SocketError.HostNotFound)
+            if (sockEx != null)
             {
                 var message = string.Format(
                     CultureInfo.CurrentCulture,
-                    Strings.Http_HostNotFound,
-                    url);
+                    Strings.Http_CommunicationFailedWithDetails,
+                    url,
+                    sockEx.Message);
                 throw new FatalProtocolException(message, ex, NuGetLogCode.NU1305);
             }
-#endif
             else
             {
                 string message = string.Format(CultureInfo.CurrentCulture, Strings.Log_FailedToReadServiceIndex, url);

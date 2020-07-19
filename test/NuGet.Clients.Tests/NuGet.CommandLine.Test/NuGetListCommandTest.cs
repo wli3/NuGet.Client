@@ -22,8 +22,7 @@ namespace NuGet.CommandLine.Test
             var nugetexe = Util.GetNuGetExePath();
             var hostName = Guid.NewGuid().ToString();
             var fullHostName = "https://" + hostName + "/";
-            var expected = "The server name could not be resolved when attempting to access source " +
-                           $"'{fullHostName}'.";
+            var expected = "Communication failed to the package source";
 
             var args = new[] { "list", "-Source", fullHostName };
 
@@ -850,7 +849,7 @@ namespace NuGet.CommandLine.Test
                 result.Item1 != 0,
                 "The run did not fail as desired. Simply got this output:" + result.Item2);
 
-                Assert.Contains($"The server name could not be resolved when attempting to access source '{invalidInput}'.", result.Item3);
+                Assert.Contains($"Communication failed to the package source", result.Item3);
         }
 
         [Theory]

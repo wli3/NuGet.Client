@@ -1946,7 +1946,7 @@ namespace NuGet.Commands.FuncTest
                 var result = await command.ExecuteAsync();
 
                 // Assert
-                Assert.True(result.Success);
+                Assert.False(result.Success);
             }
         }
 

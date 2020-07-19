@@ -561,27 +561,26 @@ namespace NuGet.Protocol
                 }
                 catch (Exception ex) when (retry == maxRetries)
                 {
-#if NET472
                     WebException webEx = ex.InnerException as WebException;
                     if (webEx != null && webEx.Status == WebExceptionStatus.NameResolutionFailure)
                     {
                         var message = string.Format(
                             CultureInfo.CurrentCulture,
-                            Strings.Http_HostNotFound,
-                            uri);
+                            Strings.Http_CommunicationFailedWithDetails,
+                            uri,
+                            webEx.Message);
                         throw new FatalProtocolException(message, ex, NuGetLogCode.NU1305);
                     }
-#elif NETSTANDARD2_0 || NETCOREAPP5_0
                     SocketException sockEx = ex.InnerException as SocketException;
-                    if (sockEx != null && sockEx.SocketErrorCode == SocketError.HostNotFound)
+                    if (sockEx != null)
                     {
                         var message = string.Format(
                             CultureInfo.CurrentCulture,
-                            Strings.Http_HostNotFound,
-                            uri);
+                            Strings.Http_CommunicationFailedWithDetails,
+                            uri,
+                            sockEx.Message);
                         throw new FatalProtocolException(message, ex, NuGetLogCode.NU1305);
                     }
-#endif
                     else
                     {
                         var message = string.Format(

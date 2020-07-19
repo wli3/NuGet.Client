@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Microsoft.Test.Apex.VisualStudio.Solution;
 using Xunit;
 using Xunit.Abstractions;
@@ -147,6 +148,40 @@ namespace NuGet.Tests.Apex
 
             // Assert
             CommonUtility.AssertPackageInPackagesConfig(VisualStudio, project, "newtonsoft.json", "10.0.3", XunitLogger);
+        }
+
+        [StaFact]
+        public void PackagesListShowsCorrectItems()
+        {
+            // Arrange
+            EnsureVisualStudioHost();
+            var dte = VisualStudio.Dte;
+            var solutionService = VisualStudio.Get<SolutionService>();
+
+            //solutionService.CreateEmptySolution();
+            solutionService.Open(@"C:\Users\EAGOODSO\source\repos\AspWebFrameworkMvc10\AspWebFrameworkMvc10.sln"); //solutionService.AddProject(ProjectLanguage.CSharp, ProjectTemplate.ClassLibrary, ProjectTargetFramework.V46, "TestProject");
+            var project = solutionService.Projects[0];
+            VisualStudio.ClearOutputWindow();
+
+            // Act
+            dte.ExecuteCommand("Project.ManageNuGetPackages");
+            var nugetTestService = GetNuGetTestService();
+            var uiwindow = nugetTestService.GetUIWindowfromProject(project);
+
+            uiwindow.SwitchTabToBrowse();
+            var browseItems = uiwindow.PackageItems.Count();
+            XunitLogger.Log(Common.LogLevel.Debug, $"Browse tab has: {browseItems}");
+
+            uiwindow.SwitchTabToInstalled();
+            var installedItems = uiwindow.PackageItems.Count();
+            XunitLogger.Log(Common.LogLevel.Debug, $"Installed tab has: {installedItems}");
+
+            uiwindow.SwitchTabToUpdate();
+            var updateItems = uiwindow.PackageItems.Count();
+            XunitLogger.Log(Common.LogLevel.Debug, $"Updates tab has: {updateItems}");
+
+            // Assert
+            VisualStudio.AssertNoErrors();
         }
 
         private static FileInfo GetPackagesConfigFile(ProjectTestExtension project)

@@ -16,6 +16,8 @@ namespace NuGet.Tests.Apex
         private TimeSpan _timeout = TimeSpan.FromSeconds(5);
 
         public bool IsSolution { get => _uiproject.IsSolution; }
+        public IEnumerable<PackageItemListViewModel> PackageItems { get => _uiproject.PackageItems; }
+        public ItemFilter ActiveFilter { get => _uiproject.ActiveFilter; set => _uiproject.ActiveFilter = value; }
 
         public NuGetUIProjectTestExtension(ApexTestUIProject project)
         {

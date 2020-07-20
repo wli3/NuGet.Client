@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Threading;
@@ -552,14 +553,7 @@ namespace NuGet.Protocol
 
                     return results;
                 }
-                catch (Exception ex) when (retry < maxRetries)
-                {
-                    var message = string.Format(CultureInfo.CurrentCulture, Strings.Log_RetryingFindPackagesById, nameof(FindPackagesByIdAsyncCore), uri)
-                        + Environment.NewLine
-                        + ExceptionUtilities.DisplayMessage(ex);
-                    logger.LogMinimal(message);
-                }
-                catch (Exception ex) when (retry == maxRetries)
+                catch (HttpRequestException ex) when (retry == maxRetries)
                 {
                     WebException webEx = ex.InnerException as WebException;
                     if (webEx != null && webEx.Status == WebExceptionStatus.NameResolutionFailure)
@@ -581,19 +575,31 @@ namespace NuGet.Protocol
                             sockEx.Message);
                         throw new FatalProtocolException(message, ex, NuGetLogCode.NU1305);
                     }
-                    else
-                    {
-                        var message = string.Format(
-                            CultureInfo.CurrentCulture,
-                            Strings.Log_FailedToRetrievePackage,
-                            id,
-                            uri);
-                        throw new FatalProtocolException(message, ex);
-                    }
+                    LogPackageRetrievalError(id, uri, ex);
+                }
+                catch (Exception ex) when (retry < maxRetries)
+                {
+                    var message = string.Format(CultureInfo.CurrentCulture, Strings.Log_RetryingFindPackagesById, nameof(FindPackagesByIdAsyncCore), uri)
+                        + Environment.NewLine
+                        + ExceptionUtilities.DisplayMessage(ex);
+                    logger.LogMinimal(message);
+                }
+                catch (Exception ex) when (retry == maxRetries)
+                {
+                    LogPackageRetrievalError(id, uri, ex);
                 }
             }
-
             return null;
+        }
+
+        private static void LogPackageRetrievalError(string id, string uri, Exception ex)
+        {
+            var message = string.Format(
+                CultureInfo.CurrentCulture,
+                Strings.Log_FailedToRetrievePackage,
+                id,
+                uri);
+            throw new FatalProtocolException(message, ex);
         }
 
         private static PackageInfo BuildModel(string id, XElement element)

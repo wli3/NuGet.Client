@@ -1940,13 +1940,13 @@ namespace NuGet.Commands.FuncTest
                     LockFilePath = Path.Combine(projectDir, "project.lock.json")
                 };
 
-                var command = new RestoreCommand(request);
-
                 // Act
+                var command = new RestoreCommand(request);
                 var result = await command.ExecuteAsync();
+                await result.CommitAsync(logger, CancellationToken.None);
 
                 // Assert
-                Assert.True(result.Success);
+                Assert.False(result.Success);
             }
         }
 

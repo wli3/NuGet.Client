@@ -1913,8 +1913,7 @@ namespace NuGet.Commands.FuncTest
             // Arrange
             var sources = new List<PackageSource>
             {
-                new PackageSource("https://failingSource"),
-                new PackageSource(NuGetConstants.V3FeedUrl)
+                new PackageSource("https://failingSource")
             };
 
             using (var packagesDir = TestDirectory.Create())

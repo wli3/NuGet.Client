@@ -575,7 +575,7 @@ namespace NuGet.Protocol
                             sockEx.Message);
                         throw new FatalProtocolException(message, ex, NuGetLogCode.NU1305);
                     }
-                    LogPackageRetrievalError(id, uri, ex);
+                    RaisePackageRetrievalError(id, uri, ex);
                 }
                 catch (Exception ex) when (retry < maxRetries)
                 {
@@ -586,13 +586,13 @@ namespace NuGet.Protocol
                 }
                 catch (Exception ex) when (retry == maxRetries)
                 {
-                    LogPackageRetrievalError(id, uri, ex);
+                    RaisePackageRetrievalError(id, uri, ex);
                 }
             }
             return null;
         }
 
-        private static void LogPackageRetrievalError(string id, string uri, Exception ex)
+        private static void RaisePackageRetrievalError(string id, string uri, Exception ex)
         {
             var message = string.Format(
                 CultureInfo.CurrentCulture,

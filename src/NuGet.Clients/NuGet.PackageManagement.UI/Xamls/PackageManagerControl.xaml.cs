@@ -27,6 +27,7 @@ using NuGet.Protocol.Core.Types;
 using NuGet.Resolver;
 using NuGet.Versioning;
 using NuGet.VisualStudio;
+using NuGet.VisualStudio.Common;
 using NuGet.VisualStudio.Telemetry;
 using Resx = NuGet.PackageManagement.UI;
 using Task = System.Threading.Tasks.Task;
@@ -107,6 +108,10 @@ namespace NuGet.PackageManagement.UI
 
         private bool _forceRecommender;
 
+        public void WriteToOutputConsole(string message)
+        {
+            _uiLogger.Log(MessageLevel.Info, "HACK: " + message);
+        }
         public PackageManagerControl(
             PackageManagerModel model,
             ISettings nugetSettings,
@@ -841,14 +846,24 @@ namespace NuGet.PackageManagement.UI
                     RefreshInstalledAndUpdatesTabs();
                 }
 
-                FlagTabDataAsLoaded(filterToRender);
-
-                // Loading Data on Installed tab should also consider the Data on Updates tab as loaded to indicate
-                // UI filtering for Updates is ready.
                 if (filterToRender == ItemFilter.Installed)
                 {
+                    //If we're loading the Installed tab, we need to ensure all statuses are loaded prior to flagging
+                    //that Updates Tab is ready for UI filtering.
+                    foreach (var installedPackageItem in _packageList.PackageItems)
+                    {
+                        WriteToOutputConsole($"Package Status Loading... {installedPackageItem}");
+                        await installedPackageItem.WaitForBackgroundLatestVersionLoaderAsync();
+                        WriteToOutputConsole($"done with Package Status Loading... {installedPackageItem} ({installedPackageItem.Status} & update?: {installedPackageItem.IsUpdateAvailable})");
+                    }
+
+                    // Loading Data on Installed tab should also consider the Data on Updates tab as loaded to indicate
+                    // UI filtering for Updates is ready.
                     FlagTabDataAsLoaded(ItemFilter.UpdatesAvailable);
                 }
+                FlagTabDataAsLoaded(filterToRender);
+
+                WriteToOutputConsole($"SearchPackagesAndRefreshUpdateCountAsync done... current state: _updatesTabIsLoaded = {_updatesTabDataIsLoaded} and _installedTabIsLoaded = {_installedTabDataIsLoaded}");
             }
             catch (OperationCanceledException)
             {
@@ -887,6 +902,8 @@ namespace NuGet.PackageManagement.UI
                 default:
                     break;
             }
+            WriteToOutputConsole($"FlagTabAsLoaded _updatesTabIsLoaded = {_updatesTabDataIsLoaded} and _installedTabIsLoaded = {_installedTabDataIsLoaded}");
+
         }
 
         private void ResetTabDataLoadFlags()
@@ -968,6 +985,7 @@ namespace NuGet.PackageManagement.UI
                 NuGetUIThreadHelper.JoinableTaskFactory.RunAsync(async () =>
                 {
                     await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    WriteToOutputConsole("RefreshConsolidatablePackagesCount executing");
                     _topPanel.UpdateCountOnConsolidateTab(count: 0);
                     var loadContext = new PackageLoadContext(ActiveSources, Model.IsSolution, Model.Context);
                     var packageFeeds = await CreatePackageFeedAsync(loadContext, ItemFilter.Consolidate, _uiLogger, recommendPackages: false);
@@ -975,6 +993,7 @@ namespace NuGet.PackageManagement.UI
                         loadContext, packageFeeds.mainFeed, includePrerelease: IncludePrerelease, recommenderPackageFeed: packageFeeds.recommenderFeed);
 
                     _topPanel.UpdateCountOnConsolidateTab(await loader.GetTotalCountAsync(maxCount: 100, CancellationToken.None));
+                    WriteToOutputConsole("RefreshConsolidatablePackagesCount done");
                 })
                 .PostOnFailure(nameof(PackageManagerControl), nameof(RefreshConsolidatablePackagesCount));
             }
@@ -1147,6 +1166,11 @@ namespace NuGet.PackageManagement.UI
         {
             if (_initialized)
             {
+                WriteToOutputConsole($"\n\n*****************************************************Loading Tab {_topPanel.Filter}");
+                WriteToOutputConsole($"001 PrevLoadingStatus: {_packageList.GetLoadingStatus()}");
+                _packageList.ResetLoadingStatusIndicator();
+                WriteToOutputConsole($"001 LoadingStatus Reset: {_packageList.GetLoadingStatus()}");
+                WriteToOutputConsole($"Begin _updatesTabIsLoaded = {_updatesTabDataIsLoaded} and _installedTabIsLoaded = {_installedTabDataIsLoaded}");
                 var timeSpan = GetTimeSinceLastRefreshAndRestart();
                 _packageList.ResetLoadingStatusIndicator();
 
@@ -1171,8 +1195,10 @@ namespace NuGet.PackageManagement.UI
                 //Installed and Updates tabs don't need to be refreshed when switching between the two, if they're both loaded.
                 if (isUiFiltering)
                 {
+                    WriteToOutputConsole("FilterItems() for tab " + _topPanel.Filter);
                     //UI can apply filtering.
                     _packageList.FilterItems(_topPanel.Filter, _loadCts.Token);
+                    WriteToOutputConsole("done with FilterItems() for tab " + _topPanel.Filter);
                 }
                 else //Refresh tab from Cache.
                 {
@@ -1182,10 +1208,14 @@ namespace NuGet.PackageManagement.UI
                         ResetTabDataLoadFlags();
                     }
 
+                    WriteToOutputConsole("SearchPackagesAndRefreshUpdateCount() for tab " + _topPanel.Filter);
                     SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: true);
+                    WriteToOutputConsole("done with SearchPackagesAndRefreshUpdateCount() for tab " + _topPanel.Filter);
                 }
+                WriteToOutputConsole($"done with Filter_SelectionChanged: _updatesTabIsLoaded = {_updatesTabDataIsLoaded} and _installedTabIsLoaded = {_installedTabDataIsLoaded}");
                 EmitRefreshEvent(timeSpan, RefreshOperationSource.FilterSelectionChanged, RefreshOperationStatus.Success, isUiFiltering);
 
+                WriteToOutputConsole($"Ending LoadingStatus: {_packageList.GetLoadingStatus()}");
                 _detailModel.OnFilterChanged(e.PreviousFilter, _topPanel.Filter);
             }
         }

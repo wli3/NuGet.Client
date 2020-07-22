@@ -848,29 +848,59 @@ namespace NuGet.PackageManagement.UI
 
                 if (filterToRender == ItemFilter.Installed)
                 {
-                    //If we're loading the Installed tab, we need to ensure all statuses are loaded prior to flagging
-                    //that Updates Tab is ready for UI filtering.
-                    foreach (var installedPackageItem in _packageList.PackageItems)
-                    {
-                        WriteToOutputConsole($"Package Status Loading... {installedPackageItem}");
-                        await installedPackageItem.WaitForBackgroundLatestVersionLoaderAsync();
-                        WriteToOutputConsole($"done with Package Status Loading... {installedPackageItem} ({installedPackageItem.Status} & update?: {installedPackageItem.IsUpdateAvailable})");
-                    }
-
+                    WriteToOutputConsole($"awaiting EnsureStatusesLoaded");
+                    await EnsureStatusesLoaded(_loadCts.Token);
+                    WriteToOutputConsole($"done awaiting EnsureStatusesLoaded");
+                    FlagTabDataAsLoaded(filterToRender);
                     // Loading Data on Installed tab should also consider the Data on Updates tab as loaded to indicate
                     // UI filtering for Updates is ready.
                     FlagTabDataAsLoaded(ItemFilter.UpdatesAvailable);
                 }
-                FlagTabDataAsLoaded(filterToRender);
+                else
+                {
+                    FlagTabDataAsLoaded(filterToRender);
+                }
 
                 WriteToOutputConsole($"SearchPackagesAndRefreshUpdateCountAsync done... current state: _updatesTabIsLoaded = {_updatesTabDataIsLoaded} and _installedTabIsLoaded = {_installedTabDataIsLoaded}");
             }
             catch (OperationCanceledException)
             {
+                WriteToOutputConsole("OperationCanceled: SearchPackagesAndRefreshUpdateCount");
                 // Invalidate cache.
                 Model.CachedUpdates = null;
                 FlagTabDataAsLoaded(filterToRender, isLoaded: false);
             }
+        }
+
+        private List<Task> _packageListStatusLoadTask = null;
+
+        private async Task EnsureStatusesLoaded(CancellationToken token)
+        {
+            _packageListStatusLoadTask = new List<Task>();
+
+            //If we're loading the Installed tab, we need to ensure all statuses are loaded prior to flagging
+            //that Updates Tab is ready for UI filtering.
+            foreach (var installedPackageItem in _packageList.PackageItems)
+            {
+                var taskLoadPackageItemVersions = NuGetUIThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+                {
+                    WriteToOutputConsole($"Package Status Loading... {installedPackageItem}");
+                    await installedPackageItem.WaitForBackgroundLatestVersionLoaderAsync();
+                    WriteToOutputConsole($"done with Package Status Loading... {installedPackageItem} ({installedPackageItem.Status} & update?: {installedPackageItem.IsUpdateAvailable})");
+                });
+                
+                _packageListStatusLoadTask.Add(taskLoadPackageItemVersions.Task);
+            }
+
+            //await Task.WhenAll(_packageListStatusLoadTask,);
+            var allLoadedTask = Task.Run(() => Task.WhenAll(_packageListStatusLoadTask), token);
+            await allLoadedTask;
+            //if (allLoadedTask.Status != TaskStatus.RanToCompletion)
+            //{
+            //    return TaskStatus.Faulted;
+            //}
+            _packageListStatusLoadTask = null;
+            //return allLoadedTask;
         }
 
         /// <summary>
@@ -1167,6 +1197,9 @@ namespace NuGet.PackageManagement.UI
             if (_initialized)
             {
                 WriteToOutputConsole($"\n\n*****************************************************Loading Tab {_topPanel.Filter}");
+                WriteToOutputConsole($"StatusLoadTask? {_packageListStatusLoadTask != null}");
+                _packageListStatusLoadTask = null;
+                
                 WriteToOutputConsole($"001 PrevLoadingStatus: {_packageList.GetLoadingStatus()}");
                 _packageList.ResetLoadingStatusIndicator();
                 WriteToOutputConsole($"001 LoadingStatus Reset: {_packageList.GetLoadingStatus()}");

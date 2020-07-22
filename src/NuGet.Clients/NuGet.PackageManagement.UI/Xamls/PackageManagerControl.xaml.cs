@@ -886,6 +886,7 @@ namespace NuGet.PackageManagement.UI
                 {
                     WriteToOutputConsole($"Package Status Loading... {installedPackageItem}");
                     await installedPackageItem.WaitForBackgroundLatestVersionLoaderAsync();
+                    //_packageListStatusLoadTask.Remove(installedpacka)
                     WriteToOutputConsole($"done with Package Status Loading... {installedPackageItem} ({installedPackageItem.Status} & update?: {installedPackageItem.IsUpdateAvailable})");
                 });
                 
@@ -899,7 +900,7 @@ namespace NuGet.PackageManagement.UI
             //{
             //    return TaskStatus.Faulted;
             //}
-            _packageListStatusLoadTask = null;
+            //_packageListStatusLoadTask = null;
             //return allLoadedTask;
         }
 
@@ -1015,7 +1016,7 @@ namespace NuGet.PackageManagement.UI
                 NuGetUIThreadHelper.JoinableTaskFactory.RunAsync(async () =>
                 {
                     await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                    WriteToOutputConsole("RefreshConsolidatablePackagesCount executing");
+                    //WriteToOutputConsole("RefreshConsolidatablePackagesCount executing");
                     _topPanel.UpdateCountOnConsolidateTab(count: 0);
                     var loadContext = new PackageLoadContext(ActiveSources, Model.IsSolution, Model.Context);
                     var packageFeeds = await CreatePackageFeedAsync(loadContext, ItemFilter.Consolidate, _uiLogger, recommendPackages: false);
@@ -1023,7 +1024,7 @@ namespace NuGet.PackageManagement.UI
                         loadContext, packageFeeds.mainFeed, includePrerelease: IncludePrerelease, recommenderPackageFeed: packageFeeds.recommenderFeed);
 
                     _topPanel.UpdateCountOnConsolidateTab(await loader.GetTotalCountAsync(maxCount: 100, CancellationToken.None));
-                    WriteToOutputConsole("RefreshConsolidatablePackagesCount done");
+                    //WriteToOutputConsole("RefreshConsolidatablePackagesCount done");
                 })
                 .PostOnFailure(nameof(PackageManagerControl), nameof(RefreshConsolidatablePackagesCount));
             }
@@ -1198,7 +1199,7 @@ namespace NuGet.PackageManagement.UI
             {
                 WriteToOutputConsole($"\n\n*****************************************************Loading Tab {_topPanel.Filter}");
                 WriteToOutputConsole($"StatusLoadTask? {_packageListStatusLoadTask != null}");
-                _packageListStatusLoadTask = null;
+                //_packageListStatusLoadTask = null;
                 
                 WriteToOutputConsole($"001 PrevLoadingStatus: {_packageList.GetLoadingStatus()}");
                 _packageList.ResetLoadingStatusIndicator();
@@ -1228,7 +1229,7 @@ namespace NuGet.PackageManagement.UI
                 //Installed and Updates tabs don't need to be refreshed when switching between the two, if they're both loaded.
                 if (isUiFiltering)
                 {
-                    WriteToOutputConsole("FilterItems() for tab " + _topPanel.Filter);
+                    WriteToOutputConsole("**UI FILTERING** FilterItems() for tab " + _topPanel.Filter);
                     //UI can apply filtering.
                     _packageList.FilterItems(_topPanel.Filter, _loadCts.Token);
                     WriteToOutputConsole("done with FilterItems() for tab " + _topPanel.Filter);
@@ -1241,7 +1242,7 @@ namespace NuGet.PackageManagement.UI
                         ResetTabDataLoadFlags();
                     }
 
-                    WriteToOutputConsole("SearchPackagesAndRefreshUpdateCount() for tab " + _topPanel.Filter);
+                    WriteToOutputConsole("**HARD REFRESHING** SearchPackagesAndRefreshUpdateCount() for tab " + _topPanel.Filter);
                     SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: true);
                     WriteToOutputConsole("done with SearchPackagesAndRefreshUpdateCount() for tab " + _topPanel.Filter);
                 }

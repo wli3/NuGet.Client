@@ -91,12 +91,10 @@ jobs:
     SDKVersionForBuild: $[dependencies.Initialize_Build.outputs['getSDKVersionForBuild.SDKVersionForBuild']]
     LocalizedLanguageCount: "13"
     var1: $(TimeoutInMinutesUnitTest)
-    var2: ${{ variables.TimeoutInMinutesUnitTest }}
     var3: $[variables.TimeoutInMinutesUnitTest]	
-    var4: variables['TimeoutInMinutesUnitTest']
-    vnonexist1: $(SomeRandomName)
-    vnonexist2: ${{ variables.SomeRandomName }}
+    #vnonexist1: $(SomeRandomName)
     vnonexist3: $[variables.SomeRandomName]	
+    vnonexist2: ${{ variables.SomeRandomName }}
     vnonexist4: variables['SomeRandomName']
 
   pool:

@@ -82,7 +82,7 @@ jobs:
 
 - job: Build_and_UnitTest
   dependsOn: Initialize_Build
-  timeoutInMinutes: $[variables['timeoutlimit']]
+  timeoutInMinutes: 10 
   variables:
     BuildNumber: $[dependencies.Initialize_Build.outputs['updatebuildnumber.BuildNumber']]
     FullVstsBuildNumber: $[dependencies.Initialize_Build.outputs['updatebuildnumber.FullVstsBuildNumber']]
@@ -90,10 +90,14 @@ jobs:
     VsTargetMajorVersion: $[dependencies.Initialize_Build.outputs['updatebuildnumber.VsTargetMajorVersion']]
     SDKVersionForBuild: $[dependencies.Initialize_Build.outputs['getSDKVersionForBuild.SDKVersionForBuild']]
     LocalizedLanguageCount: "13"
-    ${{ if eq($(TimeoutInMinutesUnitTest), '') }}:  # if TimeoutInMinutesUnitTest is not defined in pipeline, use default timeoutlimit
-      timeoutlimit: 10
-    ${{ if ne($(TimeoutInMinutesUnitTest), '') }}:   # if TimeoutInMinutesUnitTest is defined in pipeline, use TimeoutInMinutesUnitTest
-      timeoutlimit: $(TimeoutInMinutesUnitTest)
+    var1: $(TimeoutInMinutesUnitTest)
+    var2: ${{ variables.TimeoutInMinutesUnitTest }}
+    var3: $[variables.TimeoutInMinutesUnitTest]	
+    var4: variables['TimeoutInMinutesUnitTest']
+    vnonexist1: $(SomeRandomName)
+    vnonexist2: ${{ variables.SomeRandomName }}
+    vnonexist3: $[variables.SomeRandomName]	
+    vnonexist4: variables['SomeRandomName']
 
   pool:
     name: VSEng-MicroBuildVS2019
@@ -109,18 +113,18 @@ jobs:
 
   steps:
   - task: PowerShell@1
-    inputs:
-      scriptName: "$(Build.Repository.LocalPath)\\scripts\\utils\\InstallCLIforBuild.ps1"
-      arguments: '$(SDKVersionForBuild)'
-    displayName: "Install .NET 5.0 for build"
-
-  - task: PowerShell@1
-    displayName: "Update Build Number"
+    displayName: "display vars"
     inputs:
       scriptType: "inlineScript"
       inlineScript: |
-        Write-Host "##vso[build.updatebuildnumber]$env:FullVstsBuildNumber"
-        Get-ChildItem Env: | Sort-Object Name | Format-Table -Wrap -AutoSize
+        echo "var1:  " $(var1)
+        echo "var2:  " $(var2)
+        echo "var3:  " $(var3)
+        echo "var4:  " $(var4)
+        echo "vnonexist1:  " $(vnonexist1)
+        echo "vnonexist2:  " $(vnonexist2)
+        echo "vnonexist3:  " $(vnonexist3)
+        echo "vnonexist4:  " $(vnonexist4)
 
   - task: PowerShell@1
     displayName: "Define variables"

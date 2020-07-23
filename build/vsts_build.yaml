@@ -89,25 +89,25 @@ jobs:
       scriptType: "inlineScript"
       inlineScript: |
         echo "timeoutlimit2:   $env:TIMEOUTINMINUTESUNITTEST"
-        if ($env:TIMEOUTINMINUTESUNITTEST -eq $null)
+        if (timeoutlimit2 -eq $null)
         {
           $timeoutlimit2 = 3
         } 
-        else
-        {
-          $timeoutlimit2 = $env:TIMEOUTINMINUTESUNITTEST
-        }
         echo "##vso[task.setvariable variable=timeoutlimit2;isOutput=true;]$timeoutlimit2"
         echo "timeoutlimit2 resolved is $(timeoutlimit2)"
         echo "timeoutlimit3:   $env:NONEXISTTIMELIMIT"
-        if ($env:NONEXISTTIMELIMIT -eq $null)
+        if ($timeoutlimit3 -eq $null)
         {
-          $timeoutlimit3 = 3
-        } 
-        else
+          echo "timeoutlimit3:   is null"
+        }
+        if (!$timeoutlimit3)
         {
-          $timeoutlimit3 = $env:NONEXISTTIMELIMIT
-        } 
+          echo "2.timeoutlimit3:   is null"
+        }
+        if ($timeoutlimit3 -eq '')
+        {
+          echo "timeoutlimit3:   is empty string"
+        }
         echo "##vso[task.setvariable variable=timeoutlimit3;isOutput=true;]$timeoutlimit3"
         echo "timeoutlimit3 resolved is $(timeoutlimit3)"
 

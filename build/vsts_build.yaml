@@ -95,7 +95,6 @@ jobs:
     #vnonexist1: $(SomeRandomName)
     vnonexist3: $[variables.SomeRandomName]	
     vnonexist2: ${{ variables.SomeRandomName }}
-    vnonexist4: variables['SomeRandomName']
 
   pool:
     name: VSEng-MicroBuildVS2019
@@ -116,13 +115,9 @@ jobs:
       scriptType: "inlineScript"
       inlineScript: |
         echo "var1:  " $(var1)
-        echo "var2:  " $(var2)
         echo "var3:  " $(var3)
-        echo "var4:  " $(var4)
-        echo "vnonexist1:  " $(vnonexist1)
-        echo "vnonexist2:  " $(vnonexist2)
         echo "vnonexist3:  " $(vnonexist3)
-        echo "vnonexist4:  " $(vnonexist4)
+        echo "vnonexist2:  " $(vnonexist2)
 
   - task: PowerShell@1
     displayName: "Define variables"

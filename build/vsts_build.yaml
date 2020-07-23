@@ -88,7 +88,7 @@ jobs:
         echo "timeoutlimit2:   $env:TIMEOUTINMINUTESUNITTEST"
         if ($env:TIMEOUTINMINUTESUNITTEST -eq $null)
         {
-          $timeoutlimit2 = 2
+          $timeoutlimit2 = 1
         } 
         else
         {
@@ -99,7 +99,7 @@ jobs:
         echo "timeoutlimit3:   $env:NONEXISTTIMELIMIT"
         if ($env:NONEXISTTIMELIMIT -eq $null)
         {
-          $timeoutlimit3 = 2
+          $timeoutlimit3 = 1
         }
         else
         {
@@ -118,22 +118,8 @@ jobs:
     VsTargetMajorVersion: $[dependencies.Initialize_Build.outputs['updatebuildnumber.VsTargetMajorVersion']]
     SDKVersionForBuild: $[dependencies.Initialize_Build.outputs['getSDKVersionForBuild.SDKVersionForBuild']]
     LocalizedLanguageCount: "13"
-    var1: $[variables.TimeoutInMinutesUnitTest]	
-    var2: $[eq(variables['TimeoutInMinutesUnitTest'], '')]
-    var3: $[variables.SomeRandomName]	
-    var4: $[eq(variables['SomeRandomName'], '')]
-    ${{ if eq(variables['TimeoutInMinutesUnitTest'], '') }}:
-      var5: 10
-    ${{ if ne(variables['TimeoutInMinutesUnitTest'], '') }}:
-      var5: $[variables.TimeoutInMinutesUnitTest]
-    ${{ if eq(variables['SomeRandomName'], '') }}:
-      var6: 20
-    ${{ if ne(variables['SomeRandomName'], '') }}:
-      var6: $[variables.SomeRandomName]
-    ${{ if eq(variables['SigningType'], '') }}:
-      var7: 20
-    ${{ if ne(variables['SigningType'], '') }}:
-      var7: $[variables.SigningType]
+    var2: $[dependencies.Initialize_Build.outputs['timeoutlimit2']] 
+    var3: $[dependencies.Initialize_Build.outputs['timeoutlimit3']] 
 
   pool:
     name: VSEng-MicroBuildVS2019
@@ -153,13 +139,8 @@ jobs:
     inputs:
       scriptType: "inlineScript"
       inlineScript: |
-        echo "var1:  " $(var1)
         echo "var2:  " $(var2)
         echo "var3:  " $(var3)
-        echo "var4:  " $(var4)
-        echo "var5:  " $(var5)
-        echo "var6:  " $(var6)
-        echo "var7:  " $(var7)
 
   - task: PowerShell@1
     displayName: "Define variables"

@@ -3,6 +3,9 @@ jobs:
 
 - job: Initialize_Build
   timeoutInMinutes: 10
+  variables:
+    timeoutlimit2: $[variables.TimeoutInMinutesUnitTest]
+    timeoutlimit3: $[variables.NONEXISTTIMELIMIT]
   pool:
     name: VSEng-MicroBuildVS2019
     demands:

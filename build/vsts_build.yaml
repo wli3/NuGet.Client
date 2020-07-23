@@ -94,6 +94,14 @@ jobs:
     var2: $[eq(variables['TimeoutInMinutesUnitTest'], '')]
     var3: $[variables.SomeRandomName]	
     var4: $[eq(variables['SomeRandomName'], '')]
+    ${{ if eq(variables['TimeoutInMinutesUnitTest'], '') }}:
+      var5: 10
+    ${{ if ne(variables['TimeoutInMinutesUnitTest'], '') }}:
+      var5: $[variables.TimeoutInMinutesUnitTest]
+    ${{ if eq(variables['SomeRandomName'], '') }}:
+      var6: 20
+    ${{ if ne(variables['SomeRandomName'], '') }}:
+      var6: $[variables.SomeRandomName]
 
   pool:
     name: VSEng-MicroBuildVS2019
@@ -117,6 +125,8 @@ jobs:
         echo "var2:  " $(var2)
         echo "var3:  " $(var3)
         echo "var4:  " $(var4)
+        echo "var5:  " $(var5)
+        echo "var6:  " $(var6)
 
   - task: PowerShell@1
     displayName: "Define variables"

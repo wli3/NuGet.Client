@@ -3,8 +3,6 @@ jobs:
 
 - job: Initialize_Build
   timeoutInMinutes: 10
-  variables:
-    timeoutlimit: $[variables.TimeoutInMinutesUnitTest]
   pool:
     name: VSEng-MicroBuildVS2019
     demands:
@@ -87,18 +85,32 @@ jobs:
     inputs:
       scriptType: "inlineScript"
       inlineScript: |
-        echo "format1:   $env:TIMEOUTINMINUTESUNITTEST"
-        echo "format2:   $timeoutlimit"
-        if ($timeoutlimit -eq '')
+        echo "timeoutlimit2:   $env:TIMEOUTINMINUTESUNITTEST"
+        if ($env:TIMEOUTINMINUTESUNITTEST -eq '')
         {
-          $timeoutlimit = 10
+          $timeoutlimit2 = 3
         } 
-        echo "##vso[task.setvariable variable=timeoutlimit;isOutput=true;]$timeoutlimit"
-        echo "variable value is $(timeoutlimit)"
+        else
+        {
+          $timeoutlimit2 = $env:TIMEOUTINMINUTESUNITTEST
+        }
+        echo "##vso[task.setvariable variable=timeoutlimit2;isOutput=true;]$timeoutlimit2"
+        echo "timeoutlimit2 resolved is $(timeoutlimit2)"
+        echo "timeoutlimit3:   $env:NONEXISTTIMELIMIT"
+        if ($env:NONEXISTTIMELIMIT -eq '')
+        {
+          $timeoutlimit3 = 3
+        } 
+        else
+        {
+          $timeoutlimit3 = $env:NONEXISTTIMELIMIT
+        } 
+        echo "##vso[task.setvariable variable=timeoutlimit3;isOutput=true;]$timeoutlimit3"
+        echo "timeoutlimit3 resolved is $(timeoutlimit3)"
 
 - job: Build_and_UnitTest
   dependsOn: Initialize_Build
-  timeoutInMinutes: $[dependencies.Initialize_Build.outputs['timeoutlimit']] 
+  timeoutInMinutes: $[dependencies.Initialize_Build.outputs['timeoutlimit2']] 
   variables:
     BuildNumber: $[dependencies.Initialize_Build.outputs['updatebuildnumber.BuildNumber']]
     FullVstsBuildNumber: $[dependencies.Initialize_Build.outputs['updatebuildnumber.FullVstsBuildNumber']]

@@ -3,6 +3,8 @@ jobs:
 
 - job: Initialize_Build
   timeoutInMinutes: 10
+  variables:
+    timeoutlimit: $[variables.TimeoutInMinutesUnitTest]
   pool:
     name: VSEng-MicroBuildVS2019
     demands:
@@ -80,9 +82,23 @@ jobs:
         Write-Host "##vso[build.addbuildtag]${env:BUILD_SOURCEVERSIONAUTHOR}"
         Write-Host "##vso[build.addbuildtag]${env:BUILD_SOURCEBRANCHNAME}"
 
+  - task: PowerShell@1
+    displayName: "Set timeoutlimet for Build_and_UnitTest"
+    inputs:
+      scriptType: "inlineScript"
+      inlineScript: |
+        echo "format1:   $env:TIMEOUTINMINUTESUNITTEST"
+        echo "format2:   $timeoutlimit"
+        if ($timeoutlimit -eq '')
+        {
+          $timeoutlimit = 10
+        } 
+        echo "##vso[task.setvariable variable=timeoutlimit;isOutput=true;]$timeoutlimit"
+        echo "variable value is $(timeoutlimit)"
+
 - job: Build_and_UnitTest
   dependsOn: Initialize_Build
-  timeoutInMinutes: 10 
+  timeoutInMinutes: $[dependencies.Initialize_Build.outputs['timeoutlimit']] 
   variables:
     BuildNumber: $[dependencies.Initialize_Build.outputs['updatebuildnumber.BuildNumber']]
     FullVstsBuildNumber: $[dependencies.Initialize_Build.outputs['updatebuildnumber.FullVstsBuildNumber']]
@@ -102,6 +118,10 @@ jobs:
       var6: 20
     ${{ if ne(variables['SomeRandomName'], '') }}:
       var6: $[variables.SomeRandomName]
+    ${{ if eq(variables['SigningType'], '') }}:
+      var7: 20
+    ${{ if ne(variables['SigningType'], '') }}:
+      var7: $[variables.SigningType]
 
   pool:
     name: VSEng-MicroBuildVS2019
@@ -127,6 +147,7 @@ jobs:
         echo "var4:  " $(var4)
         echo "var5:  " $(var5)
         echo "var6:  " $(var6)
+        echo "var7:  " $(var7)
 
   - task: PowerShell@1
     displayName: "Define variables"

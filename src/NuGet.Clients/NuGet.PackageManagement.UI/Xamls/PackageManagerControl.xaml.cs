@@ -32,6 +32,7 @@ using NuGet.VisualStudio.Telemetry;
 using Resx = NuGet.PackageManagement.UI;
 using Task = System.Threading.Tasks.Task;
 using VSThreadHelper = Microsoft.VisualStudio.Shell.ThreadHelper;
+using System.Collections.ObjectModel;
 
 namespace NuGet.PackageManagement.UI
 {
@@ -1193,6 +1194,8 @@ namespace NuGet.PackageManagement.UI
             }
         }
 
+        //private ObservableCollection<object> cachedInstalledPackages = null;
+
         private void Filter_SelectionChanged(object sender, FilterChangedEventArgs e)
         {
             if (_initialized)
@@ -1225,6 +1228,7 @@ namespace NuGet.PackageManagement.UI
                 var installedAndUpdatesTabDataLoaded = _installedTabDataIsLoaded && _updatesTabDataIsLoaded;
 
                 var isUiFiltering = switchedFromInstalledOrUpdatesTab && switchedToInstalledOrUpdatesTab && installedAndUpdatesTabDataLoaded;
+                //bool isUiFiltering = _topPanel.Filter == ItemFilter.Installed || _topPanel.Filter == 
 
                 //Installed and Updates tabs don't need to be refreshed when switching between the two, if they're both loaded.
                 if (isUiFiltering)

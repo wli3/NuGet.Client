@@ -3,9 +3,6 @@ jobs:
 
 - job: Initialize_Build
   timeoutInMinutes: 10
-  variables:
-    timeoutlimit2: $[variables.TimeoutInMinutesUnitTest]
-    timeoutlimit3: $[variables.NONEXISTTIMELIMIT]
   pool:
     name: VSEng-MicroBuildVS2019
     demands:
@@ -89,22 +86,22 @@ jobs:
       scriptType: "inlineScript"
       inlineScript: |
         echo "timeoutlimit2:   $env:TIMEOUTINMINUTESUNITTEST"
-        if (timeoutlimit2 -eq $null)
+        if ($env:TIMEOUTINMINUTESUNITTEST -eq $null)
         {
           $timeoutlimit2 = 3
         } 
         echo "##vso[task.setvariable variable=timeoutlimit2;isOutput=true;]$timeoutlimit2"
         echo "timeoutlimit2 resolved is $(timeoutlimit2)"
         echo "timeoutlimit3:   $env:NONEXISTTIMELIMIT"
-        if ($timeoutlimit3 -eq $null)
+        if ($env:NONEXISTTIMELIMIT -eq $null)
         {
           echo "timeoutlimit3:   is null"
         }
-        if (!$timeoutlimit3)
+        if (!$env:NONEXISTTIMELIMIT)
         {
           echo "2.timeoutlimit3:   is null"
         }
-        if ($timeoutlimit3 -eq '')
+        if ($env:NONEXISTTIMELIMIT -eq '')
         {
           echo "timeoutlimit3:   is empty string"
         }

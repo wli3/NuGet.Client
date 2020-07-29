@@ -38,22 +38,31 @@ namespace NuGet.Protocol
         private static HttpHandlerResourceV3 CreateResource(PackageSource packageSource)
         {
             var sourceUri = packageSource.SourceUri;
-            var proxy = ProxyCache.Instance.GetProxy(sourceUri);
+            //var proxy = ProxyCache.Instance.GetProxy(sourceUri);
 
             // replace the handler with the proxy aware handler
+#if NET472
+            var clientHandler = new NuGetWinHttpHandler
+            {
+                //Proxy = proxy,
+                AutomaticDecompression = (DecompressionMethods.GZip | DecompressionMethods.Deflate),
+                WindowsProxyUsePolicy = WindowsProxyUsePolicy.UseWinInetProxy
+            };
+#else
             var clientHandler = new HttpClientHandler
             {
-                Proxy = proxy,
-                AutomaticDecompression = (DecompressionMethods.GZip | DecompressionMethods.Deflate)
+                //Proxy = proxy,
+                AutomaticDecompression = (DecompressionMethods.GZip | DecompressionMethods.Deflate),
             };
+#endif
 
             // HTTP handler pipeline can be injected here, around the client handler
             HttpMessageHandler messageHandler = new ServerWarningLogHandler(clientHandler);
 
-            if (proxy != null)
-            {
-                messageHandler = new ProxyAuthenticationHandler(clientHandler, HttpHandlerResourceV3.CredentialService?.Value, ProxyCache.Instance);
-            }
+            //if (proxy != null)
+            //{
+            //    messageHandler = new ProxyAuthenticationHandler(clientHandler, HttpHandlerResourceV3.CredentialService?.Value, ProxyCache.Instance);
+            //}
 
 #if !IS_CORECLR
             {
@@ -78,5 +87,18 @@ namespace NuGet.Protocol
 
             return resource;
         }
+
+#if NET472
+        internal class NuGetWinHttpHandler : WinHttpHandler
+        {
+            protected override Task<HttpResponseMessage> SendAsync(
+                HttpRequestMessage request,
+                CancellationToken cancellationToken)
+            {
+                request.Version = new Version("2.0");
+                return base.SendAsync(request, cancellationToken);
+            }
+        }
+#endif
     }
 }

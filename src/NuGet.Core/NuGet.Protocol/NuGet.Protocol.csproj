@@ -20,6 +20,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Net.Http.WinHttpHandler" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="$(NuGetCoreSrcDirectory)NuGet.Packaging\NuGet.Packaging.csproj" />
   </ItemGroup>
 

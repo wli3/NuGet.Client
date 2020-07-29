@@ -350,7 +350,10 @@ namespace NuGet.Protocol
             var httpHandler = await _messageHandlerFactory();
             var httpClient = new HttpClient(httpHandler.MessageHandler)
             {
-                Timeout = Timeout.InfiniteTimeSpan
+#if IS_CORECLR && !NETSTANDARD2_0
+                DefaultRequestVersion = new Version(2, 0),
+#endif
+                Timeout = Timeout.InfiniteTimeSpan,
             };
 
             // Set user agent

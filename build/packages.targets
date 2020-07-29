@@ -68,6 +68,7 @@
         <PackageReference Update="System.Security.Cryptography.ProtectedData" Version="$(SystemPackagesVersion)" />
         <PackageReference Update="System.Threading.Tasks.Dataflow" Version="4.9.0" />
         <PackageReference Update="System.Threading.Thread" Version="$(SystemPackagesVersion)" />
+        <PackageReference Update="System.Net.Http.WinHttpHandler" Version="$(SystemPackagesVersion)" />
         <PackageReference Update="VSLangProj" Version="7.0.3300" />
         <PackageReference Update="VSLangProj110" Version="11.0.61030" />
         <PackageReference Update="VSLangProj157" Version="15.7.0" />

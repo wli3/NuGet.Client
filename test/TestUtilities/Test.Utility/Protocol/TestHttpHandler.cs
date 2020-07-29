@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.Net.Http;
@@ -8,14 +8,14 @@ namespace Test.Utility
 {
     public class TestHttpHandler : HttpHandlerResource
     {
-        private HttpClientHandler _messageHandler;
+        private HttpMessageHandler _messageHandler;
 
-        public TestHttpHandler(HttpClientHandler messageHandler)
+        public TestHttpHandler(HttpMessageHandler messageHandler)
         {
             _messageHandler = messageHandler;
         }
 
-        public override HttpClientHandler ClientHandler
+        public override HttpMessageHandler ClientHandler
         {
             get { return _messageHandler; }
         }

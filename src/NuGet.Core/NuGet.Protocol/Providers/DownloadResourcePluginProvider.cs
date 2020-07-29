@@ -83,7 +83,7 @@ namespace NuGet.Protocol
                 MessageMethod.GetCredentials,
                 () => new GetCredentialsRequestHandler(
                     plugin,
-                    httpHandlerResource.ClientHandler?.Proxy,
+                    null, //httpHandlerResource.ClientHandler?.Proxy,
                     HttpHandlerResourceV3.CredentialService?.Value),
                 existingHandler =>
                     {

@@ -22,7 +22,7 @@ namespace NuGet.Protocol
         private readonly static SemaphoreSlim _credentialPromptLock = new SemaphoreSlim(1, 1);
 
         private readonly PackageSource _packageSource;
-        private readonly HttpClientHandler _clientHandler;
+        private readonly HttpMessageHandler _clientHandler;
         private readonly ICredentialService _credentialService;
 
         private readonly SemaphoreSlim _httpClientLock = new SemaphoreSlim(1, 1);
@@ -31,7 +31,7 @@ namespace NuGet.Protocol
 
         public HttpSourceAuthenticationHandler(
             PackageSource packageSource,
-            HttpClientHandler clientHandler,
+            HttpMessageHandler clientHandler,
             ICredentialService credentialService)
             : base(clientHandler)
         {
@@ -59,9 +59,9 @@ namespace NuGet.Protocol
                 _credentials.Credentials = packageSource.Credentials.ToICredentials();
             }
 
-            _clientHandler.Credentials = _credentials;
-            // Always take the credentials from the helper.
-            _clientHandler.UseDefaultCredentials = false;
+            //_clientHandler.Credentials = _credentials;
+            //// Always take the credentials from the helper.
+            //_clientHandler.UseDefaultCredentials = false;
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

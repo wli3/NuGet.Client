@@ -1,0 +1,6 @@
+NuGet.Protocol.HttpHandlerResourceV3.HttpHandlerResourceV3(System.Net.Http.HttpMessageHandler clientHandler, System.Net.Http.HttpMessageHandler messageHandler) -> void
+NuGet.Protocol.HttpSourceAuthenticationHandler.HttpSourceAuthenticationHandler(NuGet.Configuration.PackageSource packageSource, System.Net.Http.WinHttpHandler clientHandler, NuGet.Configuration.ICredentialService credentialService) -> void
+NuGet.Protocol.ProxyAuthenticationHandler.ProxyAuthenticationHandler(System.Net.Http.WinHttpHandler clientHandler, NuGet.Configuration.ICredentialService credentialService, NuGet.Configuration.IProxyCredentialCache credentialCache) -> void
+NuGet.Protocol.ServerWarningLogHandler.ServerWarningLogHandler(System.Net.Http.HttpMessageHandler clientHandler) -> void
+abstract NuGet.Protocol.Core.Types.HttpHandlerResource.ClientHandler.get -> System.Net.Http.HttpMessageHandler
+override NuGet.Protocol.HttpHandlerResourceV3.ClientHandler.get -> System.Net.Http.HttpMessageHandler

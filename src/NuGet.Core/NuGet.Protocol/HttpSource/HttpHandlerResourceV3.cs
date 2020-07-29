@@ -14,10 +14,12 @@ namespace NuGet.Protocol
     /// </summary>
     public class HttpHandlerResourceV3 : HttpHandlerResource
     {
-        private readonly HttpClientHandler _clientHandler;
+        private readonly HttpMessageHandler _clientHandler;
         private readonly HttpMessageHandler _messageHandler;
 
-        public HttpHandlerResourceV3(HttpClientHandler clientHandler, HttpMessageHandler messageHandler)
+        public HttpHandlerResourceV3(
+            HttpMessageHandler clientHandler,
+            HttpMessageHandler messageHandler)
         {
             if (clientHandler == null)
             {
@@ -33,7 +35,7 @@ namespace NuGet.Protocol
             _messageHandler = messageHandler;
         }
 
-        public override HttpClientHandler ClientHandler => _clientHandler;
+        public override HttpMessageHandler ClientHandler => _clientHandler;
 
         public override HttpMessageHandler MessageHandler => _messageHandler;
 

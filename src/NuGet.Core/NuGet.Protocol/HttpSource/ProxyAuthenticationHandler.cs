@@ -24,14 +24,14 @@ namespace NuGet.Protocol
         // Only one source may prompt at a time
         private static readonly SemaphoreSlim _credentialPromptLock = new SemaphoreSlim(1, 1);
 
-        private readonly HttpClientHandler _clientHandler;
+        private readonly HttpMessageHandler _clientHandler;
         private readonly ICredentialService _credentialService;
         private readonly IProxyCredentialCache _credentialCache;
 
         private int _authRetries;
 
         public ProxyAuthenticationHandler(
-            HttpClientHandler clientHandler,
+            HttpMessageHandler clientHandler,
             ICredentialService credentialService,
             IProxyCredentialCache credentialCache)
             : base(clientHandler)
@@ -83,10 +83,10 @@ namespace NuGet.Protocol
                         return response;
                     }
 
-                    if (_clientHandler.Proxy == null)
-                    {
-                        return response;
-                    }
+                    //if (_clientHandler.Proxy == null)
+                    //{
+                    //    return response;
+                    //}
 
                     if (_credentialService == null)
                     {
@@ -98,14 +98,14 @@ namespace NuGet.Protocol
                         return response;
                     }
                 }
-                catch (Exception ex)
-                when (ProxyAuthenticationRequired(ex) && _clientHandler.Proxy != null && _credentialService != null)
-                {
-                    if (!await AcquireCredentialsAsync(request.RequestUri, cacheVersion, logger, cancellationToken))
-                    {
-                        throw;
-                    }
-                }
+                catch (Exception) { throw; }
+                //when (ProxyAuthenticationRequired(ex) && _clientHandler.Proxy != null && _credentialService != null)
+                //{
+                //    if (!await AcquireCredentialsAsync(request.RequestUri, cacheVersion, logger, cancellationToken))
+                //    {
+                //        throw;
+                //    }
+                //}
             }
         }
 
@@ -167,23 +167,25 @@ namespace NuGet.Protocol
                     return false;
                 }
 
-                var proxyAddress = _clientHandler.Proxy.GetProxy(requestUri);
+                return false;
 
-                // prompt user for proxy credentials.
-                var credentials = await PromptForProxyCredentialsAsync(proxyAddress, _clientHandler.Proxy, log, cancellationToken);
+                //var proxyAddress = _clientHandler.Proxy.GetProxy(requestUri);
 
-                cancellationToken.ThrowIfCancellationRequested();
+                //// prompt user for proxy credentials.
+                //var credentials = await PromptForProxyCredentialsAsync(proxyAddress, _clientHandler.Proxy, log, cancellationToken);
 
-                if (credentials == null)
-                {
-                    // user cancelled or error occured
-                    return false;
-                }
+                //cancellationToken.ThrowIfCancellationRequested();
 
-                _credentialCache.UpdateCredential(proxyAddress, credentials);
+                //if (credentials == null)
+                //{
+                //    // user cancelled or error occured
+                //    return false;
+                //}
 
-                // use the user provided credential to send the request again.
-                return true;
+                //_credentialCache.UpdateCredential(proxyAddress, credentials);
+
+                //// use the user provided credential to send the request again.
+                //return true;
             }
             finally
             {

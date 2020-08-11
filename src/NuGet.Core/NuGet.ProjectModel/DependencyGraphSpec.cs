@@ -404,18 +404,29 @@ namespace NuGet.ProjectModel
             }
         }
 
-        public string GetHash()
+        public string GetHash(out double seconds)
         {
             using (var hashFunc = new Sha512HashFunction())
             using (var writer = new HashObjectWriter(hashFunc))
             {
-                Write(writer, PackageSpecWriter.Write);
+                seconds = Write(writer, PackageSpecWriter.Write);
                 return writer.GetHash();
             }
         }
 
-        private void Write(RuntimeModel.IObjectWriter writer, Action<PackageSpec, RuntimeModel.IObjectWriter> writeAction)
+        public string GetHash2(out double seconds)
         {
+            using (var hashFunc = new Sha512HashFunction())
+            using (var writer = new HashObjectWriter(hashFunc))
+            {
+                seconds = Write(writer, PackageSpecWriter.Write2);
+                return writer.GetHash();
+            }
+        }
+
+        private double Write(RuntimeModel.IObjectWriter writer, Func<PackageSpec, RuntimeModel.IObjectWriter, TimeSpan> writeAction)
+        {
+            double timespent = 0;
             writer.WriteObjectStart();
             writer.WriteNameValue("format", Version);
 
@@ -438,12 +449,14 @@ namespace NuGet.ProjectModel
                 var project = pair.Value;
 
                 writer.WriteObjectStart(project.RestoreMetadata.ProjectUniqueName);
-                writeAction.Invoke(project, writer);
+                var ts = writeAction.Invoke(project, writer);
+                timespent += ts.TotalSeconds;
                 writer.WriteObjectEnd();
             }
 
             writer.WriteObjectEnd();
             writer.WriteObjectEnd();
+            return timespent;
         }
 
         /// <summary>

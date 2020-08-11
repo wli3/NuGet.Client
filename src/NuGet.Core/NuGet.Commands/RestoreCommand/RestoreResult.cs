@@ -154,12 +154,14 @@ namespace NuGet.Commands
         /// </summary>
         /// <remarks>If <see cref="PreviousLockFile"/> and <see cref="LockFile"/> are identical
         ///  the file will not be written to disk.</remarks>
-        public virtual async Task CommitAsync(ILogger log, CancellationToken token)
+        public virtual async Task CommitAsync(ILogger log, CancellationToken token, TelemetryActivity telOperationId = null)
         {
             // Write the lock file
             var lockFileFormat = new LockFileFormat();
 
             var isTool = ProjectStyle == ProjectStyle.DotnetCliTool;
+
+            telOperationId?.StartIntervalMeasure();
 
             // Commit the assets file to disk.
             await CommitAssetsFileAsync(
@@ -168,21 +170,34 @@ namespace NuGet.Commands
                 log: log,
                 toolCommit: isTool,
                 token: token);
-            
+            telOperationId?.EndIntervalMeasure("CommitAssetsFileAsync");
+
+            telOperationId?.StartIntervalMeasure();
             //Commit the cache file to disk
             await CommitCacheFileAsync(
                 log: log,
                 toolCommit : isTool);
+            telOperationId?.EndIntervalMeasure("CommitCacheFileAsync");
 
+            telOperationId?.StartIntervalMeasure();
             // Commit the lock file to disk
             await CommitLockFileAsync(
                 log: log,
                 toolCommit: isTool);
+            telOperationId?.EndIntervalMeasure("CommitLockFileAsync");
 
+            telOperationId?.StartIntervalMeasure();
             // Commit the dg spec file to disk
             await CommitDgSpecFileAsync(
                 log: log,
                 toolCommit: isTool);
+            telOperationId?.EndIntervalMeasure("CommitDgSpecFileAsync");
+        }
+
+
+        public virtual async Task CommitAsync(ILogger log, CancellationToken token)
+        {
+            await CommitAsync(log, token, null);
         }
 
         private async Task CommitAssetsFileAsync(

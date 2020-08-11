@@ -48,56 +48,61 @@ namespace NuGet.Commands
             RestoreArgs restoreContext,
             CancellationToken token)
         {
-            StandaloneTelemetry.Start();
+            //StandaloneTelemetry.Start();
+            //var telGuid = Guid.NewGuid();
+            //using (var telemetry = TelemetryActivity.Create(parentId: telGuid, eventName: "RestoreRunner.RunAsync"))
+            //{
+            //    telemetry.TelemetryEvent["RestoreRequestsCount"] = restoreRequests.Count();
+               
+                var maxTasks = GetMaxTaskCount(restoreContext);
 
-            var maxTasks = GetMaxTaskCount(restoreContext);
+                var log = restoreContext.Log;
 
-            var log = restoreContext.Log;
+                if (maxTasks > 1)
+                {
+                    log.LogVerbose(string.Format(
+                        CultureInfo.CurrentCulture,
+                        Strings.Log_RunningParallelRestore,
+                        maxTasks));
+                }
+                else
+                {
+                    log.LogVerbose(Strings.Log_RunningNonParallelRestore);
+                }
 
-            if (maxTasks > 1)
-            {
-                log.LogVerbose(string.Format(
-                    CultureInfo.CurrentCulture,
-                    Strings.Log_RunningParallelRestore,
-                    maxTasks));
-            }
-            else
-            {
-                log.LogVerbose(Strings.Log_RunningNonParallelRestore);
-            }
+                // Get requests
+                var requests = new Queue<RestoreSummaryRequest>(restoreRequests);
+                var restoreTasks = new List<Task<RestoreSummary>>(maxTasks);
+                var restoreSummaries = new List<RestoreSummary>(requests.Count);
 
-            // Get requests
-            var requests = new Queue<RestoreSummaryRequest>(restoreRequests);
-            var restoreTasks = new List<Task<RestoreSummary>>(maxTasks);
-            var restoreSummaries = new List<RestoreSummary>(requests.Count);
+                // Run requests
+                while (requests.Count > 0)
+                {
+                    // Throttle and wait for a task to finish if we have hit the limit
+                    if (restoreTasks.Count == maxTasks)
+                    {
+                        var restoreSummary = await CompleteTaskAsync(restoreTasks);
+                        restoreSummaries.Add(restoreSummary);
+                    }
 
-            // Run requests
-            while (requests.Count > 0)
-            {
-                // Throttle and wait for a task to finish if we have hit the limit
-                if (restoreTasks.Count == maxTasks)
+                    var request = requests.Dequeue();
+                    //request.Request.ParentId = Guid.NewGuid();
+                    var task = Task.Run(() => ExecuteAndCommitAsync(request, token), token);
+                    restoreTasks.Add(task);
+                }
+
+                // Wait for all restores to finish
+                while (restoreTasks.Count > 0)
                 {
                     var restoreSummary = await CompleteTaskAsync(restoreTasks);
                     restoreSummaries.Add(restoreSummary);
                 }
 
-                var request = requests.Dequeue();
+                //StandaloneTelemetry.Stop();
 
-                var task = Task.Run(() => ExecuteAndCommitAsync(request, token), token);
-                restoreTasks.Add(task);
-            }
-
-            // Wait for all restores to finish
-            while (restoreTasks.Count > 0)
-            {
-                var restoreSummary = await CompleteTaskAsync(restoreTasks);
-                restoreSummaries.Add(restoreSummary);
-            }
-
-            StandaloneTelemetry.Stop();
-
-            // Summary
-            return restoreSummaries;
+                // Summary
+                return restoreSummaries;
+            //}
         }
 
         /// <summary>
@@ -250,57 +255,83 @@ namespace NuGet.Commands
             var request = summaryRequest.Request;
 
             var command = new RestoreCommand(request);
-            var result = await command.ExecuteAsync(token);
+            //using (var telemetry = TelemetryActivity.Create(parentId: summaryRequest.Request.ParentId, eventName: "ExecuteAsync"))
+            //{
+            //    telemetry.TelemetryEvent["ProjectName"] = summaryRequest.Request.Project.Name;
+            //    telemetry.TelemetryEvent["ProjectPath"] = summaryRequest.Request.Project.FilePath;
+            //    telemetry.TelemetryEvent["CentralPackageVersionsCount"] = summaryRequest.Request.Project.TargetFrameworks.Select(tf => tf.CentralPackageVersions.Count).First().ToString();
+            //    telemetry.TelemetryEvent["PackageReferencesCount"] = summaryRequest.Request.Project.TargetFrameworks.Select(tf => tf.Dependencies.Count).OrderByDescending(x => x).First().ToString();
+            //    telemetry.TelemetryEvent["TFMsCount"] = summaryRequest.Request.Project.TargetFrameworks.Count().ToString();
+            //    telemetry.TelemetryEvent["ProjectReferencesCount"] = summaryRequest.Request.Project.RestoreMetadata.TargetFrameworks.Select(tf => tf.ProjectReferences.Count).OrderByDescending(x => x).First().ToString();
 
-            return new RestoreResultPair(summaryRequest, result);
+            //    var isCpvmEnabled = summaryRequest.Request.Project.RestoreMetadata?.CentralPackageVersionsEnabled ?? false;
+            //    telemetry.TelemetryEvent["IsCentralVersionManagementEnabled"] = isCpvmEnabled;
+                var result = await command.ExecuteAsync(token);
+
+                return new RestoreResultPair(summaryRequest, result);
+            //}
         }
 
         public static async Task<RestoreSummary> CommitAsync(RestoreResultPair restoreResult, CancellationToken token)
         {
-            var summaryRequest = restoreResult.SummaryRequest;
-            var result = restoreResult.Result;
-
-            var log = summaryRequest.Request.Log;
-
-            // Commit the result
-            log.LogInformation(Strings.Log_Committing);
-            await result.CommitAsync(log, token);
-
-            if (result.Success)
+            using (var telemetry = TelemetryActivity.Create(parentId: restoreResult.SummaryRequest.Request.ParentId, eventName: "CommitAsync"))
             {
-                // For no-op results, don't log a minimal message since a summary is logged at the end
-                // For regular results, log a minimal message so that users can see which projects were actually restored
-                log.Log(
-                    result is NoOpRestoreResult ? LogLevel.Information : LogLevel.Minimal,
-                    string.Format(
+                telemetry.TelemetryEvent["ProjectName"] = restoreResult.SummaryRequest.Request.Project.Name;
+                telemetry.TelemetryEvent["ProjectPath"] = restoreResult.SummaryRequest.Request.Project.FilePath;
+                telemetry.TelemetryEvent["CentralPackageVersionsCount"] = restoreResult.SummaryRequest.Request.Project.TargetFrameworks.Select(tf => tf.CentralPackageVersions.Count).First().ToString();
+                telemetry.TelemetryEvent["PackageReferencesCount"] = restoreResult.SummaryRequest.Request.Project.TargetFrameworks.Select(tf => tf.Dependencies.Count).OrderByDescending(x => x).First().ToString();
+                telemetry.TelemetryEvent["TFMsCount"] = restoreResult.SummaryRequest.Request.Project.TargetFrameworks.Count().ToString();
+                telemetry.TelemetryEvent["ProjectReferencesCount"] = restoreResult.SummaryRequest.Request.Project.RestoreMetadata.TargetFrameworks.Select(tf => tf.ProjectReferences.Count).OrderByDescending(x => x).First().ToString();
+
+                var isCpvmEnabled = restoreResult.SummaryRequest.Request.Project.RestoreMetadata?.CentralPackageVersionsEnabled ?? false;
+                telemetry.TelemetryEvent["IsCentralVersionManagementEnabled"] = isCpvmEnabled;
+
+                var summaryRequest = restoreResult.SummaryRequest;
+                var result = restoreResult.Result;
+
+                var log = summaryRequest.Request.Log;
+
+                // Commit the result
+                log.LogInformation(Strings.Log_Committing);
+                await result.CommitAsync(log, token);
+
+                if (result.Success)
+                {
+                    // For no-op results, don't log a minimal message since a summary is logged at the end
+                    // For regular results, log a minimal message so that users can see which projects were actually restored
+                    log.Log(
+                        result is NoOpRestoreResult ? LogLevel.Information : LogLevel.Minimal,
+                        string.Format(
+                            CultureInfo.CurrentCulture,
+                            summaryRequest.Request.ProjectStyle == ProjectStyle.DotnetToolReference ?
+                                Strings.Log_RestoreCompleteDotnetTool :
+                                Strings.Log_RestoreComplete,
+                            summaryRequest.InputPath,
+                            DatetimeUtility.ToReadableTimeFormat(result.ElapsedTime)));
+                }
+                else
+                {
+                    log.LogMinimal(string.Format(
                         CultureInfo.CurrentCulture,
                         summaryRequest.Request.ProjectStyle == ProjectStyle.DotnetToolReference ?
-                            Strings.Log_RestoreCompleteDotnetTool :
-                            Strings.Log_RestoreComplete,
+                        Strings.Log_RestoreFailedDotnetTool :
+                        Strings.Log_RestoreFailed,
                         summaryRequest.InputPath,
                         DatetimeUtility.ToReadableTimeFormat(result.ElapsedTime)));
-            }
-            else
-            {
-                log.LogMinimal(string.Format(
-                    CultureInfo.CurrentCulture,
-                    summaryRequest.Request.ProjectStyle == ProjectStyle.DotnetToolReference ?
-                    Strings.Log_RestoreFailedDotnetTool :
-                    Strings.Log_RestoreFailed,
-                    summaryRequest.InputPath,
-                    DatetimeUtility.ToReadableTimeFormat(result.ElapsedTime)));
-            }
-            // Remote the summary messages from the assets file.
-            var messages = restoreResult.Result.LogMessages
-                .Select(e => new RestoreLogMessage(e.Level, e.Code, e.Message)) ?? Enumerable.Empty<RestoreLogMessage>();
+                }
+                // Remote the summary messages from the assets file.
+                var messages = restoreResult.Result.LogMessages
+                    .Select(e => new RestoreLogMessage(e.Level, e.Code, e.Message)) ?? Enumerable.Empty<RestoreLogMessage>();
 
-            // Build the summary
-            return new RestoreSummary(
-                result,
-                summaryRequest.InputPath,
-                summaryRequest.ConfigFiles,
-                summaryRequest.Sources,
-                messages);
+
+                // Build the summary
+                return new RestoreSummary(
+                    result,
+                    summaryRequest.InputPath,
+                    summaryRequest.ConfigFiles,
+                    summaryRequest.Sources,
+                    messages);
+            }
         }
 
         private static async Task<RestoreSummary> CompleteTaskAsync(List<Task<RestoreSummary>> restoreTasks)

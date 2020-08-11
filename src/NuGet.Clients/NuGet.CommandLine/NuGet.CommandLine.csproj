@@ -134,7 +134,7 @@
       <!-- NuGet.exe needs all NuGet.Commands.resources.dll merged in -->
       <LocalizedArtifacts Include="$(ArtifactsDirectory)\NuGet.Commands\**\$(NETFXTargetFramework)\**\*.resources.dll" />
     </ItemGroup>
-    <Error Text="Build dependencies are inconsistent with mergeinclude specified in ilmerge.props" Condition="'@(BuildArtifacts-&gt;Count())' != '@(MergeInclude-&gt;Count())'" />
+    <Error Text="Build dependencies are inconsistent with mergeinclude specified in ilmerge.props @(BuildArtifacts-&gt;Count()) @(MergeInclude-&gt;Count())" Condition="'@(BuildArtifacts-&gt;Count())' != '@(MergeInclude-&gt;Count())'" />
     <Error Text="Satellite assemblies count ILMerged into NuGet.exe should be $(ExpectedLocalizedArtifactCount), but was: @(LocalizedArtifacts-&gt;Count())" 
            Condition="'@(LocalizedArtifacts-&gt;Count())' != '$(ExpectedLocalizedArtifactCount)'" />
     <PropertyGroup>

@@ -35,16 +35,15 @@ namespace NuGet.Common
             return InternalInstance;
          }
 
-
-        private const string OutOfVSEventNamePrefix = "OOVS/NuGet/";
-        private const string OutOfVSPropertyNamePrefix = "OOVS.NuGet.";
+        private const string OutOfVSEventNamePrefix = "VS/NuGet/"; //"VS/NuGet/Standalone/";
+        private const string OutOfVSPropertyNamePrefix = "VS.NuGet.";//"VS.NuGet.Standalone.";
 
         private StandaloneTelemetrySession()
         {
             var executingAssembly = System.Reflection.Assembly.GetExecutingAssembly();
             System.Diagnostics.FileVersionInfo fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(executingAssembly.Location);
             _executingAssemblyVersion = $"{executingAssembly.GetName().Name}_{fvi.ProductVersion}_{executingAssembly.GetName().Version}";
-            StartTelementry();
+            StartTelemetry();
         }
 
         public void PostEvent(TelemetryEvent telemetryEvent)
@@ -126,7 +125,7 @@ namespace NuGet.Common
             TelemetryService.DefaultSession.Dispose();
         }
 
-        static void StartTelementry()
+        static void StartTelemetry()
         {
             TelemetryService.DefaultSession.IsOptedIn = true;
             TelemetryService.DefaultSession.UseVsIsOptedIn();

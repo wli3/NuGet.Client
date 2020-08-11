@@ -70,7 +70,7 @@ namespace NuGet.Commands
         private const string LockFileEvaluationResult = "LockFileEvaluationResult";
 
         // names for central package management version information
-        private const string IsCentralVersionManagementEnabled = "IsCentralVersionManagementEnabled";
+        private const string IsCentralVersionManagementEnabled = "IsCentralVersionManagementEnabled";  
 
         public RestoreCommand(RestoreRequest request)
         {
@@ -106,6 +106,14 @@ namespace NuGet.Commands
             using (var telemetry = TelemetryActivity.Create(parentId: ParentId, eventName: ProjectRestoreInformation))
             {
                 _operationId = telemetry.OperationId;
+                telemetry.TelemetryEvent["ProjectName"] = _request.Project.Name;
+                telemetry.TelemetryEvent["ProjectPath"] = _request.Project.FilePath;
+                telemetry.TelemetryEvent["CentralPackageVersionsCount"] = _request.Project.TargetFrameworks.Select(tf=>tf.CentralPackageVersions.Count).First().ToString();
+                telemetry.TelemetryEvent["PackageReferencesCount"] = _request.Project.TargetFrameworks.Select(tf => tf.Dependencies.Count).OrderByDescending(x=>x).First().ToString();
+                var projectRefs = _request.Project.RestoreMetadata.TargetFrameworks.Select(tf => tf.ProjectReferences.Count);
+                telemetry.TelemetryEvent["ProjectReferencesCount"] = projectRefs.Any()? projectRefs.OrderByDescending(x => x).First().ToString() : "0";
+
+                telemetry.TelemetryEvent["TFMsCount"] = _request.Project.TargetFrameworks.Count().ToString();
 
                 var isCpvmEnabled = _request.Project.RestoreMetadata?.CentralPackageVersionsEnabled ?? false;
                 telemetry.TelemetryEvent[IsCentralVersionManagementEnabled] = isCpvmEnabled;
@@ -138,8 +146,7 @@ namespace NuGet.Commands
                         noOpTelemetry.StartIntervalMeasure();
 
                         bool noOp;
-                        (cacheFile, noOp) = EvaluateCacheFile();
-
+                        (cacheFile, noOp) = EvaluateCacheFile(noOpTelemetry);
                         noOpTelemetry.EndIntervalMeasure(CacheFileEvaluateDuration);
 
                         if (noOp)
@@ -150,6 +157,7 @@ namespace NuGet.Commands
 
                             noOpTelemetry.EndIntervalMeasure(MsbuildAssetsVerificationDuration);
                             noOpTelemetry.TelemetryEvent[MsbuildAssetsVerificationResult] = noOpSuccess;
+                            telemetry.TelemetryEvent["Noop"] = noOpSuccess;
 
                             if (noOpSuccess)
                             {
@@ -172,6 +180,14 @@ namespace NuGet.Commands
                                     restoreTime.Elapsed);
                             }
                         }
+                        else
+                        {
+                            telemetry.TelemetryEvent["Noop"] = false;
+                        }
+                    }
+                    else
+                    {
+                        telemetry.TelemetryEvent["Noop"] = false;
                     }
                 }
 
@@ -586,12 +602,14 @@ namespace NuGet.Commands
             return (success, isLockFileValid, packagesLockFile);
         }
 
-        private (CacheFile cacheFile, bool noOp) EvaluateCacheFile()
+        private (CacheFile cacheFile, bool noOp) EvaluateCacheFile(TelemetryActivity telActivity)
         {
             CacheFile cacheFile;
             var noOp = false;
 
+            telActivity.StartIntermediateLogMeasure();
             var noOpDgSpec = NoOpRestoreUtilities.GetNoOpDgSpec(_request);
+            telActivity.LogIntermediateLogMeasure("EvaluateCacheFile_GetNoOpDgSpec");
 
             if (_request.ProjectStyle == ProjectStyle.DotnetCliTool && _request.AllowNoOp)
             {
@@ -599,7 +617,10 @@ namespace NuGet.Commands
                 NoOpRestoreUtilities.UpdateRequestBestMatchingToolPathsIfAvailable(_request);
             }
 
-            var newDgSpecHash = noOpDgSpec.GetHash();
+            telActivity.StartIntermediateLogMeasure();
+            var newDgSpecHash = noOpDgSpec.GetHash2(out double timeInSeconds);
+            telActivity.LogIntermediateLogMeasure("EvaluateCacheFile_GetHash");
+            telActivity.TelemetryEvent["EvaluateCacheFile_GetHash_Write"] = timeInSeconds;
 
             // if --force-evaluate flag is passed then restore noop check will also be skipped.
             // this will also help us to get rid of -force flag in near future.
@@ -609,7 +630,9 @@ namespace NuGet.Commands
                 File.Exists(_request.Project.RestoreMetadata.CacheFilePath) ||
                 _request.AdditionalMessages?.Count > 0)
             {
+                telActivity.StartIntermediateLogMeasure();
                 cacheFile = FileUtility.SafeRead(_request.Project.RestoreMetadata.CacheFilePath, (stream, path) => CacheFileFormat.Read(stream, _logger, path));
+                telActivity.LogIntermediateLogMeasure("EvaluateCacheFile_SafeRead");
 
                 if (cacheFile.IsValid && StringComparer.Ordinal.Equals(cacheFile.DgSpecHash, newDgSpecHash) && VerifyCacheFileMatchesProject(cacheFile))
                 {

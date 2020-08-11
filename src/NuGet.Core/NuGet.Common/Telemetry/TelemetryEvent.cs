@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace NuGet.Common
 {
@@ -11,12 +12,15 @@ namespace NuGet.Common
         private IDictionary<string, object> _properties;
         private IDictionary<string, object> _piiProperties;
 
+       
+
         /// <summary> Creates a new instance of <see cref="TelemetryEvent"/>. </summary>
         /// <param name="eventName"> Event name. </param>
         public TelemetryEvent(string eventName) :
-            this(eventName, new Dictionary<string, object>())
+            this(eventName,  new Dictionary<string, object>())
         {
         }
+
 
         /// <summary> Creates a new instance of <see cref="TelemetryEvent"/>. </summary>
         /// <param name="eventName"> Event name. </param>
@@ -77,6 +81,11 @@ namespace NuGet.Common
         public IEnumerable<KeyValuePair<string, object>> GetPiiData()
         {
             return _piiProperties;
+        }
+
+        public string PropertiesToJsonString()
+        {
+            return JsonConvert.SerializeObject(_properties);
         }
     }
 }

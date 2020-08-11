@@ -19,6 +19,10 @@
     <MergeInclude Include="$(OutputPath)NuGet.Versioning.dll"/>
     <MergeInclude Include="$(OutputPath)NuGet.Core.dll"/>
     <MergeInclude Include="$(OutputPath)System.Threading.Tasks.Dataflow.dll"/>
+<!--<MergeInclude Include="$(OutputPath)Microsoft.Diagnostics.Tracing.EventSource.dll"/>-->
+<!--<MergeInclude Include="$(OutputPath)Microsoft.VisualStudio.RemoteControl.dll"/>
+<MergeInclude Include="$(OutputPath)Microsoft.VisualStudio.Telemetry.dll"/>
+<MergeInclude Include="$(OutputPath)Microsoft.VisualStudio.Utilities.Internal.dll"/>-->
 
     <MergeExclude Include="$(OutputPath)Microsoft.VisualStudio.Setup.Configuration.Interop.dll"/>
     <MergeExclude Include="$(OutputPath)Microsoft.CSharp.dll"/>

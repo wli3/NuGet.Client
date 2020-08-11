@@ -3,7 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Diagnostics;
+using System.Linq;
 
 namespace NuGet.Common
 {
@@ -16,6 +18,8 @@ namespace NuGet.Common
         private readonly Stopwatch _intervalWatch = new Stopwatch();
         private readonly List<Tuple<string, TimeSpan>> _intervalList;
         private readonly IDisposable _telemetryActivity;
+        private readonly List<(string name, TimeSpan duration)> _intermediateIntervalList;
+        private readonly Stopwatch _intermediateIntervalWatch = new Stopwatch();
 
         /// <summary> Telemetry event which represents end of telemetry activity. </summary>
         public TelemetryEvent TelemetryEvent { get; set; }
@@ -64,6 +68,7 @@ namespace NuGet.Common
             _startTime = DateTime.UtcNow;
             _stopwatch = Stopwatch.StartNew();
             _intervalList = new List<Tuple<string, TimeSpan>>();
+            _intermediateIntervalList = new List<(string name, TimeSpan duration)>();
         }
 
         /// <summary> Start interval measure. </summary>
@@ -78,6 +83,26 @@ namespace NuGet.Common
         {
             _intervalWatch.Stop();
             _intervalList.Add(new Tuple<string, TimeSpan>(propertyName, _intervalWatch.Elapsed));
+            //if (_intermediateIntervalList.Count > 0)
+            //{
+            //    //var filename = $"{System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"{DateTime.UtcNow.ToString().Replace("/", "_").Replace(":", "_").Replace(" ", "_")}_{propertyName}.csv")}";
+            //    //System.IO.File.WriteAllLines(
+            //    //    filename,
+            //    //    _intermediateIntervalList.Select(x => $"{x.Item1}, {x.Item2}").ToArray());
+
+            //    _intermediateIntervalList.Clear();
+            //}
+        }
+
+        public void StartIntermediateLogMeasure()
+        {
+            _intermediateIntervalWatch.Restart();
+        }
+
+        public void LogIntermediateLogMeasure(string propertyName)
+        {
+            _intermediateIntervalWatch.Stop();
+            _intermediateIntervalList.Add((propertyName, _intermediateIntervalWatch.Elapsed));
         }
 
         /// <summary> Stops tracking the activity and emits a telemetry event. </summary>
@@ -85,7 +110,7 @@ namespace NuGet.Common
         {
             _stopwatch.Stop();
 
-            if (NuGetTelemetryService != null && TelemetryEvent != null)
+            if (TelemetryEvent != null) //NuGetTelemetryService != null && 
             {
                 var endTime = DateTime.UtcNow;
                 TelemetryEvent["StartTime"] = _startTime.ToString("O");
@@ -107,9 +132,15 @@ namespace NuGet.Common
                     TelemetryEvent[interval.Item1] = interval.Item2.TotalSeconds;
                 }
 
-                NuGetTelemetryService.EmitTelemetryEvent(TelemetryEvent);
-            }
+                foreach (var intervalInt in _intermediateIntervalList)
+                {
+                    TelemetryEvent[intervalInt.Item1] = intervalInt.Item2.TotalSeconds;
+                }
 
+                //NuGetTelemetryService.EmitTelemetryEvent(TelemetryEvent);
+                ETW.NuGetETWProvider.Instance.WriteFullEventData(TelemetryEvent.Name, TelemetryEvent.PropertiesToJsonString());
+            }
+            
             _telemetryActivity?.Dispose();
         }
 

@@ -3,8 +3,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Newtonsoft.Json;
 using NuGet.Common;
 using NuGet.Frameworks;
@@ -26,7 +28,7 @@ namespace NuGet.ProjectModel
         /// </summary>
         /// <param name="packageSpec">A <c>PackageSpec</c> instance.</param>
         /// <param name="writer">An <c>NuGet.Common.IObjectWriter</c> instance.</param>
-        public static void Write(PackageSpec packageSpec, IObjectWriter writer)
+        public static TimeSpan Write(PackageSpec packageSpec, IObjectWriter writer)
         {
             if (packageSpec == null)
             {
@@ -59,10 +61,59 @@ namespace NuGet.ProjectModel
             {
                 SetDependencies(writer, packageSpec.Dependencies);
             }
-
+            var sw = Stopwatch.StartNew();
             SetFrameworks(writer, packageSpec.TargetFrameworks);
-
+            sw.Stop();
             JsonRuntimeFormat.WriteRuntimeGraph(writer, packageSpec.RuntimeGraph);
+
+            return sw.Elapsed;
+        }
+
+        /// <summary>
+        /// This method is intneded for calculating the hash of the dgspec inorder to identify the noop changes
+        /// reduce the fileds that are not essential
+        /// </summary>
+        /// <param name="packageSpec">A <c>PackageSpec</c> instance.</param>
+        /// <param name="writer">An <c>NuGet.Common.IObjectWriter</c> instance.</param>
+        internal static TimeSpan Write2(PackageSpec packageSpec, IObjectWriter writer)
+        {
+            if (packageSpec == null)
+            {
+                throw new ArgumentNullException(nameof(packageSpec));
+            }
+
+            if (writer == null)
+            {
+                throw new ArgumentNullException(nameof(writer));
+            }
+
+            SetValue(writer, "title", packageSpec.Title);
+
+            if (!packageSpec.IsDefaultVersion)
+            {
+                SetValue(writer, "version", packageSpec.Version?.ToFullString());
+            }
+
+            SetValue(writer, "description", packageSpec.Description);
+            SetArrayValue(writer, "authors", packageSpec.Authors);
+            SetValue(writer, "copyright", packageSpec.Copyright);
+            SetValue(writer, "language", packageSpec.Language);
+            SetArrayValue(writer, "contentFiles", packageSpec.ContentFiles);
+            SetDictionaryValue(writer, "packInclude", packageSpec.PackInclude);
+            SetPackOptions(writer, packageSpec);
+            SetMSBuildMetadata(writer, packageSpec);
+            SetDictionaryValues(writer, "scripts", packageSpec.Scripts);
+
+            if (packageSpec.Dependencies.Any())
+            {
+                SetDependencies(writer, packageSpec.Dependencies);
+            }
+            var sw = Stopwatch.StartNew();
+            SetFrameworks2(writer, packageSpec.TargetFrameworks);
+            sw.Stop();
+            JsonRuntimeFormat.WriteRuntimeGraph(writer, packageSpec.RuntimeGraph);
+
+            return sw.Elapsed;
         }
 
         /// <summary>
@@ -502,6 +553,45 @@ namespace NuGet.ProjectModel
 
                     SetDependencies(writer, framework.Dependencies);
                     SetCentralDependencies(writer, framework.CentralPackageVersions.Values);
+                    SetImports(writer, framework.Imports);
+                    SetValueIfTrue(writer, "assetTargetFallback", framework.AssetTargetFallback);
+                    SetValueIfTrue(writer, "warn", framework.Warn);
+                    SetDownloadDependencies(writer, framework.DownloadDependencies);
+                    SetFrameworkReferences(writer, framework.FrameworkReferences);
+                    SetValueIfNotNull(writer, "runtimeIdentifierGraphPath", framework.RuntimeIdentifierGraphPath);
+                    writer.WriteObjectEnd();
+                }
+
+                writer.WriteObjectEnd();
+            }
+        }
+
+        private static string GetCPVMDataForHash(CentralPackageVersion[] cpVersions)
+        {
+            var stringB = new StringBuilder();
+
+            for(int i = 0; i< cpVersions.Length; i++ )
+            {
+                stringB.Append($"{cpVersions[i].Name}{cpVersions[i].VersionRange.ToNormalizedString()}");
+            }
+
+            return stringB.ToString();
+        }
+
+
+        private static void SetFrameworks2(IObjectWriter writer, IList<TargetFrameworkInformation> frameworks)
+        {
+            if (frameworks.Any())
+            {
+                writer.WriteObjectStart("frameworks");
+
+                var frameworkSorter = new NuGetFrameworkSorter();
+                foreach (var framework in frameworks.OrderBy(c => c.FrameworkName, frameworkSorter))
+                {
+                    writer.WriteObjectStart(framework.FrameworkName.GetShortFolderName());
+
+                    SetDependencies(writer, framework.Dependencies);
+                    SetValue(writer, "cpvm", GetCPVMDataForHash(framework.CentralPackageVersions.Values.ToArray()));
                     SetImports(writer, framework.Imports);
                     SetValueIfTrue(writer, "assetTargetFallback", framework.AssetTargetFallback);
                     SetValueIfTrue(writer, "warn", framework.Warn);

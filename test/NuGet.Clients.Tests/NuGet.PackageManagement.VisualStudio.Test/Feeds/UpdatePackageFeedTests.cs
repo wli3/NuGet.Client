@@ -6,11 +6,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentAssertions.Collections;
+using FluentAssertions.Common;
+using Microsoft.TeamFoundation.TestImpact.Client;
 using Moq;
 using NuGet.Frameworks;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using NuGet.ProjectManagement;
+using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using NuGet.Test.Utility;
 using NuGet.Versioning;
@@ -257,17 +261,42 @@ namespace NuGet.PackageManagement.VisualStudio.Test
         {
             var packageIdentity = new PackageIdentity(packageId, NuGetVersion.Parse(packageVersion));
 
-            var installedPackages = new[]
-            {
-                new PackageReference(
-                    packageIdentity,
-                    NuGetFramework.Parse("net45"),
-                    userInstalled: true,
-                    developmentDependency: false,
-                    requireReinstallation: false,
-                    allowedVersions: allowedVersions != null ? VersionRange.Parse(allowedVersions) : null)
-            };
+            return SetupProject(new List<PackageReference>()
+                {
+                    new PackageReference(
+                        packageIdentity,
+                        NuGetFramework.Parse("net45"),
+                        userInstalled: true,
+                        developmentDependency: false,
+                        requireReinstallation: false,
+                        allowedVersions: allowedVersions != null ? VersionRange.Parse(allowedVersions) : null)
+                }
+            );
+        }
 
+        private NuGetProject SetupProject(PackageCollection packageIds, string allowedVersions = null)
+        {
+            var installedPackages = new List<PackageReference>();
+
+            foreach (var packageId in packageIds)
+            {
+                var packageIdentity = new PackageIdentity(packageId.Id, NuGetVersion.Parse(packageId.Version.ToNormalizedString()));
+
+                installedPackages.Add(
+                    new PackageReference(
+                        packageIdentity,
+                        NuGetFramework.Parse("net45"),
+                        userInstalled: true,
+                        developmentDependency: false,
+                        requireReinstallation: false,
+                        allowedVersions: VersionRange.All)); // allowedVersions != null ? VersionRange.Parse(allowedVersions) : null));
+            }
+
+            return SetupProject(installedPackages, allowedVersions);
+        }
+
+        private NuGetProject SetupProject(List<PackageReference> installedPackages, string allowedVersions = null)
+        {
             var project = Mock.Of<NuGetProject>();
             Mock.Get(project)
                 .Setup(x => x.GetInstalledPackagesAsync(It.IsAny<CancellationToken>()))
@@ -281,6 +310,8 @@ namespace NuGet.PackageManagement.VisualStudio.Test
                 .Select(v => PackageSearchMetadataBuilder
                     .FromIdentity(new PackageIdentity(id, new NuGetVersion(v)))
                     .Build());
+
+            //var metadata = versions.Select(v => new LocalPackageSearchMetadata(new LocalPackageInfo(new PackageIdentity(id, new NuGetVersion()))))
 
             Mock.Get(_metadataResource)
                 .Setup(x => x.GetMetadataAsync(id, It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<SourceCacheContext>(), It.IsAny<Common.ILogger>(), It.IsAny<CancellationToken>()))
@@ -314,6 +345,68 @@ namespace NuGet.PackageManagement.VisualStudio.Test
             // Assert
             var expectedPackageIdsSorted = new List<string>(){ "AFakePackage", "FakePackage", "ZFakePackage" };
             Assert.Equal(expectedPackageIdsSorted, actualPackageIds); //Equal considers sort order of collections.
+        }
+
+        [Fact]
+        public async Task ContinueSearchAsync_InstalledPackageFeed_Includes_UpdatePackageFeed()
+        {
+            // Arrange
+            var installedPackageIdentityA = new PackageCollectionItem("FakePackageA", new NuGetVersion("1.0.0"), null);
+            var installedPackageIdentityB = new PackageCollectionItem("FakePackageB", new NuGetVersion("1.0.0"), null);
+            var installedPackageIdentityC = new PackageCollectionItem("FakePackageC", new NuGetVersion("3.2.0"), null);
+            var installedPackageIdentityD = new PackageCollectionItem("FakePackageD", new NuGetVersion("1.0.0"), null);
+
+            PackageCollection installedPackages = new PackageCollection(
+                new PackageCollectionItem[] { installedPackageIdentityA, installedPackageIdentityB, installedPackageIdentityC, installedPackageIdentityD }
+            );
+
+            var projectA = SetupProject(installedPackages);
+            SetupRemotePackageMetadata("FakePackageA", "1.0.0");
+            SetupRemotePackageMetadata("FakePackageB", "1.0.0", "2.3.0", "3.0.0");
+            SetupRemotePackageMetadata("FakePackageC", "3.2.0");
+            SetupRemotePackageMetadata("FakePackageD", "1.0.0", "2.0.0", "3.0.0");
+
+            var _targetUpdate = new UpdatePackageFeed(installedPackages,
+                _metadataProvider, new[] { projectA }, null, new TestLogger());
+
+            var _targetInstalled = new InstalledPackageFeed(installedPackages,
+                _metadataProvider, new TestLogger());
+
+            // Act
+            SearchResult<IPackageSearchMetadata> searchInstalled = await _targetInstalled.SearchAsync(searchText: string.Empty, new SearchFilter(true), CancellationToken.None);
+            SearchResult<IPackageSearchMetadata> searchUpdates = await _targetUpdate.SearchAsync(searchText: string.Empty, new SearchFilter(true), CancellationToken.None);
+            
+            Assert.Equal(2, searchUpdates.Items.Count);
+            Assert.Equal(4, searchInstalled.Items.Count);
+            foreach (IPackageSearchMetadata item in searchUpdates.Items)
+            {
+                //Assert.Contains(item, searchInstalled.Items);
+                //var contains = searchInstalled.Where(.Contains(item);
+                //Assert.NotNull(searchInstalled.Where(i => i.Identity.Id.Equals(item.Identity.Id)).Single());
+                //Assert.Contains(item, searchInstalled.Items, new EqualityComparer<IPackageSearchMetadata>((a, b) => a == b));
+                Assert.Contains(item, searchInstalled.Items, new PackageSearchMetadataEqualityComparer(ignoreVersion: false));
+
+                //item.Equals()
+            }
+
+            //Assert.Single(packages);
+            //var updateCandidate = packages.Single();
+            //Assert.Equal("2.0.0", updateCandidate.Identity.Version.ToString());
+
+            //SetupRemotePackageMetadata("FakePackage", "0.0.1", "1.0.0", "2.0.1", "2.0.0", "1.0.1");
+
+            //packages = await _targetUpdate.GetPackagesWithUpdatesAsync(
+            //    "fake", new SearchFilter(includePrerelease: false), CancellationToken.None);
+
+            //Assert.Single(packages);
+            //updateCandidate = packages.Single();
+            //Assert.Equal("2.0.1", updateCandidate.Identity.Version.ToString());
+
+            //var actualVersions = await updateCandidate.GetVersionsAsync();
+            //Assert.NotEmpty(actualVersions);
+            //Assert.Equal(
+            //    new[] { "2.0.1", "2.0.0", "1.0.1", "1.0.0", "0.0.1" },
+            //    actualVersions.Select(v => v.Version.ToString()).ToArray());
         }
     }
 }

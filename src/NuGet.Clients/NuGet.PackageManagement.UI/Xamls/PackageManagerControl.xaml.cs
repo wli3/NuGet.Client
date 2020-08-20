@@ -903,7 +903,7 @@ namespace NuGet.PackageManagement.UI
             {
                 await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-                _topPanel.UpdateDeprecationStatusOnInstalledTab(installedDeprecatedPackagesCount: 0);
+                _topPanel.UpdatePackageWarningStatusOnInstalledTab(installedDeprecatedPackagesCount: 0, installedVulnerablePackagesCount: 0);
                 _topPanel.UpdateCountOnUpdatesTab(count: 0);
                 var loadContext = new PackageLoadContext(ActiveSources, Model.IsSolution, Model.Context);
                 var packageFeeds = await CreatePackageFeedAsync(loadContext, ItemFilter.UpdatesAvailable, _uiLogger, recommendPackages: false);
@@ -917,11 +917,10 @@ namespace NuGet.PackageManagement.UI
                 Interlocked.Exchange(ref _refreshCts, refreshCts)?.Cancel();
 
                 // Update installed tab warning icon
-                var installedDeprecatedPackagesCount = await GetInstalledDeprecatedPackagesCountAsync(
-                    loadContext, metadataProvider, refreshCts.Token);
+                var (installedDeprecatedPackagesCount, installedVulnerablePackagesCount) =
+                    await GetInstalledWarnablePackagesCountAsync(loadContext, metadataProvider, refreshCts.Token);
 
-                var hasInstalledDeprecatedPackages = installedDeprecatedPackagesCount > 0;
-                _topPanel.UpdateDeprecationStatusOnInstalledTab(installedDeprecatedPackagesCount);
+                _topPanel.UpdatePackageWarningStatusOnInstalledTab(installedDeprecatedPackagesCount, installedVulnerablePackagesCount);
 
                 // Update updates tab count
                 Model.CachedUpdates = new PackageSearchMetadataCache
@@ -935,17 +934,27 @@ namespace NuGet.PackageManagement.UI
             .PostOnFailure(nameof(PackageManagerControl), nameof(RefreshInstalledAndUpdatesTabs));
         }
 
-        private static async Task<int> GetInstalledDeprecatedPackagesCountAsync(PackageLoadContext loadContext, IPackageMetadataProvider metadataProvider, CancellationToken token)
+        private static async Task<(int deprecationCount, int vulnerabilityCount)>
+            GetInstalledWarnablePackagesCountAsync(PackageLoadContext loadContext, IPackageMetadataProvider metadataProvider, CancellationToken token)
         {
             // Switch off the UI thread before fetching installed packages and deprecation metadata.
             await TaskScheduler.Default;
 
             var installedPackages = await loadContext.GetInstalledPackagesAsync();
 
-            var installedPackageDeprecationMetadata = await Task.WhenAll(
-                installedPackages.Select(p => GetPackageDeprecationMetadataAsync(p, metadataProvider, token)));
+            var installedPackageExtendedMetadata = await Task.WhenAll(
+                installedPackages.Select(async p => {
+                    var metadata = await metadataProvider.GetPackageMetadataAsync(p, includePrerelease: true, token);
+                    if (metadata == null)
+                    {
+                        return (null, null);
+                    }
 
-            return installedPackageDeprecationMetadata.Count(d => d != null);
+                    return (deprecations: await metadata.GetDeprecationMetadataAsync(), vulnerabilities: metadata.Vulnerabilities);
+                }));
+
+            return (deprecationCount: installedPackageExtendedMetadata.Count(m => m.deprecations != null),
+                vulnerabilityCount: installedPackageExtendedMetadata.Count(m => m.vulnerabilities != null && m.vulnerabilities.Any()));
         }
 
         private static async Task<PackageDeprecationMetadata> GetPackageDeprecationMetadataAsync(

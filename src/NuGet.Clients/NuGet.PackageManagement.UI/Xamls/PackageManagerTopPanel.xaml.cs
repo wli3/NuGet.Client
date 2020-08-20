@@ -107,22 +107,41 @@ namespace NuGet.PackageManagement.UI
             tabConsolidate.SetValue(System.Windows.Automation.AutomationProperties.NameProperty, automationString);
         }
 
-        public void UpdateDeprecationStatusOnInstalledTab(int installedDeprecatedPackagesCount)
+        public void UpdatePackageWarningStatusOnInstalledTab(int installedDeprecatedPackagesCount, int installedVulnerablePackagesCount)
         {
             bool hasInstalledDeprecatedPackages = installedDeprecatedPackagesCount > 0;
+            bool hasInstalledVulnerablePackages = installedVulnerablePackagesCount > 0;
+            if (!hasInstalledDeprecatedPackages && !hasInstalledVulnerablePackages)
+            {
+                _warningIcon.Visibility = Visibility.Collapsed;
+                _warningIcon.ToolTip = null;
+                return;
+            }
+
+            _warningIcon.Visibility = Visibility.Visible;
+
+            if (hasInstalledDeprecatedPackages && hasInstalledVulnerablePackages)
+            {
+                _warningIcon.ToolTip = string.Format(
+                    CultureInfo.CurrentCulture,
+                    NuGet.PackageManagement.UI.Resources.Label_Installed_DeprecatedAndVulnerableWarning,
+                    installedDeprecatedPackagesCount, installedVulnerablePackagesCount);
+                return;
+            }
+
             if (hasInstalledDeprecatedPackages)
             {
-                _warningIcon.Visibility = Visibility.Visible;
                 _warningIcon.ToolTip = string.Format(
                     CultureInfo.CurrentCulture,
                     NuGet.PackageManagement.UI.Resources.Label_Installed_DeprecatedWarning,
                     installedDeprecatedPackagesCount);
+                return;
             }
-            else
-            {
-                _warningIcon.Visibility = Visibility.Collapsed;
-                _warningIcon.ToolTip = null;
-            }
+
+            _warningIcon.ToolTip = string.Format(
+                CultureInfo.CurrentCulture,
+                NuGet.PackageManagement.UI.Resources.Label_Installed_VulnerableWarning,
+                installedVulnerablePackagesCount);
         }
 
         public void UpdateCountOnConsolidateTab(int count)

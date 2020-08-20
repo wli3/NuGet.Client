@@ -943,11 +943,29 @@ namespace NuGet.PackageManagement.UI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You have {0} deprecated and {1} vulnerable package(s) installed..
+        /// </summary>
+        public static string Label_Installed_DeprecatedAndVulnerableWarning {
+            get {
+                return ResourceManager.GetString("Label_Installed_DeprecatedAndVulnerableWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You have {0} deprecated package(s) installed..
         /// </summary>
         public static string Label_Installed_DeprecatedWarning {
             get {
                 return ResourceManager.GetString("Label_Installed_DeprecatedWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You have {0} vulnerable package(s) installed..
+        /// </summary>
+        public static string Label_Installed_VulnerableWarning {
+            get {
+                return ResourceManager.GetString("Label_Installed_VulnerableWarning", resourceCulture);
             }
         }
         

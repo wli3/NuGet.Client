@@ -1,0 +1,6 @@
+NuGet.Packaging.IPackageMetadata.Readme.get -> string
+NuGet.Packaging.ManifestMetadata.Readme.get -> string
+NuGet.Packaging.ManifestMetadata.Readme.set -> void
+NuGet.Packaging.NuspecReader.GetReadme() -> string
+NuGet.Packaging.PackageBuilder.Readme.get -> string
+NuGet.Packaging.PackageBuilder.Readme.set -> void

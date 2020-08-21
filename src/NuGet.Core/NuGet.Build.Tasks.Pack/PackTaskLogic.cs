@@ -177,6 +177,8 @@ namespace NuGet.Build.Tasks.Pack
 
             builder.Icon = request.PackageIcon;
 
+            builder.Readme = request.Readme;
+
             if (request.MinClientVersion != null)
             {
                 Version version;

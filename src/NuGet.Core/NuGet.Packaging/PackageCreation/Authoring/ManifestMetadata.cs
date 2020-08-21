@@ -62,6 +62,7 @@ namespace NuGet.Packaging
             Repository = copy.Repository;
             LicenseMetadata = copy.LicenseMetadata;
             Icon = copy.Icon;
+            Readme = copy.Readme;
         }
 
         [ManifestVersion(5)]
@@ -176,6 +177,8 @@ namespace NuGet.Packaging
         public string Language { get; set; }
 
         public string Tags { get; set; }
+
+        public string Readme { get; set; }
 
         public bool Serviceable { get; set; }
 
@@ -345,6 +348,11 @@ namespace NuGet.Packaging
             if (Icon == string.Empty)
             {
                 yield return NuGetResources.IconMissingRequiredValue;
+            }
+
+            if (Readme == string.Empty)
+            {
+                yield return NuGetResources.ReadmeMissingRequiredValue;
             }
 
             if (RequireLicenseAcceptance && (string.IsNullOrWhiteSpace(_licenseUrl) && LicenseMetadata == null))

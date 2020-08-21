@@ -1072,7 +1072,7 @@ jobs:
         KillRunningInstancesOfVS
     condition: "always()"
 
-- phase: CrossVerify_Generate_Packages_On_Windows
+- job: CrossVerify_Generate_Packages_On_Windows
   dependsOn: Initialize_Build
   variables:
     BuildNumber: $[dependencies.Initialize_Build.outputs['updatebuildnumber.BuildNumber']]
@@ -1080,7 +1080,7 @@ jobs:
     SDKVersionForBuild: $[dependencies.Initialize_Build.outputs['getSDKVersionForBuild.SDKVersionForBuild']]
   condition: "and(succeeded(),eq(variables['RunFunctionalTestsOnWindows'], 'true')) "
   queue:
-    name: VSEng-MicroBuildSxS
+    name: VSEng-MicroBuildVS2019
     timeoutInMinutes: 30
     demands: 
         - DotNetFramework
@@ -1158,7 +1158,7 @@ jobs:
       publishLocation: "Container"
     condition: "succeededOrFailed()"
 
-- phase: CrossVerify_Verify_Packages_On_Windows
+- job: CrossVerify_Verify_Packages_On_Windows
   dependsOn:
   - Initialize_Build
   - CrossVerify_Generate_Packages_On_Windows
@@ -1254,7 +1254,7 @@ jobs:
       testRunTitle: "NuGet Verify Signed Packages From All Platforms On Windows"
     condition: "succeededOrFailed()"
 
-- phase: CrossVerify_Generate_Packages_On_Linux 
+- job: CrossVerify_Generate_Packages_On_Linux 
   dependsOn: Initialize_Build
   variables:
     FULLVSTSBUILDNUMBER: $[dependencies.Initialize_Build.outputs['updatebuildnumber.FullVstsBuildNumber']]
@@ -1262,7 +1262,7 @@ jobs:
     MSBUILDDISABLENODEREUSE: 1
   condition: "and(succeeded(),eq(variables['RunTestsOnLinux'], 'true')) "
   queue:
-    name: DDNuGet-Linux
+    name: ubuntu-latest
     timeoutInMinutes: 30
     demands: sh
 
@@ -1318,7 +1318,7 @@ jobs:
       publishLocation: "Container"
     condition: "succeededOrFailed()"
 
-- phase: CrossVerify_Verify_Tests_On_Linux
+- job: CrossVerify_Verify_Tests_On_Linux
   dependsOn:
   - Initialize_Build
   - CrossVerify_Generate_Packages_On_Windows
@@ -1329,7 +1329,7 @@ jobs:
     MSBUILDDISABLENODEREUSE: 1
   condition: "and(succeeded(),eq(variables['RunTestsOnLinux'], 'true')) "
   queue:
-    name: DDNuGet-Linux
+    name: ubuntu-latest
     timeoutInMinutes: 30
     demands: sh
 

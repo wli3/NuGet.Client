@@ -1079,7 +1079,7 @@ jobs:
     FullVstsBuildNumber: $[dependencies.Initialize_Build.outputs['updatebuildnumber.FullVstsBuildNumber']]
     SDKVersionForBuild: $[dependencies.Initialize_Build.outputs['getSDKVersionForBuild.SDKVersionForBuild']]
   condition: "and(succeeded(),eq(variables['RunFunctionalTestsOnWindows'], 'true')) "
-  queue:
+  pool:
     name: VSEng-MicroBuildVS2019
     timeoutInMinutes: 30
     demands: 
@@ -1168,7 +1168,7 @@ jobs:
     FullVstsBuildNumber: $[dependencies.Initialize_Build.outputs['updatebuildnumber.FullVstsBuildNumber']]
     SDKVersionForBuild: $[dependencies.Initialize_Build.outputs['getSDKVersionForBuild.SDKVersionForBuild']]
   condition: "and(succeeded(),eq(variables['RunFunctionalTestsOnWindows'], 'true')) "
-  queue:
+  pool:
     name: VSEng-MicroBuildSxS
     timeoutInMinutes: 30
     demands: 
@@ -1261,7 +1261,7 @@ jobs:
     SDKVersionForBuild: $[dependencies.Initialize_Build.outputs['getSDKVersionForBuild.SDKVersionForBuild']]
     MSBUILDDISABLENODEREUSE: 1
   condition: "and(succeeded(),eq(variables['RunTestsOnLinux'], 'true')) "
-  queue:
+  pool:
     name: ubuntu-latest
     timeoutInMinutes: 30
     demands: sh
@@ -1328,7 +1328,7 @@ jobs:
     SDKVersionForBuild: $[dependencies.Initialize_Build.outputs['getSDKVersionForBuild.SDKVersionForBuild']]
     MSBUILDDISABLENODEREUSE: 1
   condition: "and(succeeded(),eq(variables['RunTestsOnLinux'], 'true')) "
-  queue:
+  pool:
     name: ubuntu-latest
     timeoutInMinutes: 30
     demands: sh

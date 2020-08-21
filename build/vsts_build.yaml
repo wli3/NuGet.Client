@@ -1074,6 +1074,7 @@ jobs:
 
 - job: CrossVerify_Generate_Packages_On_Windows
   dependsOn: Initialize_Build
+  timeoutInMinutes: 20
   variables:
     BuildNumber: $[dependencies.Initialize_Build.outputs['updatebuildnumber.BuildNumber']]
     FullVstsBuildNumber: $[dependencies.Initialize_Build.outputs['updatebuildnumber.FullVstsBuildNumber']]
@@ -1081,7 +1082,6 @@ jobs:
   condition: "and(succeeded(),eq(variables['RunFunctionalTestsOnWindows'], 'true')) "
   pool:
     name: VSEng-MicroBuildVS2019
-    timeoutInMinutes: 30
     demands: 
         - DotNetFramework
         - msbuild
@@ -1163,6 +1163,7 @@ jobs:
   - Initialize_Build
   - CrossVerify_Generate_Packages_On_Windows
   - CrossVerify_Generate_Packages_On_Linux 
+  timeoutInMinutes: 20
   variables:
     BuildNumber: $[dependencies.Initialize_Build.outputs['updatebuildnumber.BuildNumber']]
     FullVstsBuildNumber: $[dependencies.Initialize_Build.outputs['updatebuildnumber.FullVstsBuildNumber']]
@@ -1170,7 +1171,6 @@ jobs:
   condition: "and(succeeded(),eq(variables['RunFunctionalTestsOnWindows'], 'true')) "
   pool:
     name: VSEng-MicroBuildSxS
-    timeoutInMinutes: 30
     demands: 
         - DotNetFramework
         - msbuild
@@ -1256,14 +1256,14 @@ jobs:
 
 - job: CrossVerify_Generate_Packages_On_Linux 
   dependsOn: Initialize_Build
+  timeoutInMinutes: 20
   variables:
     FULLVSTSBUILDNUMBER: $[dependencies.Initialize_Build.outputs['updatebuildnumber.FullVstsBuildNumber']]
     SDKVersionForBuild: $[dependencies.Initialize_Build.outputs['getSDKVersionForBuild.SDKVersionForBuild']]
     MSBUILDDISABLENODEREUSE: 1
   condition: "and(succeeded(),eq(variables['RunTestsOnLinux'], 'true')) "
   pool:
-    name: ubuntu-latest
-    timeoutInMinutes: 30
+    vmImage: ubuntu-latest
     demands: sh
 
   steps:
@@ -1323,14 +1323,14 @@ jobs:
   - Initialize_Build
   - CrossVerify_Generate_Packages_On_Windows
   - CrossVerify_Generate_Packages_On_Linux 
+  timeoutInMinutes: 20
   variables:
     FULLVSTSBUILDNUMBER: $[dependencies.Initialize_Build.outputs['updatebuildnumber.FullVstsBuildNumber']]
     SDKVersionForBuild: $[dependencies.Initialize_Build.outputs['getSDKVersionForBuild.SDKVersionForBuild']]
     MSBUILDDISABLENODEREUSE: 1
   condition: "and(succeeded(),eq(variables['RunTestsOnLinux'], 'true')) "
   pool:
-    name: ubuntu-latest
-    timeoutInMinutes: 30
+    vmImage: ubuntu-latest
     demands: sh
 
   steps:

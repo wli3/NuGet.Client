@@ -203,22 +203,6 @@ namespace NuGet.Common
                 nameof(hashAlgorithmName));
         }
 
-        public static HashAlgorithm GetSha1HashProvider()
-        {
-#if !IS_CORECLR
-            if (AllowFipsAlgorithmsOnly.Value)
-            {
-                return new SHA1CryptoServiceProvider();
-            }
-            else
-            {
-                return new SHA1Managed();
-            }
-#else
-            return SHA1.Create();
-#endif
-        }
-
         // Read this value once.
         private static Lazy<bool> AllowFipsAlgorithmsOnly = new Lazy<bool>(() => ReadFipsConfigValue());
 
@@ -250,6 +234,7 @@ namespace NuGet.Common
 #endif
         }
 
+#if !NET45
         /// <summary>
         /// Extension method to convert NuGet.Common.HashAlgorithmName to System.Security.Cryptography.HashAlgorithmName
         /// </summary>
@@ -270,6 +255,7 @@ namespace NuGet.Common
                         nameof(hashAlgorithmName));
             }
         }
+#endif
 
         /// <summary>
         /// Extension method to convert NuGet.Common.HashAlgorithmName to an Oid string

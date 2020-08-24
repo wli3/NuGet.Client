@@ -565,10 +565,9 @@ namespace Dotnet.Integration.Test
                 var referencedProject = "ClassLibrary2";
                 var workingDirectory = Path.Combine(testDirectory, projectName);
                 var projectFile = Path.Combine(workingDirectory, $"{projectName}.csproj");
-                var framework = FrameworkConstants.CommonFrameworks.NetCoreApp31;
 
-                msbuildFixture.CreateDotnetNewProject(testDirectory.Path, projectName, "console -f netcoreapp3.1");
-                msbuildFixture.CreateDotnetNewProject(testDirectory.Path, referencedProject, "classlib -f netstandard2.0");
+                msbuildFixture.CreateDotnetNewProject(testDirectory.Path, projectName, "console");
+                msbuildFixture.CreateDotnetNewProject(testDirectory.Path, referencedProject, "classlib");
 
                 using (var stream = new FileStream(projectFile, FileMode.Open, FileAccess.ReadWrite))
                 {
@@ -611,9 +610,6 @@ namespace Dotnet.Integration.Test
 
                     Assert.Equal(1,
                         dependencyGroups.Count);
-
-                    Assert.Equal(framework,
-                        dependencyGroups[0].TargetFramework);
                         
                     var packagesA = dependencyGroups[0].Packages.ToList();
                     Assert.Equal(1,
@@ -626,12 +622,11 @@ namespace Dotnet.Integration.Test
 
                     // Validate the assets.
                     var libItems = nupkgReader.GetLibItems().ToList();
-                    Assert.Equal(1, libItems.Count);
-                    Assert.Equal(framework, libItems[0].TargetFramework);
-                    Assert.Equal(
-                        new[]
-                        {$"lib/{framework.GetShortFolderName()}/ClassLibrary1.dll", $"lib/{framework.GetShortFolderName()}/ClassLibrary1.runtimeconfig.json"},
-                        libItems[0].Items);
+                    libItems.Should().HaveCount(1);
+                    var files = libItems[0].Items;
+                    files.Should().HaveCount(2);
+                    files.Should().ContainSingle(filePath => filePath.Contains("ClassLibrary1.runtimeconfig.json"));
+                    files.Should().ContainSingle(filePath => filePath.Contains("ClassLibrary1.dll"));
                 }
             }
         }
@@ -4296,10 +4291,10 @@ namespace ClassLibrary
                 .WithProjectName("test")
                 .WithPackageIcon("icon.jpg")
                 .WithPackageIconUrl("http://test.icon")
-                .WithItem("None", "icon.jpg", string.Empty)
-                .WithItem("None", "other\\files.txt", null)
-                .WithItem("None", "folder\\**", "media")
-                .WithItem("None", "utils\\*", "utils");
+                .WithItem(itemType: "None", itemPath: "icon.jpg", packagePath: string.Empty, pack: "true")
+                .WithItem(itemType: "None", itemPath: "other\\files.txt", packagePath: null, pack: "true")
+                .WithItem(itemType: "None", itemPath: "folder\\**", packagePath: "media", pack: "true")
+                .WithItem(itemType: "None", itemPath: "utils\\*", packagePath: "utils", pack: "true");
 
             using (var srcDir = msbuildFixture.Build(testDirBuilder))
             {
@@ -4354,7 +4349,7 @@ namespace ClassLibrary
             projectBuilder
                 .WithProjectName("test")
                 .WithPackageIcon("icon.jpg")
-                .WithItem("None", "icon.jpg", "icon.jpg");
+                .WithItem(itemType: "None", itemPath: "icon.jpg", packagePath: "icon.jpg", pack: "true");
 
             using (var srcDir = msbuildFixture.Build(testDirBuilder))
             {

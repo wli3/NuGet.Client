@@ -197,7 +197,7 @@ namespace NuGet.Commands
 
         public virtual async Task CommitAsync(ILogger log, CancellationToken token)
         {
-            await CommitAsync(log, token, null);
+            await CommitAsync(log, token, telOperationId: null);
         }
 
         private async Task CommitAssetsFileAsync(

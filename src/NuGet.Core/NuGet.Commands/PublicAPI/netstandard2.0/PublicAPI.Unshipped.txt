@@ -1,1 +1,2 @@
 static NuGet.Commands.MSBuildProjectFrameworkUtility.GetProjectFramework(string projectFilePath, string targetFrameworkMoniker, string targetPlatformMoniker, string targetPlatformMinVersion) -> NuGet.Frameworks.NuGetFramework
+virtual NuGet.Commands.RestoreResult.CommitAsync(NuGet.Common.ILogger log, System.Threading.CancellationToken token, NuGet.Common.TelemetryActivity telOperationId = null) -> System.Threading.Tasks.Task

@@ -86,7 +86,11 @@ namespace NuGet.Commands
                     }
 
                     var request = requests.Dequeue();
-                    //request.Request.ParentId = Guid.NewGuid();
+                    if (request.Request.ParentId == default(Guid))
+                    {
+                        request.Request.ParentId = Guid.NewGuid();
+                    }
+
                     var task = Task.Run(() => ExecuteAndCommitAsync(request, token), token);
                     restoreTasks.Add(task);
                 }
@@ -144,7 +148,10 @@ namespace NuGet.Commands
                 }
 
                 var request = requests.Dequeue();
-
+                if(request.Request.ParentId == default(Guid))
+                {
+                    request.Request.ParentId = Guid.NewGuid();
+                }
                 var task = Task.Run(() => ExecuteAsync(request, CancellationToken.None));
                 restoreTasks.Add(task);
             }
@@ -237,12 +244,27 @@ namespace NuGet.Commands
 
         private static async Task<RestoreSummary> ExecuteAndCommitAsync(RestoreSummaryRequest summaryRequest, CancellationToken token)
         {
-            var result = await ExecuteAsync(summaryRequest, token);
+            using (var telemetry = TelemetryActivity.Create(parentId: summaryRequest.Request.ParentId, eventName: "RestoreRunner_ExecuteAndCommitAsync"))
+            {
+                telemetry.TelemetryEvent["ProjectName"] = summaryRequest.Request.Project.Name;
+                telemetry.TelemetryEvent["ProjectPath"] = summaryRequest.Request.Project.FilePath;
+                telemetry.TelemetryEvent["CentralPackageVersionsCount"] = summaryRequest.Request.Project.TargetFrameworks.Select(tf => tf.CentralPackageVersions.Count).First().ToString();
+                telemetry.TelemetryEvent["PackageReferencesCount"] = summaryRequest.Request.Project.TargetFrameworks.Select(tf => tf.Dependencies.Count).OrderByDescending(x => x).First().ToString();
+                telemetry.TelemetryEvent["TFMsCount"] = summaryRequest.Request.Project.TargetFrameworks.Count().ToString();
 
-            return await CommitAsync(result, token);
+                var projectRefs = summaryRequest.Request.Project.RestoreMetadata.TargetFrameworks.Select(tf => tf.ProjectReferences.Count);
+                telemetry.TelemetryEvent["ProjectReferencesCount"] = projectRefs.Any() ? projectRefs.OrderByDescending(x => x).First().ToString() : "0";
+
+                var isCpvmEnabled = summaryRequest.Request.Project.RestoreMetadata?.CentralPackageVersionsEnabled ?? false;
+                telemetry.TelemetryEvent["IsCentralVersionManagementEnabled"] = isCpvmEnabled;
+
+                var result = await ExecuteAsync(summaryRequest, token, telemetry);
+
+                return await CommitAsync(result, token);
+            }
         }
 
-        private static async Task<RestoreResultPair> ExecuteAsync(RestoreSummaryRequest summaryRequest, CancellationToken token)
+        private static async Task<RestoreResultPair> ExecuteAsync(RestoreSummaryRequest summaryRequest, CancellationToken token, TelemetryActivity telemetry = null)
         {
             var log = summaryRequest.Request.Log;
 
@@ -255,24 +277,10 @@ namespace NuGet.Commands
             var request = summaryRequest.Request;
 
             var command = new RestoreCommand(request);
-            using (var telemetry = TelemetryActivity.Create(parentId: summaryRequest.Request.ParentId, eventName: "RestoreRunnerExecuteAsync"))
-            {
-                telemetry.TelemetryEvent["ProjectName"] = summaryRequest.Request.Project.Name;
-                telemetry.TelemetryEvent["ProjectPath"] = summaryRequest.Request.Project.FilePath;
-                telemetry.TelemetryEvent["CentralPackageVersionsCount"] = summaryRequest.Request.Project.TargetFrameworks.Select(tf => tf.CentralPackageVersions.Count).First().ToString();
-                telemetry.TelemetryEvent["PackageReferencesCount"] = summaryRequest.Request.Project.TargetFrameworks.Select(tf => tf.Dependencies.Count).OrderByDescending(x => x).First().ToString();
-                telemetry.TelemetryEvent["TFMsCount"] = summaryRequest.Request.Project.TargetFrameworks.Count().ToString();
-
-                var projectRefs = summaryRequest.Request.Project.RestoreMetadata.TargetFrameworks.Select(tf => tf.ProjectReferences.Count);
-                telemetry.TelemetryEvent["ProjectReferencesCount"] = projectRefs.Any() ? projectRefs.OrderByDescending(x => x).First().ToString() : "0";
-
-
-                var isCpvmEnabled = summaryRequest.Request.Project.RestoreMetadata?.CentralPackageVersionsEnabled ?? false;
-                telemetry.TelemetryEvent["IsCentralVersionManagementEnabled"] = isCpvmEnabled;
-                var result = await command.ExecuteAsync(token);
-
-                return new RestoreResultPair(summaryRequest, result);
-            }
+            telemetry?.StartIntervalMeasure();
+            var result = await command.ExecuteAsync(token);
+            telemetry?.EndIntervalMeasure("Restorerunner_ExecuteAsync");
+            return new RestoreResultPair(summaryRequest, result);
         }
 
         public static async Task<RestoreSummary> CommitAsync(RestoreResultPair restoreResult, CancellationToken token)

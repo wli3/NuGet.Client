@@ -18,7 +18,7 @@ namespace NuGet.Common
         private readonly Stopwatch _intervalWatch = new Stopwatch();
         private readonly List<Tuple<string, TimeSpan>> _intervalList;
         private readonly IDisposable _telemetryActivity;
-        private readonly List<(string name, TimeSpan duration)> _intermediateIntervalList;
+        private readonly List<Tuple<string, TimeSpan>> _intermediateIntervalList;
         private readonly Stopwatch _intermediateIntervalWatch = new Stopwatch();
 
         /// <summary> Telemetry event which represents end of telemetry activity. </summary>
@@ -68,7 +68,7 @@ namespace NuGet.Common
             _startTime = DateTime.UtcNow;
             _stopwatch = Stopwatch.StartNew();
             _intervalList = new List<Tuple<string, TimeSpan>>();
-            _intermediateIntervalList = new List<(string name, TimeSpan duration)>();
+            _intermediateIntervalList = new List<Tuple<string, TimeSpan>>();
         }
 
         /// <summary> Start interval measure. </summary>
@@ -102,7 +102,7 @@ namespace NuGet.Common
         public void LogIntermediateLogMeasure(string propertyName)
         {
             _intermediateIntervalWatch.Stop();
-            _intermediateIntervalList.Add((propertyName, _intermediateIntervalWatch.Elapsed));
+            _intermediateIntervalList.Add( new Tuple<string, TimeSpan>(propertyName, _intermediateIntervalWatch.Elapsed));
         }
 
         /// <summary> Stops tracking the activity and emits a telemetry event. </summary>

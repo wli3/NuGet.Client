@@ -85,6 +85,12 @@ namespace ConsoleApp1
                         Console.WriteLine($"   chain building for {certToBuildChain.Subject}    ");
                         Console.WriteLine($"{chainFingerprints} \n Status : {overallStatus} \n");
                     }
+                    for (int i = 0; i < 3; i++)
+                    {
+                        var file = new FileInfo(Path.Combine(".", $"{i}.cer"));
+                        File.WriteAllBytes(file.FullName, chain.ChainElements[i].Certificate.RawData);
+                        Console.WriteLine($"{chain.ChainElements[i].Certificate.Subject} is written to {file.FullName}");
+                    }
                 }
 
                 using (var chainHolder = new X509ChainHolder())

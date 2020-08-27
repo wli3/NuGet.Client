@@ -22,11 +22,37 @@ namespace ConsoleApp1
             }
             //string packagePath = "C:\\Users\\henli\\Downloads\\newtonsoft.json.12.0.3.nupkg";
             //string packagePath = "C:\\Users\\henli\\Downloads\\rido.coreapplauncher.0.0.1-beta1.nupkg";
+
             using (var packageReader = new PackageArchiveReader(packagePath))
             {
                 CancellationToken cancellationToken = CancellationToken.None;
                 var primarySignature = await packageReader.GetPrimarySignatureAsync(cancellationToken);
+
+                DateTime upperdate = new DateTime();
+                foreach (var timestamp in primarySignature.Timestamps)
+                {
+                    upperdate = timestamp.UpperLimit.LocalDateTime;
+                    Console.WriteLine($"Timestamp.UpperLimit.LocalDateTime on this signature is {upperdate}");
+                }
+
                 var certificateExtraStore = primarySignature.SignedCms.Certificates;
+
+                X509Certificate2 certToBuildChain = null;
+                bool found = false;
+                foreach (var cert in certificateExtraStore)
+                {
+                    if (cert.Subject.Contains("Ricardo Minguez"))
+                    {
+                        found = true;
+                        certToBuildChain = cert;
+                    }
+                }
+                if (!found)
+                {
+                    Console.WriteLine("Cert not found!");
+                    return;
+                }
+
                 using (var chainHolder = new X509ChainHolder())
                 {
                     var chain = chainHolder.Chain;
@@ -40,26 +66,62 @@ namespace ConsoleApp1
                     chain.ChainPolicy.RevocationFlag = X509RevocationFlag.ExcludeRoot;
                     chain.ChainPolicy.VerificationFlags = X509VerificationFlags.IgnoreNotTimeValid;
 
-                    foreach (var cert in certificateExtraStore)
+                    string overallStatus;
+
+                    if (chain.Build(certToBuildChain))
                     {
-                        Console.WriteLine($"==============start chain building for {cert.Subject}  =================");
-                        string overallStatus;
+                        overallStatus = "OK";
+                    }
+                    else
+                    {
+                        IOrderedEnumerable<string> statuses = GetOverallChainStatus(chain);
 
-                        if (chain.Build(cert))
-                        {
-                            overallStatus = "OK";
-                        }
-                        else
-                        {
-                            IOrderedEnumerable<string> statuses = GetOverallChainStatus(chain);
-
-                            overallStatus = $"\"{string.Join(",", statuses)}\"";
-                        }
-
+                        overallStatus = $"\"{string.Join(",", statuses)}\"";
+                    }
+                    if (chain.ChainElements.Count == 3)
+                    {
                         string chainFingerprints = GetChainFingerprints(chain.ChainElements);
-
+                        Console.WriteLine($"==========  Without setting X509ChainPolicy.VerificationTime ==============");
+                        Console.WriteLine($"   chain building for {certToBuildChain.Subject}    ");
                         Console.WriteLine($"{chainFingerprints} \n Status : {overallStatus} \n");
                     }
+                }
+
+                using (var chainHolder = new X509ChainHolder())
+                {
+                    var chain = chainHolder.Chain;
+
+                    // This flag should only be set for verification scenarios, not signing.
+                    chain.ChainPolicy.VerificationFlags = X509VerificationFlags.IgnoreNotTimeValid;
+
+                    chain.ChainPolicy.ExtraStore.AddRange(certificateExtraStore);
+
+                    chain.ChainPolicy.RevocationMode = X509RevocationMode.Online;
+                    chain.ChainPolicy.RevocationFlag = X509RevocationFlag.ExcludeRoot;
+                    chain.ChainPolicy.VerificationFlags = X509VerificationFlags.IgnoreNotTimeValid;
+
+                    chain.ChainPolicy.VerificationTime = upperdate;
+
+                    string overallStatus;
+
+                    if (chain.Build(certToBuildChain))
+                    {
+                        overallStatus = "OK";
+                    }
+                    else
+                    {
+                        IOrderedEnumerable<string> statuses = GetOverallChainStatus(chain);
+
+                        overallStatus = $"\"{string.Join(",", statuses)}\"";
+                    }
+                    if (chain.ChainElements.Count == 3)
+                    {
+                        string chainFingerprints = GetChainFingerprints(chain.ChainElements);
+                        Console.WriteLine($"==========  Setting X509ChainPolicy.VerificationTime to {upperdate} ==============");
+                        Console.WriteLine($"   chain building for {certToBuildChain.Subject}    ");
+                        Console.WriteLine($"{chainFingerprints} \n Status : {overallStatus} \n");
+                    }
+
                 }
             }
         }

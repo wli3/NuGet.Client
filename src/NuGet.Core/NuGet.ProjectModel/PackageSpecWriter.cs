@@ -504,6 +504,50 @@ namespace NuGet.ProjectModel
             writer.WriteObjectEnd();
         }
 
+        /// <summary>
+        /// This method sorts the libraries based on the name
+        /// This method also writes out the normalized versions to avoid cases where original string is set because it was gotten through project system vs being installed from PM UI
+        /// </summary>
+        internal static void SetCentralTransitiveDependenciesGroup(IObjectWriter writer, string name, IEnumerable<LibraryDependency> libraryDependencies)
+        {
+            if (!libraryDependencies.Any())
+            {
+                return;
+            }
+
+            writer.WriteObjectStart(name);
+
+            foreach (var dependency in libraryDependencies)
+            {
+                var versionRange = dependency.LibraryRange.VersionRange ?? VersionRange.All;
+                var versionString = versionRange.ToNormalizedString();
+
+                writer.WriteObjectStart(dependency.Name);
+
+                if (dependency.IncludeType != LibraryIncludeFlags.All)
+                {
+                    SetValue(writer, "include", dependency.IncludeType.ToString());
+                }
+
+                if (dependency.SuppressParent != LibraryIncludeFlagUtils.DefaultSuppressParent)
+                {
+                    SetValue(writer, "suppressParent", dependency.SuppressParent.ToString());
+                }
+
+                if (dependency.Type != LibraryDependencyType.Default)
+                {
+                    SetValue(writer, "type", dependency.Type.ToString());
+                }
+
+                SetValue(writer, "version", versionString);
+
+                writer.WriteObjectEnd();
+            }
+
+            writer.WriteObjectEnd();
+        }
+
+
         private static void SetImports(IObjectWriter writer, IList<NuGetFramework> frameworks)
         {
             if (frameworks?.Any() == true)

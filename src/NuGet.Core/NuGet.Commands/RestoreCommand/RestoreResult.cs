@@ -154,7 +154,7 @@ namespace NuGet.Commands
         /// </summary>
         /// <remarks>If <see cref="PreviousLockFile"/> and <see cref="LockFile"/> are identical
         ///  the file will not be written to disk.</remarks>
-        public virtual async Task CommitAsync(ILogger log, CancellationToken token, TelemetryActivity telOperationId = null)
+        public virtual async Task CommitAsync(ILogger log, CancellationToken token, TelemetryActivity telOperationId)
         {
             // Write the lock file
             var lockFileFormat = new LockFileFormat();

@@ -819,7 +819,7 @@ namespace NuGet.ProjectModel
 
                 foreach (var centralTransitiveDepGroup in centralTransitiveDependencyGroups.OrderBy(ptdg => ptdg.FrameworkName))
                 {
-                    PackageSpecWriter.SetDependencies(writer, centralTransitiveDepGroup.FrameworkName, centralTransitiveDepGroup.TransitiveDependencies);
+                    PackageSpecWriter.SetCentralTransitiveDependenciesGroup(writer, centralTransitiveDepGroup.FrameworkName, centralTransitiveDepGroup.TransitiveDependencies);
                 }
 
                 writer.WriteObjectEnd();

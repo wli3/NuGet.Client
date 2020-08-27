@@ -32,7 +32,7 @@ namespace NuGet.Commands
 
         //We override this method because in the case of a no op we don't need to update anything
 #pragma warning disable CS1998 // This async method lacks 'await' operators and will run synchronously.
-        public override async Task CommitAsync(ILogger log, CancellationToken token)
+        public override async Task CommitAsync(ILogger log, CancellationToken token, TelemetryActivity telOperationId)
 #pragma warning restore CS1998 // This async method lacks 'await' operators and will run synchronously.
         {
             var isTool = ProjectStyle == ProjectStyle.DotnetCliTool;
@@ -55,6 +55,13 @@ namespace NuGet.Commands
                         Strings.Log_SkippingCacheFile,
                         CacheFilePath));
             }
+        }
+
+#pragma warning disable CS1998 // This async method lacks 'await' operators and will run synchronously.
+        public override async Task CommitAsync(ILogger log, CancellationToken token)
+#pragma warning restore CS1998 // This async method lacks 'await' operators and will run synchronously.
+        {
+            await CommitAsync(log, token, telOperationId: null);
         }
 
         //We override this method because in the case of a no op we don't have any new libraries installed

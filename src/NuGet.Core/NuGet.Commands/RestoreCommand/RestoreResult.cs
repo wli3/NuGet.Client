@@ -72,7 +72,7 @@ namespace NuGet.Commands
         /// <summary>
         /// Cache File path. The file path where the cache is written out
         /// </summary>
-        protected string CacheFilePath { get;  }
+        protected string CacheFilePath { get; }
 
         /// <summary>
         /// New Packages lock file path
@@ -170,6 +170,7 @@ namespace NuGet.Commands
                 log: log,
                 toolCommit: isTool,
                 token: token);
+
             telOperationId?.EndIntervalMeasure("CommitAssetsFileAsync");
 
             telOperationId?.StartIntervalMeasure();
@@ -178,6 +179,7 @@ namespace NuGet.Commands
                 log: log,
                 toolCommit : isTool);
             telOperationId?.EndIntervalMeasure("CommitCacheFileAsync");
+
 
             telOperationId?.StartIntervalMeasure();
             // Commit the lock file to disk
@@ -215,7 +217,7 @@ namespace NuGet.Commands
 
             BuildAssetsUtils.WriteFiles(buildFilesToWrite, log);
 
-            if (result.LockFile == null || result.LockFilePath ==  null)
+            if (result.LockFile == null || result.LockFilePath == null)
             {
                 // there is no assets file to be written so just return
                 return;
@@ -266,13 +268,15 @@ namespace NuGet.Commands
 
         private async Task CommitCacheFileAsync(ILogger log, bool toolCommit)
         {
-            if (CacheFile != null && CacheFilePath != null) { // This is done to preserve the old behavior
+            if (CacheFile != null && CacheFilePath != null)
+            { // This is done to preserve the old behavior
 
-                if (toolCommit) { 
+                if (toolCommit)
+                {
                     log.LogVerbose(string.Format(CultureInfo.CurrentCulture,
                             Strings.Log_ToolWritingCacheFile,
                             CacheFilePath));
-                } 
+                }
                 else
                 {
                     log.LogVerbose(string.Format(CultureInfo.CurrentCulture,

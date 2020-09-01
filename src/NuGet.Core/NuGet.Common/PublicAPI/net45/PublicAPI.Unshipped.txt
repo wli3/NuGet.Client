@@ -4,3 +4,6 @@ NuGet.Common.ETW.NuGetETWProvider.WriteFullEventData(string Name, string jsonEve
 NuGet.Common.TelemetryActivity.LogIntermediateLogMeasure(string propertyName) -> void
 NuGet.Common.TelemetryActivity.StartIntermediateLogMeasure() -> void
 NuGet.Common.TelemetryEvent.PropertiesToJsonString() -> string
+NuGet.Common.NuGetLogCode.NU1010 = 1010 -> NuGet.Common.NuGetLogCode
+NuGet.Common.NuGetLogCode.NU1011 = 1011 -> NuGet.Common.NuGetLogCode
+

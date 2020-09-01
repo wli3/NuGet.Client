@@ -259,7 +259,7 @@ namespace NuGet.Commands
                 telemetry.TelemetryEvent["IsCentralVersionManagementEnabled"] = isCpvmEnabled;
 
                 var result = await ExecuteAsync(summaryRequest, token, telemetry);
-
+                telemetry.TelemetryEvent["IsNoop"] = result.Result is NoOpRestoreResult;
                 return await CommitAsync(result, token);
             }
         }
@@ -287,6 +287,7 @@ namespace NuGet.Commands
         {
             using (var telemetry = TelemetryActivity.Create(parentId: restoreResult.SummaryRequest.Request.ParentId, eventName: "CommitAsync"))
             {
+                telemetry.TelemetryEvent["IsNoop"] = restoreResult.Result is NoOpRestoreResult;
                 telemetry.TelemetryEvent["ProjectName"] = restoreResult.SummaryRequest.Request.Project.Name;
                 telemetry.TelemetryEvent["ProjectPath"] = restoreResult.SummaryRequest.Request.Project.FilePath;
                 telemetry.TelemetryEvent["CentralPackageVersionsCount"] = restoreResult.SummaryRequest.Request.Project.TargetFrameworks.Select(tf => tf.CentralPackageVersions.Count).First().ToString();

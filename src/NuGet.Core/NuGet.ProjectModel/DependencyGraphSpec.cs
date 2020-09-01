@@ -259,8 +259,8 @@ namespace NuGet.ProjectModel
 
         private PackageSpec ToPackageSpecWithCentralVersionInformation(PackageSpec spec)
         {
-            var newSpec = spec.Clone();
-            foreach (var tfm in newSpec.TargetFrameworks)
+            //var newSpec = spec.Clone();
+            foreach (var tfm in spec.TargetFrameworks)
             {
                 foreach (LibraryDependency d in tfm.Dependencies.Where(d => !d.AutoReferenced && d.LibraryRange.VersionRange == null))
                 {
@@ -274,7 +274,7 @@ namespace NuGet.ProjectModel
                 }
             }
 
-            return newSpec;
+            return spec;
         }
 
         public static DependencyGraphSpec Union(IEnumerable<DependencyGraphSpec> dgSpecs)

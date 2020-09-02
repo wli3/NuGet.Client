@@ -7,7 +7,7 @@
         <VSFrameworkVersion>16.6.30107.105</VSFrameworkVersion>
         <VSServicesVersion>16.153.0</VSServicesVersion>
         <VSThreadingVersion>16.7.54</VSThreadingVersion>
-        <CryptographyPackagesVersion>5.0.0-preview.8.20407.11</CryptographyPackagesVersion>
+        <CryptographyPackagesVersion>5.0.0-preview.7.20364.11</CryptographyPackagesVersion>
     </PropertyGroup>
 
     <!-- Test and package versions -->

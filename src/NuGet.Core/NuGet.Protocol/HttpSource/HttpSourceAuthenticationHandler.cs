@@ -96,18 +96,11 @@ namespace NuGet.Protocol
                 if (response.StatusCode == HttpStatusCode.Unauthorized ||
                     (configuration.PromptOn403 && response.StatusCode == HttpStatusCode.Forbidden))
                 {
-                    List<Stopwatch> stopwatches = null;
+                    IList<Stopwatch> stopwatches = null;
 
-#if NET5_0
-                    if (request.Options.TryGetValue(
-                        new HttpRequestOptionsKey<List<Stopwatch>>(HttpRetryHandler.StopwatchPropertyName),
-                        out stopwatches))
-                    {
-#else
                     if (request.Properties.TryGetValue(HttpRetryHandler.StopwatchPropertyName, out var value))
                     {
-                        stopwatches = value as List<Stopwatch>;
-#endif
+                        stopwatches = value as IList<Stopwatch>;
                         if (stopwatches != null)
                         {
                             foreach (var stopwatch in stopwatches)

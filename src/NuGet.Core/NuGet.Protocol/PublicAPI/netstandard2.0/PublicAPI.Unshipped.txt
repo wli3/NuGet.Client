@@ -11,3 +11,10 @@ NuGet.Protocol.PackageVulnerabilityMetadata.Severity.get -> int
 const NuGet.Protocol.JsonProperties.AdvisoryUrl = "advisoryUrl" -> string
 const NuGet.Protocol.JsonProperties.Severity = "severity" -> string
 const NuGet.Protocol.JsonProperties.Vulnerabilities = "vulnerabilities" -> string
+NuGet.Protocol.Core.Types.IPackageSearchMetadata.ReadmeUrl.get -> System.Uri
+NuGet.Protocol.Core.Types.PackageSearchMetadataBuilder.ClonedPackageSearchMetadata.ReadmeUrl.get -> System.Uri
+NuGet.Protocol.Core.Types.PackageSearchMetadataBuilder.ClonedPackageSearchMetadata.ReadmeUrl.set -> void
+NuGet.Protocol.LocalPackageSearchMetadata.ReadmeUrl.get -> System.Uri
+NuGet.Protocol.PackageSearchMetadata.ReadmeUrl.get -> System.Uri
+NuGet.Protocol.PackageSearchMetadataV2Feed.ReadmeUrl.get -> System.Uri
+const NuGet.Protocol.JsonProperties.ReadmeUrl = "readmeUrl" -> string

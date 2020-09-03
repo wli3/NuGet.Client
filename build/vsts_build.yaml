@@ -852,6 +852,22 @@ jobs:
 
   steps:
   - task: PowerShell@1
+    displayName: "Test: Clear build share variables"
+    inputs:
+      scriptType: "inlineScript"
+      inlineScript: |
+        Write-Host "##vso[build.updatebuildnumber]$env:FullVstsBuildNumber"
+        Write-Host "##vso[task.setvariable variable=CIRoot]"
+        Write-Host "##vso[task.setvariable variable=DropRoot]"
+        Write-Host "##vso[task.setvariable variable=BuildOutputTargetPath]"
+        Write-Host "##vso[task.setvariable variable=EndToEndResultsDropPath]"
+        Write-Host "##vso[task.setvariable variable=NuGetShareRoot]"
+        Write-Host "##vso[task.setvariable variable=NuGetSharePublicKeys]"
+        Write-Host "##vso[task.setvariable variable=MS_PFX_PATH]"
+        Write-Host "##vso[task.setvariable variable=NUGET_PFX_PATH]"
+        Get-ChildItem Env: | Sort-Object Name | Format-Table -Wrap -AutoSize
+
+  - task: PowerShell@1
     inputs:
       scriptName: "$(Build.Repository.LocalPath)\\scripts\\utils\\InstallCLIforBuild.ps1"
       arguments: '$(SDKVersionForBuild)'
@@ -967,6 +983,22 @@ jobs:
   - checkout: self
     clean: true
     submodules: true
+
+  - task: PowerShell@1
+    displayName: "Test: Clear build share variables"
+    inputs:
+      scriptType: "inlineScript"
+      inlineScript: |
+        Write-Host "##vso[build.updatebuildnumber]$env:FullVstsBuildNumber"
+        Write-Host "##vso[task.setvariable variable=CIRoot]"
+        Write-Host "##vso[task.setvariable variable=DropRoot]"
+        Write-Host "##vso[task.setvariable variable=BuildOutputTargetPath]"
+        Write-Host "##vso[task.setvariable variable=EndToEndResultsDropPath]"
+        Write-Host "##vso[task.setvariable variable=NuGetShareRoot]"
+        Write-Host "##vso[task.setvariable variable=NuGetSharePublicKeys]"
+        Write-Host "##vso[task.setvariable variable=MS_PFX_PATH]"
+        Write-Host "##vso[task.setvariable variable=NUGET_PFX_PATH]"
+        Get-ChildItem Env: | Sort-Object Name | Format-Table -Wrap -AutoSize
 
   - task: PowerShell@1
     displayName: "Print Environment Variables"

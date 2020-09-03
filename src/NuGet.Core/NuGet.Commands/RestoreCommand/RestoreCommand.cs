@@ -611,7 +611,8 @@ namespace NuGet.Commands
             }
 
             telActivity.StartIntermediateLogMeasure();
-            var newDgSpecHash = noOpDgSpec.GetHash2(out double timeInSeconds);
+            //var newDgSpecHash = noOpDgSpec.GetHash2(out double timeInSeconds); 
+            var newDgSpecHash = noOpDgSpec.GetCombinedProjectHashCode(out double timeInSeconds).ToString();
             telActivity.LogIntermediateLogMeasure("EvaluateCacheFile_GetHash");
             telActivity.TelemetryEvent["EvaluateCacheFile_GetHash_Write"] = timeInSeconds;
 

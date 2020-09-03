@@ -1,1 +1,2 @@
 override NuGet.LibraryModel.FrameworkDependency.GetHashCode() -> int
+static NuGet.LibraryModel.CentralPackageVersion.GetHash(System.Collections.Generic.IEnumerable<NuGet.LibraryModel.CentralPackageVersion> items) -> int

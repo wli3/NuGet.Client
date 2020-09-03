@@ -66,7 +66,8 @@ namespace NuGet.Commands
                     pair.Key,
                     remoteWalker,
                     context,
-                    token: token));
+                    token: token,
+                    telemetryActivity: telemetryActivity));
             }
 
             var frameworkGraphs = await Task.WhenAll(frameworkTasks);
@@ -148,7 +149,8 @@ namespace NuGet.Commands
                         remoteWalker,
                         context,
                         runtimeGraph,
-                        token: token));
+                        token: token,
+                        telemetryActivity: telemetryActivity));
                 }
 
                 foreach (var runtimeSpecificGraph in (await Task.WhenAll(runtimeTasks)).SelectMany(g => g))
@@ -234,7 +236,8 @@ namespace NuGet.Commands
             NuGetFramework framework,
             RemoteDependencyWalker walker,
             RemoteWalkContext context,
-            CancellationToken token)
+            CancellationToken token,
+            TelemetryActivity telemetryActivity)
         {
             return WalkDependenciesAsync(projectRange,
                 framework,
@@ -242,7 +245,8 @@ namespace NuGet.Commands
                 runtimeGraph: RuntimeGraph.Empty,
                 walker: walker,
                 context: context,
-                token: token);
+                token: token,
+                telemetryActivity: telemetryActivity);
         }
 
         private async Task<RestoreTargetGraph> WalkDependenciesAsync(LibraryRange projectRange,
@@ -251,8 +255,10 @@ namespace NuGet.Commands
             RuntimeGraph runtimeGraph,
             RemoteDependencyWalker walker,
             RemoteWalkContext context,
-            CancellationToken token)
+            CancellationToken token,
+            TelemetryActivity telemetryActivity)
         {
+            telemetryActivity.StartIntermediateLogMeasure();
             var name = FrameworkRuntimePair.GetTargetGraphName(framework, runtimeIdentifier);
             var graphs = new List<GraphNode<RemoteResolveResult>>
             {
@@ -263,12 +269,12 @@ namespace NuGet.Commands
                 runtimeGraph,
                 recursive: true)
             };
-
+            telemetryActivity.LogIntermediateLogMeasure("WalkAsync");
             // Resolve conflicts
             await _logger.LogAsync(LogLevel.Verbose, string.Format(CultureInfo.CurrentCulture, Strings.Log_ResolvingConflicts, name));
 
             // Flatten and create the RestoreTargetGraph to hold the packages
-            return RestoreTargetGraph.Create(runtimeGraph, graphs, context, _logger, framework, runtimeIdentifier);
+            return RestoreTargetGraph.Create(runtimeGraph, graphs, context, _logger, framework, runtimeIdentifier, telemetryActivity);
         }
 
         private async Task<bool> ResolutionSucceeded(IEnumerable<RestoreTargetGraph> graphs, IList<DownloadDependencyResolutionResult> downloadDependencyResults, RemoteWalkContext context, CancellationToken token)
@@ -432,7 +438,8 @@ namespace NuGet.Commands
             RemoteDependencyWalker walker,
             RemoteWalkContext context,
             RuntimeGraph runtimes,
-            CancellationToken token)
+            CancellationToken token,
+            TelemetryActivity telemetryActivity)
         {
             var resultGraphs = new List<Task<RestoreTargetGraph>>();
             foreach (var runtimeName in runtimeIds)
@@ -445,7 +452,8 @@ namespace NuGet.Commands
                     runtimes,
                     walker,
                     context,
-                    token));
+                    token,
+                    telemetryActivity));
             }
 
             return Task.WhenAll(resultGraphs);

@@ -75,7 +75,7 @@ namespace NuGet.ProjectModel
         /// </summary>
         /// <param name="packageSpec">A <c>PackageSpec</c> instance.</param>
         /// <param name="writer">An <c>NuGet.Common.IObjectWriter</c> instance.</param>
-        internal static TimeSpan Write2(PackageSpec packageSpec, IObjectWriter writer)
+        internal static TimeSpan WriteDGSpecForNoopHash(PackageSpec packageSpec, IObjectWriter writer)
         {
             if (packageSpec == null)
             {
@@ -109,7 +109,7 @@ namespace NuGet.ProjectModel
                 SetDependencies(writer, packageSpec.Dependencies);
             }
             var sw = Stopwatch.StartNew();
-            SetFrameworks2(writer, packageSpec.TargetFrameworks);
+            SetFrameworksDGSpecForNoopHash(writer, packageSpec.TargetFrameworks);
             sw.Stop();
             JsonRuntimeFormat.WriteRuntimeGraph(writer, packageSpec.RuntimeGraph);
 
@@ -617,8 +617,7 @@ namespace NuGet.ProjectModel
             return stringB.ToString();
         }
 
-
-        private static void SetFrameworks2(IObjectWriter writer, IList<TargetFrameworkInformation> frameworks)
+        private static void SetFrameworksDGSpecForNoopHash(IObjectWriter writer, IList<TargetFrameworkInformation> frameworks)
         {
             if (frameworks.Any())
             {
@@ -630,7 +629,8 @@ namespace NuGet.ProjectModel
                     writer.WriteObjectStart(framework.FrameworkName.GetShortFolderName());
 
                     SetDependencies(writer, framework.Dependencies);
-                    SetValue(writer, "cpvm", GetCPVMDataForHash(framework.CentralPackageVersions.Values.ToArray()));
+                    SetValue(writer, "cpvm", CentralPackageVersion.GetHash(framework.CentralPackageVersions.Values).ToString());
+                    //SetValue(writer, "cpvm", GetCPVMDataForHash(framework.CentralPackageVersions.Values.ToArray()));
                     SetImports(writer, framework.Imports);
                     SetValueIfTrue(writer, "assetTargetFallback", framework.AssetTargetFallback);
                     SetValueIfTrue(writer, "warn", framework.Warn);

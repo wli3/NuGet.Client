@@ -1,5 +1,6 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+//# define VerboseTelemetryCollection
 
 using System;
 using System.Collections.Generic;
@@ -175,110 +176,151 @@ namespace NuGet.Build.Tasks
                 throw new ArgumentNullException(nameof(log));
             }
 
-            try
+            var dgSpecProjectNames = string.Join(";", dependencyGraphSpec.Projects.Select(p => p.FilePath));
+            var isCPVM = "false";
+            if(dependencyGraphSpec.Projects.All(p => p.RestoreMetadata.CentralPackageVersionsEnabled))
             {
-                DefaultCredentialServiceUtility.SetupDefaultCredentialService(log, !interactive);
+                isCPVM = "true";
+            }
+            else
+            {
+                // not all enabled but some
+                if(dependencyGraphSpec.Projects.Any(p => p.RestoreMetadata.CentralPackageVersionsEnabled))
+                {
+                    isCPVM = "mixed";
+                }
+            }
 
-                // Set connection limit
-                NetworkProtocolUtility.SetConnectionLimit();
+            using (var restoreTaskTel = TelemetryActivity.Create("RestoreTask_RestoreAsync"))
+            {
+                restoreTaskTel.TelemetryEvent["interactive"] = interactive;
+                restoreTaskTel.TelemetryEvent["recursive"] = recursive;
+                restoreTaskTel.TelemetryEvent["noCache"] = noCache;
+                restoreTaskTel.TelemetryEvent["ignoreFailedSources"] = ignoreFailedSources;
+                restoreTaskTel.TelemetryEvent["disableParallel"] = disableParallel;
+                restoreTaskTel.TelemetryEvent["force"] = force;
+                restoreTaskTel.TelemetryEvent["forceEvaluate"] = forceEvaluate;
+                restoreTaskTel.TelemetryEvent["hideWarningsAndErrors"] = hideWarningsAndErrors;
+                restoreTaskTel.TelemetryEvent["restorePC"] = restorePC;
+                restoreTaskTel.TelemetryEvent["cleanupAssetsForUnsupportedProjects"] = cleanupAssetsForUnsupportedProjects;
+                restoreTaskTel.TelemetryEvent["dgSpecProjectCount_BeforeRestore"] = dependencyGraphSpec.Projects.Count;
+                restoreTaskTel.TelemetryEvent["dgSpecProjectNames"] = dgSpecProjectNames;
+                restoreTaskTel.TelemetryEvent["IsCPVM"] = isCPVM;
 
-                // Set user agent string used for network calls
+#if VerboseTelemetryCollection
+                restoreTaskTel.StartIntervalMeasure();
+                var dgspecProjectGetHashCodeBeforeRestore = dependencyGraphSpec.GetCombinedProjectHashCode();
+                restoreTaskTel.EndIntervalMeasure("DGSpec_GetCombinedProjectHashCode_BeforeRestore");
+                restoreTaskTel.StartIntervalMeasure();
+                var dgspecGetHashBeforeRestore = dependencyGraphSpec.GetHash(out var sec);
+                restoreTaskTel.EndIntervalMeasure("DGSpec_GetHash_BeforeRestore");
+                restoreTaskTel.TelemetryEvent["DGSpec_Hash_BeforeRestore"] = dgspecGetHashBeforeRestore;
+                restoreTaskTel.TelemetryEvent["DGSpec_CombinedProjectHashCode_BeforeRestore"] = dgspecProjectGetHashCodeBeforeRestore;
+#endif
+                try
+                {
+                    DefaultCredentialServiceUtility.SetupDefaultCredentialService(log, !interactive);
+
+                    // Set connection limit
+                    NetworkProtocolUtility.SetConnectionLimit();
+
+                    // Set user agent string used for network calls
 #if IS_CORECLR
                 UserAgent.SetUserAgentString(new UserAgentStringBuilder("NuGet .NET Core MSBuild Task")
                     .WithOSDescription(RuntimeInformation.OSDescription));
 #else
-                // OS description is set by default on Desktop
-                UserAgent.SetUserAgentString(new UserAgentStringBuilder("NuGet Desktop MSBuild Task"));
+                    // OS description is set by default on Desktop
+                    UserAgent.SetUserAgentString(new UserAgentStringBuilder("NuGet Desktop MSBuild Task"));
 #endif
 
-                var restoreSummaries = new List<RestoreSummary>();
-                var providerCache = new RestoreCommandProvidersCache();
+                    var restoreSummaries = new List<RestoreSummary>();
+                    var providerCache = new RestoreCommandProvidersCache();
 
 #if IS_DESKTOP
-                if (restorePC && dependencyGraphSpec.Projects.Any(i => i.RestoreMetadata.ProjectStyle == ProjectStyle.PackagesConfig))
-                {
-                    var v2RestoreResult = await PerformNuGetV2RestoreAsync(log, dependencyGraphSpec, noCache, disableParallel, interactive);
-                    restoreSummaries.Add(v2RestoreResult);
-
-                    if (restoreSummaries.Count < 1)
+                    if (restorePC && dependencyGraphSpec.Projects.Any(i => i.RestoreMetadata.ProjectStyle == ProjectStyle.PackagesConfig))
                     {
-                        var message = string.Format(
-                               Strings.InstallCommandNothingToInstall,
-                               "packages.config"
-                        );
+                        var v2RestoreResult = await PerformNuGetV2RestoreAsync(log, dependencyGraphSpec, noCache, disableParallel, interactive);
+                        restoreSummaries.Add(v2RestoreResult);
 
-                        log.LogMinimal(message);
-                    }
+                        if (restoreSummaries.Count < 1)
+                        {
+                            var message = string.Format(
+                                   Strings.InstallCommandNothingToInstall,
+                                   "packages.config"
+                            );
 
-                    if (!v2RestoreResult.Success)
-                    {
-                        v2RestoreResult
-                            .Errors
-                            .Where(l => l.Level == LogLevel.Warning)
-                            .ForEach(message =>
-                            {
-                                log.LogWarning(message.Message);
-                            });
+                            log.LogMinimal(message);
+                        }
+
+                        if (!v2RestoreResult.Success)
+                        {
+                            v2RestoreResult
+                                .Errors
+                                .Where(l => l.Level == LogLevel.Warning)
+                                .ForEach(message =>
+                                {
+                                    log.LogWarning(message.Message);
+                                });
+                        }
                     }
-                }
 #endif
 
-                using (var cacheContext = new SourceCacheContext())
-                {
-                    cacheContext.NoCache = noCache;
-                    cacheContext.IgnoreFailedSources = ignoreFailedSources;
-
-                    // Pre-loaded request provider containing the graph file
-                    var providers = new List<IPreLoadedRestoreRequestProvider>();
-
-                    if (dependencyGraphSpec.Restore.Count > 0)
+                    using (var cacheContext = new SourceCacheContext())
                     {
-                        // Add all child projects
-                        if (recursive)
+                        cacheContext.NoCache = noCache;
+                        cacheContext.IgnoreFailedSources = ignoreFailedSources;
+
+                        // Pre-loaded request provider containing the graph file
+                        var providers = new List<IPreLoadedRestoreRequestProvider>();
+
+                        if (dependencyGraphSpec.Restore.Count > 0)
                         {
-                            AddAllProjectsForRestore(dependencyGraphSpec);
-                        }
-
-                        providers.Add(new DependencyGraphSpecRequestProvider(providerCache, dependencyGraphSpec));
-
-                        var restoreContext = new RestoreArgs()
-                        {
-                            CacheContext = cacheContext,
-                            LockFileVersion = LockFileFormat.Version,
-                            // 'dotnet restore' fails on slow machines (https://github.com/NuGet/Home/issues/6742)
-                            // The workaround is to pass the '--disable-parallel' option.
-                            // We apply the workaround by default when the system has 1 cpu.
-                            // This will fix restore failures on VMs with 1 CPU and containers with less or equal to 1 CPU assigned.
-                            DisableParallel = Environment.ProcessorCount == 1 ? true : disableParallel,
-                            Log = log,
-                            MachineWideSettings = new XPlatMachineWideSetting(),
-                            PreLoadedRequestProviders = providers,
-                            AllowNoOp = !force,
-                            HideWarningsAndErrors = hideWarningsAndErrors,
-                            RestoreForceEvaluate = forceEvaluate
-                        };
-
-                        if (restoreContext.DisableParallel)
-                        {
-                            HttpSourceResourceProvider.Throttle = SemaphoreSlimThrottle.CreateBinarySemaphore();
-                        }
-
-                        cancellationToken.ThrowIfCancellationRequested();
-
-                        restoreSummaries.AddRange(await RestoreRunner.RunAsync(restoreContext, cancellationToken));
-                    }
-
-                    if (cleanupAssetsForUnsupportedProjects)
-                    {
-                        // Restore assets are normally left on disk between restores for all projects.  This can cause a condition where a project that supports PackageReference was restored
-                        // but then a user changes a branch or some other condition and now the project does not use PackageReference. Since the restore assets are left on disk, the build
-                        // consumes them which can cause build errors. The code below cleans up all of the files that we write so that they are not used during build
-                        Parallel.ForEach(dependencyGraphSpec.Projects.Where(i => !DoesProjectSupportRestore(i)), project =>
-                        {
-                            if (project.RestoreMetadata == null || string.IsNullOrWhiteSpace(project.RestoreMetadata.OutputPath) || string.IsNullOrWhiteSpace(project.RestoreMetadata.ProjectPath))
+                            // Add all child projects
+                            if (recursive)
                             {
-                                return;
+                                AddAllProjectsForRestore(dependencyGraphSpec);
                             }
+                            // add the parentTelemetry to add corelation parent id for the requests
+                            providers.Add(new DependencyGraphSpecRequestProvider(providerCache, dependencyGraphSpec));
+
+                            var restoreContext = new RestoreArgs()
+                            {
+                                CacheContext = cacheContext,
+                                LockFileVersion = LockFileFormat.Version,
+                                // 'dotnet restore' fails on slow machines (https://github.com/NuGet/Home/issues/6742)
+                                // The workaround is to pass the '--disable-parallel' option.
+                                // We apply the workaround by default when the system has 1 cpu.
+                                // This will fix restore failures on VMs with 1 CPU and containers with less or equal to 1 CPU assigned.
+                                DisableParallel = Environment.ProcessorCount == 1 ? true : disableParallel,
+                                Log = log,
+                                MachineWideSettings = new XPlatMachineWideSetting(),
+                                PreLoadedRequestProviders = providers,
+                                AllowNoOp = !force,
+                                HideWarningsAndErrors = hideWarningsAndErrors,
+                                RestoreForceEvaluate = forceEvaluate
+                            };
+
+                            if (restoreContext.DisableParallel)
+                            {
+                                HttpSourceResourceProvider.Throttle = SemaphoreSlimThrottle.CreateBinarySemaphore();
+                            }
+
+                            cancellationToken.ThrowIfCancellationRequested();
+
+                            restoreSummaries.AddRange(await RestoreRunner.RunAsync(restoreContext, cancellationToken, restoreTaskTel));
+                        }
+
+                        if (cleanupAssetsForUnsupportedProjects)
+                        {
+                            // Restore assets are normally left on disk between restores for all projects.  This can cause a condition where a project that supports PackageReference was restored
+                            // but then a user changes a branch or some other condition and now the project does not use PackageReference. Since the restore assets are left on disk, the build
+                            // consumes them which can cause build errors. The code below cleans up all of the files that we write so that they are not used during build
+                            Parallel.ForEach(dependencyGraphSpec.Projects.Where(i => !DoesProjectSupportRestore(i)), project =>
+                            {
+                                if (project.RestoreMetadata == null || string.IsNullOrWhiteSpace(project.RestoreMetadata.OutputPath) || string.IsNullOrWhiteSpace(project.RestoreMetadata.ProjectPath))
+                                {
+                                    return;
+                                }
 
                             // project.assets.json
                             FileUtility.Delete(Path.Combine(project.RestoreMetadata.OutputPath, LockFileFormat.AssetsFileName));
@@ -294,26 +336,39 @@ namespace NuGet.Build.Tasks
 
                             // project.csproj.nuget.dgspec.json
                             FileUtility.Delete(Path.Combine(project.RestoreMetadata.OutputPath, DependencyGraphSpec.GetDGSpecFileName(Path.GetFileName(project.RestoreMetadata.ProjectPath))));
-                        });
+                            });
+                        }
                     }
-                }
 
-                if (restoreSummaries.Count < 1)
-                {
-                    log.LogMinimal(Strings.NoProjectsToRestore);
+                    if (restoreSummaries.Count < 1)
+                    {
+                        log.LogMinimal(Strings.NoProjectsToRestore);
+                    }
+                    else
+                    {
+                        RestoreSummary.Log(log, restoreSummaries);
+                    }
+
+                    restoreTaskTel.TelemetryEvent["dgSpecProjectCount_AfterRestore"] = dependencyGraphSpec.Projects.Count;
+
+#if VerboseTelemetryCollection
+                    var dgspecProjectGetHashCode_AfterRestore = dependencyGraphSpec.GetCombinedProjectHashCode();
+                    var dgspecGetHash_AfterRestore = dependencyGraphSpec.GetHash(out var sec2);
+                   
+                    restoreTaskTel.TelemetryEvent["DGSpec_Hash_AfterRestore"] = dgspecGetHash_AfterRestore;
+                    restoreTaskTel.TelemetryEvent["DGSpec_CombinedProjectHashCode_AfterRestore"] = dgspecProjectGetHashCode_AfterRestore;
+#endif
+                    bool success = restoreSummaries.All(x => x.Success);
+                    restoreTaskTel.TelemetryEvent["Success"] = success;
+                    return success;
                 }
-                else
+                finally
                 {
-                    RestoreSummary.Log(log, restoreSummaries);
+                    // The CredentialService lifetime is for the duration of the process. We should not leave a potentially unavailable logger. 
+                    // We need to update the delegating logger with a null instance
+                    // because the tear downs of the plugins and similar rely on idleness and process exit.
+                    DefaultCredentialServiceUtility.UpdateCredentialServiceDelegatingLogger(NullLogger.Instance);
                 }
-                return restoreSummaries.All(x => x.Success);
-            }
-            finally
-            {
-                // The CredentialService lifetime is for the duration of the process. We should not leave a potentially unavailable logger. 
-                // We need to update the delegating logger with a null instance
-                // because the tear downs of the plugins and similar rely on idleness and process exit.
-                DefaultCredentialServiceUtility.UpdateCredentialServiceDelegatingLogger(NullLogger.Instance);
             }
         }
 

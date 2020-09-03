@@ -98,6 +98,18 @@ namespace NuGet.Commands
             NuGetFramework framework,
             string runtimeIdentifier)
         {
+            return Create(RuntimeGraph.Empty, graphs, context, log, framework, runtimeIdentifier: null, telemetryActivity: null);
+        }
+
+        public static RestoreTargetGraph Create(
+            RuntimeGraph runtimeGraph,
+            IEnumerable<GraphNode<RemoteResolveResult>> graphs,
+            RemoteWalkContext context,
+            ILogger log,
+            NuGetFramework framework,
+            string runtimeIdentifier,
+            TelemetryActivity telemetryActivity)
+        {
             var install = new HashSet<RemoteMatch>();
             var flattened = new HashSet<GraphItem<RemoteResolveResult>>();
             var unresolved = new HashSet<LibraryRange>();
@@ -106,13 +118,16 @@ namespace NuGet.Commands
             var analyzeResult = new AnalyzeResult<RemoteResolveResult>();
             var resolvedDependencies = new HashSet<ResolvedDependencyKey>();
 
+            telemetryActivity?.StartIntermediateLogMeasure();
             foreach (var graph in graphs)
             {
                 var result = graph.Analyze();
 
                 analyzeResult.Combine(result);
             }
+            telemetryActivity?.LogIntermediateLogMeasure("Graph_Analyze");
 
+            telemetryActivity?.StartIntermediateLogMeasure();
             graphs.ForEach(node =>
                 {
                     if (node == null || node.Key == null)
@@ -172,6 +187,8 @@ namespace NuGet.Commands
                         install.Add(node.Item.Data.Match);
                     }
                 });
+
+            telemetryActivity?.LogIntermediateLogMeasure("Graph_CreateFlattenGraph");
 
             return new RestoreTargetGraph(
                 conflicts.Select(p => new ResolverConflict(p.Key, p.Value)),

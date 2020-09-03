@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
@@ -10,6 +11,7 @@ using Newtonsoft.Json.Linq;
 using NuGet.Common;
 using NuGet.LibraryModel;
 using NuGet.Packaging;
+using NuGet.Shared;
 using NuGet.Versioning;
 
 namespace NuGet.ProjectModel
@@ -413,14 +415,45 @@ namespace NuGet.ProjectModel
             }
         }
 
+        public int GetCombinedProjectHashCode(out double seconds)
+        {
+            var sw = Stopwatch.StartNew();
+            var hashCode = new HashCodeCombiner();
+            foreach (var item in Projects)
+            {
+                hashCode.AddObject(item.GetHashCode());
+            }
+
+            int combinedHash =  hashCode.CombinedHash;
+            sw.Stop();
+            seconds = sw.Elapsed.TotalSeconds;
+            return combinedHash;
+        }
+
         public string GetHash2(out double seconds)
         {
             using (var hashFunc = new Sha512HashFunction())
             using (var writer = new HashObjectWriter(hashFunc))
             {
-                seconds = Write(writer, PackageSpecWriter.Write2);
+                seconds = Write(writer, PackageSpecWriter.WriteDGSpecForNoopHash);
                 return writer.GetHash();
             }
+        }
+
+        public string GetHash22(out double seconds)
+        {
+            var hash = string.Empty;
+            var sw = Stopwatch.StartNew();
+            using (var hashFunc = new Sha512HashFunction())
+            using (var writer = new HashObjectWriter(hashFunc))
+            {
+                Write(writer, PackageSpecWriter.WriteDGSpecForNoopHash); 
+                hash = writer.GetHash();
+            }
+
+            sw.Stop();
+            seconds = sw.Elapsed.TotalSeconds;
+            return hash;
         }
 
         private double Write(RuntimeModel.IObjectWriter writer, Func<PackageSpec, RuntimeModel.IObjectWriter, TimeSpan> writeAction)

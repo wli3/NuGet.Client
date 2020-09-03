@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using NuGet.Shared;
 using NuGet.Versioning;
@@ -61,6 +62,17 @@ namespace NuGet.LibraryModel
             return
                 Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase) &&
                 EqualityUtility.EqualsWithNullCheck(VersionRange, other.VersionRange);
+        }
+
+        public static int GetHash(IEnumerable<CentralPackageVersion> items)
+        {
+            var hashCode = new HashCodeCombiner();
+            foreach(var item in items)
+            {
+                hashCode.AddStringIgnoreCase(item.Name);
+                hashCode.AddObject(item.VersionRange.GetHashCode());//.ToNormalizedString()
+            }
+            return hashCode.CombinedHash;
         }
     }
 }

@@ -21,7 +21,7 @@ namespace NuGet.Protocol.Core.Types
         /// <summary>
         /// Default amount of time to cache version lists.
         /// </summary>
-        private static readonly TimeSpan DefaultMaxAge = TimeSpan.FromMinutes(30);
+        private static readonly TimeSpan DefaultMaxAge = TimeSpan.FromMinutes(24*60);
 
         /// <summary>
         /// If set, the global disk cache will not be written to or read from. Instead, a temporary directory will be

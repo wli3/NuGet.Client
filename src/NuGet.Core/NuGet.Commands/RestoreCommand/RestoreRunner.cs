@@ -22,13 +22,21 @@ namespace NuGet.Commands
         /// <summary>
         /// Create requests, execute requests, and commit restore results.
         /// </summary>
-        public static async Task<IReadOnlyList<RestoreSummary>> RunAsync(RestoreArgs restoreContext, CancellationToken token)
+        public static async Task<IReadOnlyList<RestoreSummary>> RunAsync(RestoreArgs restoreContext, CancellationToken token, TelemetryActivity parentTelActivity)
         {
             // Create requests
             var requests = await GetRequests(restoreContext);
 
             // Run requests
-            return await RunAsync(requests, restoreContext, token);
+            return await RunAsync(requests, restoreContext, token, parentTelActivity);
+        }
+
+        /// <summary>
+        /// Create requests, execute requests, and commit restore results.
+        /// </summary>
+        public static async Task<IReadOnlyList<RestoreSummary>> RunAsync(RestoreArgs restoreContext, CancellationToken token)
+        {
+            return await RunAsync(restoreContext, token, parentTelActivity: null);
         }
 
         /// <summary>
@@ -46,7 +54,8 @@ namespace NuGet.Commands
         private static async Task<IReadOnlyList<RestoreSummary>> RunAsync(
             IEnumerable<RestoreSummaryRequest> restoreRequests,
             RestoreArgs restoreContext,
-            CancellationToken token)
+            CancellationToken token,
+            TelemetryActivity parentTelActivity)
         {
             //StandaloneTelemetry.Start();
             //var telGuid = Guid.NewGuid();
@@ -88,7 +97,7 @@ namespace NuGet.Commands
                     var request = requests.Dequeue();
                     if (request.Request.ParentId == default(Guid))
                     {
-                        request.Request.ParentId = Guid.NewGuid();
+                        request.Request.ParentId = parentTelActivity?.OperationId ?? Guid.NewGuid();
                     }
 
                     var task = Task.Run(() => ExecuteAndCommitAsync(request, token), token);

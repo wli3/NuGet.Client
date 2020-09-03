@@ -1,5 +1,7 @@
+NuGet.ProjectModel.DependencyGraphSpec.GetCombinedProjectHashCode(out double seconds) -> int
 NuGet.ProjectModel.DependencyGraphSpec.GetHash(out double seconds) -> string
 NuGet.ProjectModel.DependencyGraphSpec.GetHash2(out double seconds) -> string
+NuGet.ProjectModel.DependencyGraphSpec.GetHash22(out double seconds) -> string
 NuGet.ProjectModel.LockFile.GetTarget(string frameworkAlias, string runtimeIdentifier) -> NuGet.ProjectModel.LockFileTarget
 NuGet.ProjectModel.ProjectRestoreMetadataFrameworkInfo.TargetAlias.get -> string
 NuGet.ProjectModel.ProjectRestoreMetadataFrameworkInfo.TargetAlias.set -> void

@@ -17,7 +17,9 @@ namespace NuGet.PackageManagement.Telemetry
             RefreshOperationStatus refreshStatus,
             string tab,
             bool isUIFiltering,
-            TimeSpan timeSinceLastRefresh) : base(EventName)
+            TimeSpan timeSinceLastRefresh,
+            PerformanceMetrics performanceMetrics = null
+            ) : base(EventName)
         {
             base["ParentId"] = parentId.ToString();
             base["IsSolutionLevel"] = isSolutionLevel;
@@ -26,6 +28,10 @@ namespace NuGet.PackageManagement.Telemetry
             base["Tab"] = tab;
             base["IsUIFiltering"] = isUIFiltering;
             base["TimeSinceLastRefresh"] = timeSinceLastRefresh.TotalMilliseconds;
+            if (performanceMetrics != null)
+            {
+                performanceMetrics.WriteTelemetry(this);
+            }
         }
     }
 
@@ -50,5 +56,6 @@ namespace NuGet.PackageManagement.Telemetry
         Success,
         NotApplicable,
         NoOp,
+        BackgroundComplete
     }
 }

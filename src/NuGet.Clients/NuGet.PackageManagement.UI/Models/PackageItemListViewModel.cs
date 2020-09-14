@@ -382,9 +382,46 @@ namespace NuGet.PackageManagement.UI
         private Lazy<Task<NuGetVersion>> _backgroundLatestVersionLoader;
         private Lazy<Task<PackageDeprecationMetadata>> _backgroundDeprecationMetadataLoader;
 
+        #region Track completion of Background Loading
+        public bool HasPendingBackgroundWork
+        {
+            get
+            {
+                return _taskCount > 0;
+            }
+        }
+        private int _taskCount;
+
+        public int TaskCount
+        {
+            get { return _taskCount; }
+            private set
+            {
+                _taskCount = value;
+                OnPropertyChanged(nameof(HasPendingBackgroundWork));
+            }
+        }
+        private object _taskCountLock = new object();
+        private void IncrementTask()
+        {
+            lock (_taskCountLock)
+            {
+                TaskCount++;
+            }
+        }
+        private void DecrementTask()
+        {
+            lock (_taskCountLock)
+            {
+                TaskCount--;
+            }
+        }
+        #endregion
+
+
         private void TriggerStatusLoader()
         {
-            if (!_backgroundLatestVersionLoader.IsValueCreated)
+            if (!_backgroundLatestVersionLoader.IsValueCreated && !HasPendingBackgroundWork)
             {
                 NuGetUIThreadHelper.JoinableTaskFactory
                     .RunAsync(ReloadPackageVersionsAsync)
@@ -402,7 +439,9 @@ namespace NuGet.PackageManagement.UI
 
         private async System.Threading.Tasks.Task ReloadPackageVersionsAsync()
         {
+            IncrementTask();
             var result = await _backgroundLatestVersionLoader.Value;
+            DecrementTask();
 
             await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 

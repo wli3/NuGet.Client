@@ -105,6 +105,7 @@
               x:Name="_packageList"
               AutomationProperties.Name="{x:Static nuget:Resources.Accessibility_PackagesList}"
               SelectionChanged="PackageList_SelectionChanged"
+              PropertyChanged="PackageList_PropertyChanged"
               UpdateButtonClicked="PackageList_UpdateButtonClicked"
               Width="{Binding ActualWidth, ElementName=_leftSide}"/>
 

@@ -29,8 +29,9 @@ namespace NuGet.PackageManagement.UI
     /// Interaction logic for InfiniteScrollList.xaml
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001")]
-    public partial class InfiniteScrollList : UserControl
+    public partial class InfiniteScrollList : UserControl, INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
         private readonly LoadingStatusIndicator _loadingStatusIndicator = new LoadingStatusIndicator();
         private ScrollViewer _scrollViewer;
 
@@ -145,6 +146,13 @@ namespace NuGet.PackageManagement.UI
             }
         }
 
+        public bool HasPendingBackgroundWork
+        {
+            get
+            {
+                return PackageItems.Any(p => p.HasPendingBackgroundWork);
+            }
+        }
         public PackageItemListViewModel SelectedPackageItem => _list.SelectedItem as PackageItemListViewModel;
 
         public int SelectedIndex => _list.SelectedIndex;
@@ -612,8 +620,21 @@ namespace NuGet.PackageManagement.UI
 
                 UpdateCheckBoxStatus();
             }
-        }
 
+            if (e.PropertyName == nameof(package.HasPendingBackgroundWork))
+            {
+                OnPropertyChanged(nameof(HasPendingBackgroundWork));
+            }
+        }
+        protected void OnPropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+            {
+                var e = new PropertyChangedEventArgs(propertyName);
+                PropertyChanged(this, e);
+            }
+        }
+    
         // Update the status of the _selectAllPackages check box and the Update button.
         private void UpdateCheckBoxStatus()
         {

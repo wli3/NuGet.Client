@@ -50,11 +50,13 @@ namespace NuGet.PackageManagement.UI
         private INuGetUILogger _uiLogger;
         private readonly Guid _sessionGuid = Guid.NewGuid();
         private Stopwatch _sinceLastRefresh;
+        private Stopwatch _sinceUserAction;
+        private PerformanceMetrics _performanceMetrics;
         private CancellationTokenSource _refreshCts;
         private bool _installedTabDataIsLoaded;
         private bool _updatesTabDataIsLoaded;
         private bool _forceRecommender;
-        // used to prevent starting new search when we update the package sources
+        // used to prevent starting new searchnew s when we update the package sources
         // list in response to PackageSourcesChanged event.
         private bool _dontStartNewSearch;
         // When executing a UI operation, we disable the PM UI and ignore any refresh requests.
@@ -86,6 +88,8 @@ namespace NuGet.PackageManagement.UI
         {
             await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             _sinceLastRefresh = Stopwatch.StartNew();
+            _sinceUserAction = new Stopwatch();
+            _performanceMetrics = new PerformanceMetrics();
 
             Model = model;
             _uiLogger = uiLogger;
@@ -176,6 +180,9 @@ namespace NuGet.PackageManagement.UI
             {
                 // don't make recommendations if we are not able to read the environment variable
             }
+
+            var gen = PackageList._list.ItemContainerGenerator;
+            gen.StatusChanged += Gen_StatusChanged;
         }
 
         public PackageRestoreBar RestoreBar { get; private set; }
@@ -351,7 +358,8 @@ namespace NuGet.PackageManagement.UI
             }
         }
 
-        private void EmitRefreshEvent(TimeSpan timeSpan, RefreshOperationSource refreshOperationSource, RefreshOperationStatus status, bool isUIFiltering = false)
+        private void EmitRefreshEvent(TimeSpan timeSpan, RefreshOperationSource refreshOperationSource, RefreshOperationStatus status,
+            bool isUIFiltering = false, PerformanceMetrics performanceMetrics = null)
         {
             TelemetryActivity.EmitTelemetryEvent(
                                 new PackageManagerUIRefreshEvent(
@@ -361,7 +369,8 @@ namespace NuGet.PackageManagement.UI
                                     status,
                                     _topPanel.Filter.ToString(),
                                     isUIFiltering,
-                                    timeSpan));
+                                    timeSpan,
+                                    performanceMetrics));
         }
 
         private TimeSpan GetTimeSinceLastRefreshAndRestart()
@@ -1182,11 +1191,14 @@ namespace NuGet.PackageManagement.UI
             EmitRefreshEvent(timeSpan, RefreshOperationSource.SourceSelectionChanged, RefreshOperationStatus.Success);
         }
 
+        private bool _isUiFiltering = false;
+
         private void Filter_SelectionChanged(object sender, FilterChangedEventArgs e)
         {
+            RestartUserActionMetrics();
             if (_initialized)
             {
-                var timeSpan = GetTimeSinceLastRefreshAndRestart();
+                //var timeSpan = GetTimeSinceLastRefreshAndRestart();
                 _packageList.ResetLoadingStatusIndicator();
 
                 // Collapse the Update controls when the current tab is not "Updates".
@@ -1205,10 +1217,10 @@ namespace NuGet.PackageManagement.UI
                 var switchedToInstalledOrUpdatesTab = _topPanel.Filter == ItemFilter.UpdatesAvailable || _topPanel.Filter == ItemFilter.Installed;
                 var installedAndUpdatesTabDataLoaded = _installedTabDataIsLoaded && _updatesTabDataIsLoaded;
 
-                var isUiFiltering = switchedFromInstalledOrUpdatesTab && switchedToInstalledOrUpdatesTab && installedAndUpdatesTabDataLoaded;
+                _isUiFiltering = switchedFromInstalledOrUpdatesTab && switchedToInstalledOrUpdatesTab && installedAndUpdatesTabDataLoaded;
 
                 //Installed and Updates tabs don't need to be refreshed when switching between the two, if they're both loaded.
-                if (isUiFiltering)
+                if (_isUiFiltering)
                 {
                     //UI can apply filtering.
                     _packageList.FilterItems(_topPanel.Filter, _loadCts.Token);
@@ -1222,10 +1234,16 @@ namespace NuGet.PackageManagement.UI
                     }
 
                     SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: true);
+                    _performanceMetrics.TimeSinceSearchCompleted = GetTimeSinceLastUserAction();
                 }
-                EmitRefreshEvent(timeSpan, RefreshOperationSource.FilterSelectionChanged, RefreshOperationStatus.Success, isUiFiltering);
+
+                //EmitRefreshEvent(timeSpan, RefreshOperationSource.FilterSelectionChanged, RefreshOperationStatus.Success, isUiFiltering, _performanceMetrics);
 
                 _detailModel.OnFilterChanged(e.PreviousFilter, _topPanel.Filter);
+                //Dispatcher.BeginInvoke(new Action(() =>
+                //{
+                //    _performanceMetrics.TimeSinceDispatcher = GetTimeSinceLastUserAction();
+                //}), DispatcherPriority.Input);
             }
         }
 
@@ -1587,6 +1605,40 @@ namespace NuGet.PackageManagement.UI
                 await Model.Context.UIActionEngine.UpgradeNuGetProjectAsync(Model.UIController, null);
             })
             .PostOnFailure(nameof(PackageManagerControl), nameof(UpgradeButton_Click));
+        }
+        private void RestartUserActionMetrics()
+        {
+            _performanceMetrics = new PerformanceMetrics();
+            _sinceUserAction.Restart();
+        }
+
+        private TimeSpan GetTimeSinceLastUserAction()
+        {
+            return _sinceUserAction.Elapsed;
+        }
+
+        private void Gen_StatusChanged(object sender, EventArgs e)
+        {
+            ItemContainerGenerator gen = sender as ItemContainerGenerator;
+
+            if (gen.Status == System.Windows.Controls.Primitives.GeneratorStatus.ContainersGenerated)
+            {
+                var timestamp = GetTimeSinceLastUserAction();
+                _performanceMetrics.TimeSinceContainersGenerated = timestamp;
+            }
+        }
+
+        private void PackageList_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(PackageList.HasPendingBackgroundWork))
+            {
+                //When background work is complete, emit telemetry.
+                if (PackageList.HasPendingBackgroundWork == false)
+                {
+                    var timeSpan = GetTimeSinceLastRefreshAndRestart();
+                    EmitRefreshEvent(timeSpan, RefreshOperationSource.FilterSelectionChanged, RefreshOperationStatus.BackgroundComplete, _isUiFiltering, _performanceMetrics);
+                }
+            }
         }
     }
 }

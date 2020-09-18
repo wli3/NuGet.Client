@@ -8,9 +8,9 @@ using System.Reflection;
 using System.Threading;
 using NuGet.Common;
 
-namespace NuGet.SolutionRestoreManager
+namespace NuGet.PackageManagement
 {
-    internal sealed class NuGetFileLogger : IDisposable
+    public sealed class NuGetFileLogger : IDisposable
     {
         private bool _isDisposed;
         private readonly Lazy<StreamWriter> _streamWriter;
@@ -19,7 +19,7 @@ namespace NuGet.SolutionRestoreManager
         private readonly Stopwatch _stopwatch;
         private readonly object _streamWriterLock;
 
-        internal static NuGetFileLogger DefaultInstance { get; } = new NuGetFileLogger(EnvironmentVariableWrapper.Instance);
+        public static NuGetFileLogger DefaultInstance { get; } = new NuGetFileLogger(EnvironmentVariableWrapper.Instance);
 
         public bool IsEnabled { get; }
 

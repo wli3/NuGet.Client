@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
-using System.CodeDom;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -68,6 +67,11 @@ namespace NuGet.PackageManagement
         /// Event to be raised when batch processing of install/ uninstall packages ends at a project level
         /// </summary>
         public event EventHandler<PackageProjectEventArgs> BatchEnd;
+        private static int InstanceCount;
+        private static int RunDurationTotal;
+        private static int RunCount;
+        private static int RestoreActionTotal;
+        private static int RestoreActionCount;
 
         /// <summary>
         /// To construct a NuGetPackageManager that does not need a SolutionManager like NuGet.exe
@@ -2637,6 +2641,7 @@ namespace NuGet.PackageManagement
             }
 
             var stopWatch = Stopwatch.StartNew();
+            var stopWatch2 = Stopwatch.StartNew();
             var logger = new ProjectContextLogger(nuGetProjectContext);
             var result = new List<ResolvedAction>();
 
@@ -2684,6 +2689,13 @@ namespace NuGet.PackageManagement
 
             actionBlock.Complete();
             await actionBlock.Completion;
+            stopWatch2.Stop();
+            RestoreActionTotal += stopWatch.Elapsed.Milliseconds;
+            RestoreActionCount++;
+
+            NuGetFileLogger.DefaultInstance.Write($"Runaction:{RestoreActionCount} actions, Avg of run:{(double)RestoreActionTotal / RestoreActionCount}");
+            var solPaths = SolutionManager.SolutionDirectory.Split('\\');
+            NuGetFileLogger.DefaultInstance.Write($"{solPaths[solPaths.Length - 1]}: {buildIntegratedProjects.Count}: TPL runtime total duration: {stopWatch2.Elapsed.Milliseconds}");
 
             // Restore based on the modified package specs for many projects. This operation does not write the lock files to disk.
             var restoreResults = await DependencyGraphRestoreUtility.PreviewRestoreProjectsAsync(
@@ -2816,12 +2828,16 @@ namespace NuGet.PackageManagement
                 TelemetryConstants.PreviewBuildIntegratedStepName, stopWatch.Elapsed.TotalSeconds);
 
             TelemetryActivity.EmitTelemetryEvent(actionTelemetryEvent);
-
             return result;
         }
 
         private async Task GetBuildIntegratedProjectAction(BuildIntegratedProjectActionInput projectActionInput)
         {
+            var stopWatch = Stopwatch.StartNew();
+            var projPaths = projectActionInput.BuildIntegratedProject.MSBuildProjectPath.Split('\\');
+            Interlocked.Increment(ref InstanceCount);
+            NuGetFileLogger.DefaultInstance.Write($"{projPaths[projPaths.Length - 1]} starts. Number of instance: {InstanceCount}");
+
             NuGetProjectAction[] nuGetProjectActions;
 
             if (projectActionInput.PackageIdentity != null)
@@ -2925,6 +2941,14 @@ namespace NuGet.PackageManagement
                     projectActionInput.DependencyGraphContext.PackageSpecCache[projectActionInput.BuildIntegratedProject.MSBuildProjectPath] = updatedPackageSpec;
                 }
             }
+
+            stopWatch.Stop();
+            Interlocked.Decrement(ref InstanceCount);
+            RunDurationTotal += stopWatch.Elapsed.Milliseconds;
+            RunCount ++;
+
+            NuGetFileLogger.DefaultInstance.Write($"Avg of run:{RunCount} runs. {(double)RunDurationTotal/RunCount}");
+            NuGetFileLogger.DefaultInstance.Write($"{projPaths[projPaths.Length - 1]} ends.: {stopWatch.Elapsed.Milliseconds}.   Number of instance: {InstanceCount}");
         }
 
         /// <summary>

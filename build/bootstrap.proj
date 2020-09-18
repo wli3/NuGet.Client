@@ -13,7 +13,7 @@
         <PackageDownload Include="ILMerge" version="[3.0.21]" />
         <PackageDownload Include="Lucene.Net" version="[3.0.3]" />
         <PackageDownload Include="MicroBuild.Core" version="[0.2.0]" />
-        <PackageDownload Include="Microsoft.Build" version="[15.1.262-preview5]" />
+        <PackageDownload Include="Microsoft.Build" version="[16.7.0-preview-20213-01]" />
         <PackageDownload Include="Microsoft.DotNet.Build.Tasks.Feed" version="[5.0.0-beta.20224.2]" />  <!-- for publishing to the .NET Core build asset registry (BAR) -->
         <PackageDownload Include="Microsoft.DotNet.Maestro.Tasks" version="[1.1.0-beta.20352.2]" />  <!-- for publishing to the .NET Core build asset registry (BAR) -->
         <PackageDownload Include="Microsoft.VisualStudio.Composition" version="[16.4.11]" />

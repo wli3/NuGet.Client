@@ -62,7 +62,7 @@ namespace NuGet.Repositories
             return FindPackageImpl(packageId, version) != null;
         }
 
-        public LocalPackageInfo FindPackage(string packageId, NuGetVersion version)
+        public virtual LocalPackageInfo FindPackage(string packageId, NuGetVersion version)
         {
             var package = FindPackageImpl(packageId, version);
 

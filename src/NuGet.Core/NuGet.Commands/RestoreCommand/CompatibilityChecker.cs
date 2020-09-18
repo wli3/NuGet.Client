@@ -20,7 +20,7 @@ using NuGet.Repositories;
 
 namespace NuGet.Commands
 {
-    internal class CompatibilityChecker
+    public class CompatibilityChecker
     {
         private readonly IReadOnlyList<NuGetv3LocalRepository> _localRepositories;
         private readonly LockFile _lockFile;
@@ -35,7 +35,7 @@ namespace NuGet.Commands
             _validateRuntimeAssets = validateRuntimeAssets;
         }
 
-        internal async Task<CompatibilityCheckResult> CheckAsync(
+        public async Task<CompatibilityCheckResult> CheckAsync(
             RestoreTargetGraph graph,
             Dictionary<string, LibraryIncludeFlags> includeFlags,
             PackageSpec packageSpec)
@@ -249,7 +249,7 @@ namespace NuGet.Commands
             return RestoreLogMessage.CreateError(logCode, issue.Format(), issue.Package.Id, graph.TargetGraphName);
         }
 
-        private static List<NuGetFramework> GetPackageFrameworks(
+        public static List<NuGetFramework> GetPackageFrameworks(
             CompatibilityData compatibilityData,
             RestoreTargetGraph graph)
         {
@@ -501,7 +501,7 @@ namespace NuGet.Commands
             return new CompatibilityData(files, targetLibrary, packageSpec);
         }
 
-        private class CompatibilityData
+        public class CompatibilityData
         {
             public IEnumerable<string> Files { get; }
             public LockFileTargetLibrary TargetLibrary { get; }

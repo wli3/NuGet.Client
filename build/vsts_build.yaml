@@ -548,7 +548,7 @@ jobs:
 
 - job: Tests_On_Mac
   dependsOn:
-  - Build_and_UnitTest
+  - Build_and_UnitTest NonRTM
   - Initialize_Build
   timeoutInMinutes: 75
   variables:
@@ -621,7 +621,7 @@ jobs:
 
 - job: End_To_End_Tests_On_Windows
   dependsOn:
-  - Build_and_UnitTest
+  - Build_and_UnitTest NonRTM
   - Initialize_Build
   timeoutInMinutes: 150
   variables:
@@ -733,7 +733,7 @@ jobs:
 
 - job: Apex_Tests_On_Windows
   dependsOn:
-  - Build_and_UnitTest
+  - Build_and_UnitTest NonRTM
   - Initialize_Build
   timeoutInMinutes: 120
   variables:

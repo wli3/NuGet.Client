@@ -236,7 +236,7 @@ jobs:
       msbuildVersion: "16.0"
       configuration: "$(BuildConfiguration)"
       msbuildArguments: "/t:CopyFinalNuGetExeToOutputPath"
-    condition: "and(succeeded(),eq(variables['BuildRTM'], 'true'))"
+    condition: "and(succeeded(),eq(variables['BuildRTM'], 'false'))"
 
   - task: PowerShell@1
     displayName: "Initialize Git Commit Status on GitHub"
@@ -254,7 +254,7 @@ jobs:
       PathtoPublish: "$(Build.Repository.LocalPath)\\test\\NuGet.Clients.Tests\\NuGet.CommandLine.Test\\bin\\$(BuildConfiguration)\\net472"
       ArtifactName: "NuGet.CommandLine.Test"
       ArtifactType: "Container"
-    condition: "and(succeeded(),eq(variables['BuildRTM'], 'true'))"
+    condition: "and(succeeded(),eq(variables['BuildRTM'], 'false'))"
 
   - task: MSBuild@1
     displayName: "Sign Assemblies"

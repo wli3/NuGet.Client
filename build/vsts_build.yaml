@@ -537,7 +537,7 @@ jobs:
 
 - job: Tests_On_Mac
   dependsOn:
-  - Build_and_UnitTest | [NonRTM]
+  - Build_and_UnitTest
   - Initialize_Build
   timeoutInMinutes: 75
   variables:

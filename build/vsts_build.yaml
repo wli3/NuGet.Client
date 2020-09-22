@@ -162,9 +162,6 @@ jobs:
       inlineScript: |
         Get-ChildItem Env: | Sort-Object Name | Format-Table -Wrap -AutoSize
 
-  - task: MicroBuildLocalizationPlugin@1
-    displayName: "Install Localization Plugin"
-
   - task: MicroBuildSigningPlugin@1
     inputs:
       signType: "$(SigningType)"
@@ -214,20 +211,12 @@ jobs:
       msbuildArguments: "/t:BuildNoVSIX /p:BuildRTM=$(BuildRTM) /p:BuildNumber=$(BuildNumber) /p:SkipILMergeOfNuGetExe=true"
 
   - task: MSBuild@1
-    displayName: "Localize Assemblies"
-    inputs:
-      solution: "build\\loc.proj"
-      msbuildVersion: "16.0"
-      configuration: "$(BuildConfiguration)"
-      msbuildArguments: "/t:AfterBuild"
-
-  - task: MSBuild@1
     displayName: "Build Final NuGet.exe (via ILMerge)"
     inputs:
       solution: "src\\NuGet.Clients\\NuGet.CommandLine\\NuGet.CommandLine.csproj"
       msbuildVersion: "16.0"
       configuration: "$(BuildConfiguration)"
-      msbuildArguments: "/t:ILMergeNuGetExe /p:ExpectedLocalizedArtifactCount=$(LocalizedLanguageCount)"
+      msbuildArguments: "/t:ILMergeNuGetExe
 
   - task: MSBuild@1
     displayName: "Publish NuGet.exe (ILMerged) into NuGet.CommandLine.Test (Mac tests use this)"

@@ -126,7 +126,7 @@ namespace NuGet.CommandLine.Test
 
                 // Assert
                 var expectedError = "Property 'PackageSource' should not be null or empty";
-                Assert.True(result.Item2.Contains(expectedError));
+                Assert.True(result.Item2.Contains(expectedError), result.Item2 + " " + result.Item3);
             }
         }
 

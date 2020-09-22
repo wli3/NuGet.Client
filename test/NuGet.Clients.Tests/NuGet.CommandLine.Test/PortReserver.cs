@@ -76,10 +76,10 @@ namespace NuGet.CommandLine.Test
                         }
 
                         string mutexName = "NuGet-Port-" + port.ToString(CultureInfo.InvariantCulture); // Create a well known mutex
-                        _portMutex = new Mutex(initiallyOwned: false, name: mutexName);
+                        _portMutex = new Mutex(initiallyOwned: true, name: mutexName, out bool mutexWasCreated);
 
                         // If no one else is using this port grab it.
-                        if (_portMutex.WaitOne(millisecondsTimeout: 0))
+                        if (mutexWasCreated && _portMutex.WaitOne(millisecondsTimeout: 0))
                         {
                             break;
                         }
@@ -120,8 +120,8 @@ namespace NuGet.CommandLine.Test
 
         private static Mutex GetGlobalMutex()
         {
-            Mutex mutex = new Mutex(initiallyOwned: false, name: "NuGet-RandomPortAcquisition");
-            if (!mutex.WaitOne(30000))
+            Mutex mutex = new Mutex(initiallyOwned: true, name: "NuGet-RandomPortAcquisition", out bool mutexWasCreated);
+            if (!mutexWasCreated && !mutex.WaitOne(30000))
             {
                 throw new InvalidOperationException();
             }

@@ -48,7 +48,7 @@ namespace NuGet.Configuration
 
         private static XDocument GetDocument(string fullPath)
         {
-            using (Stream configStream = File.OpenRead(fullPath))
+            using (var configStream = File.Open(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 return LoadSafe(configStream, LoadOptions.PreserveWhitespace);
             }

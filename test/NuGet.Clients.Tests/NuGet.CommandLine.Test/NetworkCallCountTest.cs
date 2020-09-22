@@ -18,6 +18,7 @@ using Xunit;
 
 namespace NuGet.CommandLine.Test
 {
+    [Collection("Cache Dependency")]
     public class NetworkCallCountTest
     {
         [SkipMono(Skip = "https://github.com/NuGet/Home/issues/8594")]
@@ -117,7 +118,7 @@ namespace NuGet.CommandLine.Test
                 // Assert
                 Assert.True(0 != r.Item1, r.Item2 + " " + r.Item3);
 
-                Assert.Equal(1, hitsByUrl["/index.json"]);
+                Assert.True(1 == hitsByUrl["/index.json"], r.Item2 + " " + r.Item3);
                 Assert.Equal(100, hitsByUrl2.Keys.Count(s => s.StartsWith("/nuget/Packages")));
 
                 // The "/Packages" endpoint falls back to "/FindPackagesById" if no package is found.
@@ -250,7 +251,7 @@ namespace NuGet.CommandLine.Test
                 // Assert
                 Assert.True(0 != r.Item1, r.Item2 + " " + r.Item3);
 
-                Assert.Equal(1, hitsByUrl["/index.json"]);
+                Assert.True(1 == hitsByUrl["/index.json"], r.Item2 + " " + r.Item3);
 
                 Assert.Equal(expectedPackages.Count, allPackages.Count());
 
@@ -833,7 +834,7 @@ namespace NuGet.CommandLine.Test
 
                 foreach (var url in hitsByUrl.Keys)
                 {
-                    Assert.True(1 == hitsByUrl[url], url);
+                    Assert.True(1 == hitsByUrl[url], url + " " + r.Item2 + " " + r.Item3);
                 }
             }
         }
@@ -893,12 +894,12 @@ namespace NuGet.CommandLine.Test
 
                 // Assert
                 Assert.True(0 == r.Item1, r.Item2 + " " + r.Item3);
-                Assert.Equal(1, hitsByUrl["/index.json"]);
+                Assert.True(1 == hitsByUrl["/index.json"], r.Item2 + " " + r.Item3);
                 Assert.Equal(1, hitsByUrl["/reg/packagea/index.json"]);
 
                 foreach (var url in hitsByUrl.Keys)
                 {
-                    Assert.True(1 == hitsByUrl[url], url);
+                    Assert.True(1 == hitsByUrl[url], url + " " + r.Item2 + " " + r.Item3);
                 }
             }
         }
@@ -958,7 +959,7 @@ namespace NuGet.CommandLine.Test
 
                 foreach (var url in hitsByUrl.Keys)
                 {
-                    Assert.True(1 == hitsByUrl[url], url);
+                    Assert.True(1 == hitsByUrl[url], url + " " + r.Item2 + " " + r.Item3);
                 }
             }
         }
@@ -1015,12 +1016,12 @@ namespace NuGet.CommandLine.Test
 
                 // Assert
                 Assert.True(0 == r.Item1, r.Item2 + " " + r.Item3);
-                Assert.Equal(1, hitsByUrl["/index.json"]);
-                Assert.Equal(1, hitsByUrl["/reg/packagea/index.json"]);
+                Assert.True(1 == hitsByUrl["/index.json"], r.Item2 + " " + r.Item3);
+                Assert.True(1 == hitsByUrl["/reg/packagea/index.json"], r.Item2 + " " + r.Item3);
 
                 foreach (var url in hitsByUrl.Keys)
                 {
-                    Assert.True(1 == hitsByUrl[url], url);
+                    Assert.True(1 == hitsByUrl[url], url + " " + r.Item2 + " " + r.Item3);
                 }
             }
         }
@@ -1080,7 +1081,7 @@ namespace NuGet.CommandLine.Test
                 // Assert
                 Assert.True(0 == r.Item1, r.Item2 + " " + r.Item3);
 
-                Assert.Equal(1, hitsByUrl["/index.json"]);
+                Assert.True(1 == hitsByUrl["/index.json"], r.Item2 + " " + r.Item3);
             }
         }
 
@@ -1140,12 +1141,12 @@ namespace NuGet.CommandLine.Test
 
                 foreach (var url in hitsByUrl.Keys)
                 {
-                    Assert.True(1 == hitsByUrl[url], url + " hits: " + hitsByUrl[url]);
+                    Assert.True(1 == hitsByUrl[url], url + " hits: " + hitsByUrl[url] + " " + r.Item2 + " " + r.Item3);
                 }
 
                 foreach (var url in hitsByUrl2.Keys)
                 {
-                    Assert.True(1 == hitsByUrl2[url], url + " hits: " + hitsByUrl2[url]);
+                    Assert.True(1 == hitsByUrl2[url], url + " hits: " + hitsByUrl2[url] + " " + r.Item2 + " " + r.Item3);
                 }
             }
         }
@@ -1213,7 +1214,7 @@ namespace NuGet.CommandLine.Test
 
                 foreach (var url in hitsByUrl.Keys)
                 {
-                    Assert.True(1 == hitsByUrl[url], url);
+                    Assert.True(1 == hitsByUrl[url], url + " " + r.Item2 + " " + r.Item3);
                 }
 
                 foreach (var url in hitsByUrl2.Keys)
@@ -1268,7 +1269,7 @@ namespace NuGet.CommandLine.Test
 
                 // Assert
                 Assert.True(0 == r.Item1, r.Item2 + " " + r.Item3);
-                Assert.Equal(1, hitsByUrl["/index.json"]);
+                Assert.True(1 == hitsByUrl["/index.json"], r.Item2 + " " + r.Item3);
 
                 // PackageE is hit twice, once from packages.config and the other from project.json.
                 // The rest should only be hit once.
@@ -1326,11 +1327,11 @@ namespace NuGet.CommandLine.Test
 
                 // Assert
                 Assert.True(0 == r.Item1, r.Item2 + " " + r.Item3);
-                Assert.Equal(1, hitsByUrl["/index.json"]);
+                Assert.True(1 == hitsByUrl["/index.json"], r.Item2 + " " + r.Item3);
 
                 foreach (var url in hitsByUrl.Keys)
                 {
-                    Assert.True(1 == hitsByUrl[url], url);
+                    Assert.True(1 == hitsByUrl[url], url + " " + r.Item2 + " " + r.Item3);
                 }
             }
         }
@@ -1384,7 +1385,7 @@ namespace NuGet.CommandLine.Test
 
                 foreach (var url in hitsByUrl.Keys)
                 {
-                    Assert.True(1 == hitsByUrl[url], url);
+                    Assert.True(1 == hitsByUrl[url], url + " " + r.Item2 + " " + r.Item3);
                 }
             }
         }

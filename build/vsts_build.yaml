@@ -223,14 +223,6 @@ jobs:
     condition: "and(succeeded(),eq(variables['BuildRTM'], 'false'))"
 
   - task: MSBuild@1
-    displayName: "Sign Assemblies"
-    inputs:
-      solution: "build\\sign.proj"
-      msbuildVersion: "16.0"
-      configuration: "$(BuildConfiguration)"
-      msbuildArguments: "/t:AfterBuild"
-
-  - task: MSBuild@1
     displayName: "Pack VSIX"
     inputs:
       solution: "build\\build.proj"

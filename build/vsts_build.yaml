@@ -162,6 +162,15 @@ jobs:
       inlineScript: |
         Get-ChildItem Env: | Sort-Object Name | Format-Table -Wrap -AutoSize
 
+  - task: MicroBuildSigningPlugin@1
+    inputs:
+      signType: "$(SigningType)"
+      esrpSigning: "true"
+    displayName: "Install Signing Plugin"
+
+  - task: MicroBuildSwixPlugin@1
+    displayName: "Install Swix Plugin"
+
   - task: MSBuild@1
     displayName: "Restore for VS2019"
     inputs:

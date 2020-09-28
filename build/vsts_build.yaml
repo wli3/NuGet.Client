@@ -105,7 +105,7 @@ jobs:
   steps:
   - template: templates/Build_and_UnitTest.yml  
     parameters:
-    BuildRTM: true
+      BuildRTM: true
 
 - job: Build_and_UnitTest_NonRTM
   dependsOn: Initialize_Build
@@ -127,7 +127,7 @@ jobs:
   steps:
   - template: templates/Build_and_UnitTest.yml  
     parameters:
-    BuildRTM: false
+      BuildRTM: false
 
 - job: Functional_Tests_On_Windows
   dependsOn: Initialize_Build

@@ -107,7 +107,7 @@ jobs:
     parameters:
     BuildRTM: true
 
-  - job: Build_and_UnitTest_NonRTM
+- job: Build_and_UnitTest_NonRTM
   dependsOn: Initialize_Build
   timeoutInMinutes: 170
   variables:

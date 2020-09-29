@@ -95,6 +95,7 @@ jobs:
     VsTargetMajorVersion: $[dependencies.Initialize_Build.outputs['updatebuildnumber.VsTargetMajorVersion']]
     SDKVersionForBuild: $[dependencies.Initialize_Build.outputs['getSDKVersionForBuild.SDKVersionForBuild']]
     LocalizedLanguageCount: "13"
+    BuildRTM: "true"
 
   pool:
     name: VSEng-MicroBuildVS2019
@@ -117,6 +118,7 @@ jobs:
     VsTargetMajorVersion: $[dependencies.Initialize_Build.outputs['updatebuildnumber.VsTargetMajorVersion']]
     SDKVersionForBuild: $[dependencies.Initialize_Build.outputs['getSDKVersionForBuild.SDKVersionForBuild']]
     LocalizedLanguageCount: "13"
+    BuildRTM: "false"
 
   pool:
     name: VSEng-MicroBuildVS2019

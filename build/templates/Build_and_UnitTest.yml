@@ -1,6 +1,7 @@
 parameters:
 - name: 'BuildRTM'
   type: string
+  default: 'true'
 
 steps:
 - task: PowerShell@1

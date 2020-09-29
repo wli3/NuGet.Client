@@ -9,6 +9,7 @@
       Configuration=$(Configuration);
       ReleaseLabel=$(ReleaseLabel);
       BuildNumber=$(BuildNumber);
+      BuildRTM=$(BuildRTM);
     </CommonMSBuildProperties>
     <OutDir>$(ArtifactsDirectory)</OutDir>
     <IntermediateOutputPath>$(ArtifactsDirectory)</IntermediateOutputPath>

@@ -22,7 +22,6 @@ namespace NuGet.Test.Utility
             bool waitForExit,
             int timeOutInMilliseconds = 60000,
             Action<StreamWriter> inputAction = null,
-            bool shareProcessObject = false,
             IDictionary<string, string> environmentVariables = null)
         {
             var psi = new ProcessStartInfo(Path.GetFullPath(process), arguments)
@@ -60,21 +59,10 @@ namespace NuGet.Test.Utility
 
             Process p = null;
 
-            try
+            using (p = new Process())
             {
-                p = new Process();
-
-                p.OutputDataReceived += new DataReceivedEventHandler((sender, e) =>
-                {
-                    if (!string.IsNullOrEmpty(e.Data))
-                        output.AppendLine(e.Data);
-                });
-
-                p.ErrorDataReceived += new DataReceivedEventHandler((sender, e) =>
-                {
-                    if (!string.IsNullOrEmpty(e.Data))
-                        errors.AppendLine(e.Data);
-                });
+                p.OutputDataReceived += OutputHandler;
+                p.ErrorDataReceived += ErrorHandler;
 
                 p.StartInfo = psi;
                 p.Start();
@@ -107,14 +95,23 @@ namespace NuGet.Test.Utility
                         throw new TimeoutException($"{processName} timed out: " + psi.Arguments);
                     }
                 }
+
+                p.CancelOutputRead();
+                p.CancelErrorRead();
             }
-            finally
+
+            void OutputHandler(object sendingProcess, DataReceivedEventArgs e)
             {
-                if (!shareProcessObject)
-                {
-                    p.Dispose();
-                }
+                if (!string.IsNullOrEmpty(e.Data))
+                    output.AppendLine(e.Data);
             }
+
+            void ErrorHandler(object sendingProcess, DataReceivedEventArgs e)
+            {
+                if (!string.IsNullOrEmpty(e.Data))
+                    errors.AppendLine(e.Data);
+            }
+
             return new CommandRunnerResult(p, exitCode, output.ToString(), errors.ToString());
         }
 

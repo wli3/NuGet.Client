@@ -23,6 +23,7 @@ using NuGet.Protocol.Core.Types;
 using NuGet.Resolver;
 using NuGet.VisualStudio;
 using NuGet.VisualStudio.Internal.Contracts;
+using StreamJsonRpc;
 using Task = System.Threading.Tasks.Task;
 
 namespace NuGet.PackageManagement.UI
@@ -357,11 +358,16 @@ namespace NuGet.PackageManagement.UI
 
         public void ShowError(Exception ex)
         {
-            var signException = ex as SignatureException;
-
-            if (signException != null)
+            if (ex is RemoteInvocationException)
             {
-                ProcessSignatureIssues(signException);
+                var logMessage = new LogMessage(LogLevel.Error, ex.Message);
+
+                UILogger.ReportError(logMessage);
+                ProjectContext.Log(logMessage);
+            }
+            else if (ex is SignatureException signatureException)
+            {
+                ProcessSignatureIssues(signatureException);
             }
             else
             {

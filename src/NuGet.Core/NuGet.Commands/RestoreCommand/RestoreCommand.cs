@@ -611,10 +611,8 @@ namespace NuGet.Commands
             }
 
             telActivity.StartIntermediateLogMeasure();
-            //var newDgSpecHash = noOpDgSpec.GetHash2(out double timeInSeconds); 
-            var newDgSpecHash = noOpDgSpec.GetCombinedProjectHashCode(out double timeInSeconds).ToString();
+            var newDgSpecHash = noOpDgSpec.GetHash();
             telActivity.LogIntermediateLogMeasure("EvaluateCacheFile_GetHash");
-            telActivity.TelemetryEvent["EvaluateCacheFile_GetHash_Write"] = timeInSeconds;
 
             // if --force-evaluate flag is passed then restore noop check will also be skipped.
             // this will also help us to get rid of -force flag in near future.

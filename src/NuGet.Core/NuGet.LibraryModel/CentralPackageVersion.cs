@@ -63,16 +63,5 @@ namespace NuGet.LibraryModel
                 Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase) &&
                 EqualityUtility.EqualsWithNullCheck(VersionRange, other.VersionRange);
         }
-
-        public static int GetHash(IEnumerable<CentralPackageVersion> items)
-        {
-            var hashCode = new HashCodeCombiner();
-            foreach(var item in items)
-            {
-                hashCode.AddStringIgnoreCase(item.Name);
-                hashCode.AddObject(item.VersionRange.GetHashCode());//.ToNormalizedString()
-            }
-            return hashCode.CombinedHash;
-        }
     }
 }

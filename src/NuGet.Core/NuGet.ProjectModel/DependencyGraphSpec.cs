@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
@@ -11,7 +10,6 @@ using Newtonsoft.Json.Linq;
 using NuGet.Common;
 using NuGet.LibraryModel;
 using NuGet.Packaging;
-using NuGet.Shared;
 using NuGet.Versioning;
 
 namespace NuGet.ProjectModel
@@ -379,7 +377,7 @@ namespace NuGet.ProjectModel
             }
         }
 
-        public string GetHash(out double seconds)
+        public string GetHash()
         {
             using (var hashFunc = new Sha512HashFunction())
             using (var writer = new HashObjectWriter(hashFunc))
@@ -389,10 +387,8 @@ namespace NuGet.ProjectModel
             }
         }
 
-
         private void Write(RuntimeModel.IObjectWriter writer, bool compressed, Action<PackageSpec, RuntimeModel.IObjectWriter, bool> writeAction)
         {
-            double timespent = 0;
             writer.WriteObjectStart();
             writer.WriteNameValue("format", Version);
 
@@ -421,7 +417,6 @@ namespace NuGet.ProjectModel
 
             writer.WriteObjectEnd();
             writer.WriteObjectEnd();
-            return timespent;
         }
 
         /// <summary>

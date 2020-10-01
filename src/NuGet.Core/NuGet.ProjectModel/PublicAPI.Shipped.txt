@@ -65,7 +65,7 @@ NuGet.ProjectModel.DependencyGraphSpec.DependencyGraphSpec() -> void
 NuGet.ProjectModel.DependencyGraphSpec.DependencyGraphSpec(Newtonsoft.Json.Linq.JObject json) -> void
 NuGet.ProjectModel.DependencyGraphSpec.DependencyGraphSpec(bool isReadOnly) -> void
 NuGet.ProjectModel.DependencyGraphSpec.GetClosure(string rootUniqueName) -> System.Collections.Generic.IReadOnlyList<NuGet.ProjectModel.PackageSpec>
-
+NuGet.ProjectModel.DependencyGraphSpec.GetHash() -> string
 NuGet.ProjectModel.DependencyGraphSpec.GetParents(string rootUniqueName) -> System.Collections.Generic.IReadOnlyList<string>
 NuGet.ProjectModel.DependencyGraphSpec.GetProjectSpec(string projectUniqueName) -> NuGet.ProjectModel.PackageSpec
 NuGet.ProjectModel.DependencyGraphSpec.Json.get -> Newtonsoft.Json.Linq.JObject
@@ -673,7 +673,7 @@ static NuGet.ProjectModel.PackageSpecOperations.HasPackage(NuGet.ProjectModel.Pa
 static NuGet.ProjectModel.PackageSpecOperations.RemoveDependency(NuGet.ProjectModel.PackageSpec spec, string packageId) -> void
 static NuGet.ProjectModel.PackageSpecUtility.IsSnapshotVersion(string version) -> bool
 static NuGet.ProjectModel.PackageSpecUtility.SpecifySnapshot(string version, string snapshotValue) -> NuGet.Versioning.NuGetVersion
-
+static NuGet.ProjectModel.PackageSpecWriter.Write(NuGet.ProjectModel.PackageSpec packageSpec, NuGet.RuntimeModel.IObjectWriter writer) -> void
 static NuGet.ProjectModel.PackageSpecWriter.WriteToFile(NuGet.ProjectModel.PackageSpec packageSpec, string filePath) -> void
 static NuGet.ProjectModel.PackagesLockFileFormat.Parse(string lockFileContent, NuGet.Common.ILogger log, string path) -> NuGet.ProjectModel.PackagesLockFile
 static NuGet.ProjectModel.PackagesLockFileFormat.Parse(string lockFileContent, string path) -> NuGet.ProjectModel.PackagesLockFile

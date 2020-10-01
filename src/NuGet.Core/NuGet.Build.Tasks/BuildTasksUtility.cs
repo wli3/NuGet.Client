@@ -176,7 +176,7 @@ namespace NuGet.Build.Tasks
                 throw new ArgumentNullException(nameof(log));
             }
 
-            var dgSpecProjectNames = string.Join(";", dependencyGraphSpec.Projects.Select(p => p.FilePath));
+            var dgSpecProjectFilePath = dependencyGraphSpec.Projects.First().FilePath;
             var isCPVM = "false";
             if(dependencyGraphSpec.Projects.All(p => p.RestoreMetadata.CentralPackageVersionsEnabled))
             {
@@ -204,7 +204,7 @@ namespace NuGet.Build.Tasks
                 restoreTaskTel.TelemetryEvent["restorePC"] = restorePC;
                 restoreTaskTel.TelemetryEvent["cleanupAssetsForUnsupportedProjects"] = cleanupAssetsForUnsupportedProjects;
                 restoreTaskTel.TelemetryEvent["dgSpecProjectCount_BeforeRestore"] = dependencyGraphSpec.Projects.Count;
-                restoreTaskTel.TelemetryEvent["dgSpecProjectNames"] = dgSpecProjectNames;
+                restoreTaskTel.TelemetryEvent["dgSpecProjectFilePath"] = dgSpecProjectFilePath;
                 restoreTaskTel.TelemetryEvent["IsCPVM"] = isCPVM;
 
 #if VerboseTelemetryCollection

@@ -3,3 +3,5 @@ static NuGet.Commands.MSBuildProjectFrameworkUtility.GetProjectFramework(string 
 static NuGet.Commands.RestoreRunner.RunAsync(NuGet.Commands.RestoreArgs restoreContext, System.Threading.CancellationToken token, NuGet.Common.TelemetryActivity parentTelActivity) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<NuGet.Commands.RestoreSummary>>
 static NuGet.Commands.RestoreTargetGraph.Create(NuGet.RuntimeModel.RuntimeGraph runtimeGraph, System.Collections.Generic.IEnumerable<NuGet.DependencyResolver.GraphNode<NuGet.DependencyResolver.RemoteResolveResult>> graphs, NuGet.DependencyResolver.RemoteWalkContext context, NuGet.Common.ILogger log, NuGet.Frameworks.NuGetFramework framework, string runtimeIdentifier, NuGet.Common.TelemetryActivity telemetryActivity) -> NuGet.Commands.RestoreTargetGraph
 virtual NuGet.Commands.RestoreResult.CommitAsync(NuGet.Common.ILogger log, System.Threading.CancellationToken token, NuGet.Common.TelemetryActivity telOperationId) -> System.Threading.Tasks.Task
+NuGet.Commands.VerifyArgs.PackagePaths.get -> System.Collections.Generic.IReadOnlyList<string>
+NuGet.Commands.VerifyArgs.PackagePaths.set -> void

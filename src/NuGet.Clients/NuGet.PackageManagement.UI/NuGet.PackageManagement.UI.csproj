@@ -22,6 +22,7 @@
     <NuGetPackageImportStamp>3b445626</NuGetPackageImportStamp>
     <TargetFrameworkVersion>$(NETFXTargetFrameworkVersion)</TargetFrameworkVersion>
     <AlwaysCompileMarkupFilesInSeparateDomain>false</AlwaysCompileMarkupFilesInSeparateDomain>
+    <LangVersion>8</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <DefineConstants>TRACE;DEBUG;VS15</DefineConstants>
@@ -112,6 +113,7 @@
       <DependentUpon>PackageSourcesOptionsControl.cs</DependentUpon>
     </Compile>
     <Compile Include="PackageLicenseUtilities.cs" />
+    <Compile Include="PackageManagerToolWindowPane.cs" />
     <Compile Include="PackageManagerWindowPane.cs" />
     <Compile Include="Resources\Resources.xaml.cs">
       <DependentUpon>Resources.xaml</DependentUpon>
@@ -123,10 +125,12 @@
     <Compile Include="Constants.cs" />
     <Compile Include="UserInterfaceService\NuGetSettings.cs" />
     <Compile Include="UserInterfaceService\NuGetSettingsSerializer.cs" />
+    <Compile Include="UserInterfaceService\NuGetSolutionManagerServiceWrapper.cs" />
     <Compile Include="UserInterfaceService\NuGetUIFactory.cs" />
     <Compile Include="UserInterfaceService\SolutionUserOptions.cs" />
     <Compile Include="UserInterfaceService\VisualStudioProgress.cs" />
     <Compile Include="UserInterfaceService\VisualStudioProgressDialogSession.cs" />
+    <Compile Include="Utility\ProjectUtility.cs" />
     <Compile Include="Utility\VsUtility.cs" />
     <Compile Include="UserInterfaceService\ProgressDialogData.cs" />
     <Compile Include="Xamls\DeprecatedFrameworkWindow.xaml.cs">
@@ -160,7 +164,6 @@
     </Compile>
     <Compile Include="Common\TriggerEventMethod.cs" />
     <Compile Include="Converters\MessageLevelToBrushConverter.cs" />
-    <Compile Include="Converters\LoadingStatusToIconConverter.cs" />
     <Compile Include="Converters\NotEqualConverter.cs" />
     <Compile Include="Converters\BooleanToVisibilityConverter.cs" />
     <Compile Include="Converters\DownloadCountToVisibilityConverter.cs" />
@@ -190,7 +193,6 @@
     <Compile Include="LoadingStatusIndicator.cs" />
     <Compile Include="Models\AlternativePackageManagerProviders.cs" />
     <Compile Include="Models\PackageItemListViewModel.cs" />
-    <Compile Include="Models\PackageSourceMoniker.cs" />
     <Compile Include="Models\PackageStatus.cs" />
     <Compile Include="Converters\NotNullToBooleanConverter.cs" />
     <Compile Include="PackageInstallationInfo.cs" />
@@ -306,15 +308,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Xamls\InstalledIndicator.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="Xamls\LicenseFileWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Xamls\MigratorHelpIcon.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -500,6 +494,10 @@
       <Project>{eea49a74-6efc-410e-9745-bad367ac151d}</Project>
       <Name>NuGet.VisualStudio.Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\NuGet.VisualStudio.Internal.Contracts\NuGet.VisualStudio.Internal.Contracts.csproj">
+      <Project>{deebf1a1-1c21-4e9e-8ce3-1eb21381ff1e}</Project>
+      <Name>NuGet.VisualStudio.Internal.Contracts</Name>
+    </ProjectReference>
     <ProjectReference Include="..\NuGet.VisualStudio\NuGet.VisualStudio.csproj">
       <Project>{e5556bc6-a7fd-4d8e-8a7d-7648df1d7471}</Project>
       <Name>NuGet.VisualStudio</Name>
@@ -507,24 +505,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" NoWarn="NU1605" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\StatusOK_32x.png" />
-    <Resource Include="Resources\StatusStop_32x.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\Refresh_grey_16x.png" />
-    <Resource Include="Resources\Refresh_inverse_16x.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\Refresh.16.16.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\StatusInformation_16x.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\statuserror.16.16.png" />
-    <Resource Include="Resources\statusinformation.16.16.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\UpgradeReport.xslt">

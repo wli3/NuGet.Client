@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -43,26 +44,6 @@ namespace NuGetConsole.Implementation
             get { return this.GetService<IComponentModel>(typeof(SComponentModel)); }
         }
 
-        private IProductUpdateService ProductUpdateService
-        {
-            get { return ComponentModel.GetService<IProductUpdateService>(); }
-        }
-
-        private IPackageRestoreManager PackageRestoreManager
-        {
-            get { return ComponentModel.GetService<IPackageRestoreManager>(); }
-        }
-
-        private IDeleteOnRestartManager DeleteOnRestartManager
-        {
-            get { return ComponentModel.GetService<IDeleteOnRestartManager>(); }
-        }
-
-        private ISolutionManager SolutionManager
-        {
-            get { return ComponentModel.GetService<ISolutionManager>(); }
-        }
-
         private PowerConsoleWindow PowerConsoleWindow
         {
             get { return ComponentModel.GetService<IPowerConsoleWindow>() as PowerConsoleWindow; }
@@ -78,9 +59,9 @@ namespace NuGetConsole.Implementation
             get
             {
                 return _wpfConsole != null &&
-                       _wpfConsole.Dispatcher.IsStartCompleted &&
-                       _wpfConsole.Host != null &&
-                       _wpfConsole.Host.IsCommandEnabled;
+                    _wpfConsole.Dispatcher.IsStartCompleted &&
+                    _wpfConsole.Host != null &&
+                    _wpfConsole.Host.IsCommandEnabled;
             }
         }
 
@@ -88,12 +69,10 @@ namespace NuGetConsole.Implementation
         /// Standard constructor for the tool window.
         /// </summary>
         public PowerConsoleToolWindow()
-            :
-                base(null)
+            : base(null)
         {
             Caption = Resources.ToolWindowTitle;
-            BitmapResourceID = 301;
-            BitmapIndex = 0;
+            BitmapImageMoniker = KnownMonikers.Console;
             ToolBar = new CommandID(GuidList.guidNuGetCmdSet, PkgCmdIDList.idToolbar);
         }
 
@@ -135,10 +114,6 @@ namespace NuGetConsole.Implementation
         /// </summary>
         public bool IsLoaded { get; private set; }
 
-        [SuppressMessage(
-            "Microsoft.Design",
-            "CA1031:DoNotCatchGeneralExceptionTypes",
-            Justification = "We really don't want exceptions from the console to bring down VS")]
         public override void OnToolWindowCreated()
         {
             base.OnToolWindowCreated();
@@ -175,10 +150,8 @@ namespace NuGetConsole.Implementation
         {
             base.OnClose();
 
-            if (_wpfConsole != null)
-            {
-                _wpfConsole.Dispose();
-            }
+            _wpfConsole?.Dispose();
+            _consoleParentPane?.Dispose();
         }
 
         /// <summary>
@@ -552,7 +525,6 @@ namespace NuGetConsole.Implementation
         /// <summary>
         /// Get the WpfConsole of the active host.
         /// </summary>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
         private IWpfConsole WpfConsole
         {
             get

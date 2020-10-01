@@ -12,6 +12,7 @@ using NuGet.Common;
 using NuGet.Frameworks;
 using NuGet.LibraryModel;
 using NuGet.RuntimeModel;
+using NuGet.Shared;
 using NuGet.Versioning;
 
 namespace NuGet.ProjectModel
@@ -29,6 +30,11 @@ namespace NuGet.ProjectModel
         /// <param name="packageSpec">A <c>PackageSpec</c> instance.</param>
         /// <param name="writer">An <c>NuGet.Common.IObjectWriter</c> instance.</param>
         public static TimeSpan Write(PackageSpec packageSpec, IObjectWriter writer)
+        {
+            Write(packageSpec, writer, compressed: false);
+        }
+
+        internal static void Write(PackageSpec packageSpec, IObjectWriter writer, bool compressed)
         {
             if (packageSpec == null)
             {
@@ -61,26 +67,7 @@ namespace NuGet.ProjectModel
             {
                 SetDependencies(writer, packageSpec.Dependencies);
             }
-            var sw = Stopwatch.StartNew();
-            SetFrameworks(writer, packageSpec.TargetFrameworks);
-            sw.Stop();
-            JsonRuntimeFormat.WriteRuntimeGraph(writer, packageSpec.RuntimeGraph);
-
-            return sw.Elapsed;
-        }
-
-        /// <summary>
-        /// This method is intneded for calculating the hash of the dgspec inorder to identify the noop changes
-        /// reduce the fileds that are not essential
-        /// </summary>
-        /// <param name="packageSpec">A <c>PackageSpec</c> instance.</param>
-        /// <param name="writer">An <c>NuGet.Common.IObjectWriter</c> instance.</param>
-        internal static TimeSpan WriteDGSpecForNoopHash(PackageSpec packageSpec, IObjectWriter writer)
-        {
-            if (packageSpec == null)
-            {
-                throw new ArgumentNullException(nameof(packageSpec));
-            }
+            SetFrameworks(writer, packageSpec.TargetFrameworks, compressed);
 
             if (writer == null)
             {
@@ -505,10 +492,11 @@ namespace NuGet.ProjectModel
         }
 
         /// <summary>
-        /// This method sorts the libraries based on the name
-        /// This method also writes out the normalized versions to avoid cases where original string is set because it was gotten through project system vs being installed from PM UI
+        /// The central transitive dependecy groups are used for pack operation.
+        /// The metadata needed for pack is composed from:
+        ///     Name, IncludeType, SuppressParent and Version 
         /// </summary>
-        internal static void SetCentralTransitiveDependenciesGroup(IObjectWriter writer, string name, IEnumerable<LibraryDependency> libraryDependencies)
+        internal static void SetCentralTransitveDependencyGroup(IObjectWriter writer, string name, IEnumerable<LibraryDependency> libraryDependencies)
         {
             if (!libraryDependencies.Any())
             {
@@ -517,7 +505,7 @@ namespace NuGet.ProjectModel
 
             writer.WriteObjectStart(name);
 
-            foreach (var dependency in libraryDependencies)
+            foreach (var dependency in libraryDependencies.OrderBy(e => e.Name, StringComparer.Ordinal))
             {
                 var versionRange = dependency.LibraryRange.VersionRange ?? VersionRange.All;
                 var versionString = versionRange.ToNormalizedString();
@@ -534,11 +522,6 @@ namespace NuGet.ProjectModel
                     SetValue(writer, "suppressParent", dependency.SuppressParent.ToString());
                 }
 
-                if (dependency.Type != LibraryDependencyType.Default)
-                {
-                    SetValue(writer, "type", dependency.Type.ToString());
-                }
-
                 SetValue(writer, "version", versionString);
 
                 writer.WriteObjectEnd();
@@ -546,7 +529,6 @@ namespace NuGet.ProjectModel
 
             writer.WriteObjectEnd();
         }
-
 
         private static void SetImports(IObjectWriter writer, IList<NuGetFramework> frameworks)
         {
@@ -580,7 +562,7 @@ namespace NuGet.ProjectModel
             writer.WriteArrayEnd();
         }
 
-        private static void SetFrameworks(IObjectWriter writer, IList<TargetFrameworkInformation> frameworks)
+        private static void SetFrameworks(IObjectWriter writer, IList<TargetFrameworkInformation> frameworks, bool compressed)
         {
             if (frameworks.Any())
             {
@@ -591,7 +573,7 @@ namespace NuGet.ProjectModel
                     writer.WriteObjectStart(framework.FrameworkName.GetShortFolderName());
                     SetValueIfNotNull(writer, "targetAlias", framework.TargetAlias);
                     SetDependencies(writer, framework.Dependencies);
-                    SetCentralDependencies(writer, framework.CentralPackageVersions.Values);
+                    SetCentralDependencies(writer, framework.CentralPackageVersions.Values, compressed);
                     SetImports(writer, framework.Imports);
                     SetValueIfTrue(writer, "assetTargetFallback", framework.AssetTargetFallback);
                     SetValueIfTrue(writer, "warn", framework.Warn);
@@ -660,21 +642,36 @@ namespace NuGet.ProjectModel
             }
         }
 
-        private static void SetCentralDependencies(IObjectWriter writer, ICollection<CentralPackageVersion> centralPackageVersions)
+        private static void SetCentralDependencies(IObjectWriter writer, ICollection<CentralPackageVersion> centralPackageVersions, bool compressed)
         {
             if (!centralPackageVersions.Any())
             {
                 return;
             }
 
-            writer.WriteObjectStart("centralPackageVersions");
+            if (compressed)
+            {
+                SetValue(writer, "centralPackageVersionsHash", GetHash(centralPackageVersions).ToString());
+                return;
+            }
 
+            writer.WriteObjectStart("centralPackageVersions");
             foreach (var dependency in centralPackageVersions.OrderBy(dep => dep.Name))
             {
                 writer.WriteNameValue(name: dependency.Name, value: dependency.VersionRange.ToNormalizedString());
-
             }
             writer.WriteObjectEnd();
+        }
+
+        private static int GetHash(ICollection<CentralPackageVersion> items)
+        {
+            var hashCode = new HashCodeCombiner();
+            foreach (var item in items)
+            {
+                hashCode.AddStringIgnoreCase(item.Name);
+                hashCode.AddObject(item.VersionRange.GetHashCode());
+            }
+            return hashCode.CombinedHash;
         }
 
         private static void SetValueIfTrue(IObjectWriter writer, string name, bool value)

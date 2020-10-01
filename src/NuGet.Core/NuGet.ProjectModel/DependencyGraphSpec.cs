@@ -248,34 +248,8 @@ namespace NuGet.ProjectModel
 
             if (!_projects.ContainsKey(projectUniqueName))
             {
-                PackageSpec projectToRestore = projectSpec;
-
-                if (projectSpec.RestoreMetadata != null && projectSpec.RestoreMetadata.CentralPackageVersionsEnabled)
-                {
-                    projectToRestore = ToPackageSpecWithCentralVersionInformation(projectSpec);
-                }
-
-                _projects.Add(projectUniqueName, projectToRestore);
+                _projects.Add(projectUniqueName, projectSpec);
             }
-        }
-
-        private PackageSpec ToPackageSpecWithCentralVersionInformation(PackageSpec spec)
-        {
-            //var newSpec = spec.Clone();
-            foreach (var tfm in spec.TargetFrameworks)
-            {
-                foreach (LibraryDependency d in tfm.Dependencies.Where(d => !d.AutoReferenced && d.LibraryRange.VersionRange == null))
-                {
-                    if (tfm.CentralPackageVersions.TryGetValue(d.Name, out CentralPackageVersion centralPackageVersion))
-                    {
-                        d.LibraryRange.VersionRange = centralPackageVersion.VersionRange;
-                    }
-
-                    d.VersionCentrallyManaged = true;
-                }
-            }
-
-            return spec;
         }
 
         public static DependencyGraphSpec Union(IEnumerable<DependencyGraphSpec> dgSpecs)
@@ -363,7 +337,7 @@ namespace NuGet.ProjectModel
             {
                 jsonWriter.Formatting = Formatting.Indented;
 
-                Write(writer, PackageSpecWriter.Write);
+                Write(writer, compressed: false, PackageSpecWriter.Write);
             }
         }
 
@@ -410,53 +384,13 @@ namespace NuGet.ProjectModel
             using (var hashFunc = new Sha512HashFunction())
             using (var writer = new HashObjectWriter(hashFunc))
             {
-                seconds = Write(writer, PackageSpecWriter.Write);
+                Write(writer, compressed: true, PackageSpecWriter.Write);
                 return writer.GetHash();
             }
         }
 
-        public int GetCombinedProjectHashCode(out double seconds)
-        {
-            var sw = Stopwatch.StartNew();
-            var hashCode = new HashCodeCombiner();
-            foreach (var item in Projects)
-            {
-                hashCode.AddObject(item.GetHashCode());
-            }
 
-            int combinedHash =  hashCode.CombinedHash;
-            sw.Stop();
-            seconds = sw.Elapsed.TotalSeconds;
-            return combinedHash;
-        }
-
-        public string GetHash2(out double seconds)
-        {
-            using (var hashFunc = new Sha512HashFunction())
-            using (var writer = new HashObjectWriter(hashFunc))
-            {
-                seconds = Write(writer, PackageSpecWriter.WriteDGSpecForNoopHash);
-                return writer.GetHash();
-            }
-        }
-
-        public string GetHash22(out double seconds)
-        {
-            var hash = string.Empty;
-            var sw = Stopwatch.StartNew();
-            using (var hashFunc = new Sha512HashFunction())
-            using (var writer = new HashObjectWriter(hashFunc))
-            {
-                Write(writer, PackageSpecWriter.WriteDGSpecForNoopHash); 
-                hash = writer.GetHash();
-            }
-
-            sw.Stop();
-            seconds = sw.Elapsed.TotalSeconds;
-            return hash;
-        }
-
-        private double Write(RuntimeModel.IObjectWriter writer, Func<PackageSpec, RuntimeModel.IObjectWriter, TimeSpan> writeAction)
+        private void Write(RuntimeModel.IObjectWriter writer, bool compressed, Action<PackageSpec, RuntimeModel.IObjectWriter, bool> writeAction)
         {
             double timespent = 0;
             writer.WriteObjectStart();
@@ -481,8 +415,7 @@ namespace NuGet.ProjectModel
                 var project = pair.Value;
 
                 writer.WriteObjectStart(project.RestoreMetadata.ProjectUniqueName);
-                var ts = writeAction.Invoke(project, writer);
-                timespent += ts.TotalSeconds;
+                writeAction.Invoke(project, writer, compressed);
                 writer.WriteObjectEnd();
             }
 
@@ -521,6 +454,24 @@ namespace NuGet.ProjectModel
             var newSpec = new DependencyGraphSpec();
             newSpec.AddProject(project);
             newSpec.AddRestore(project.RestoreMetadata.ProjectUniqueName);
+
+            foreach (var child in Projects)
+            {
+                newSpec.AddProject(child);
+            }
+
+            return newSpec;
+        }
+
+        public DependencyGraphSpec WithPackageSpecs(IEnumerable<PackageSpec> packageSpecs)
+        {
+            var newSpec = new DependencyGraphSpec();
+
+            foreach (var packageSpec in packageSpecs)
+            {
+                newSpec.AddProject(packageSpec);
+                newSpec.AddRestore(packageSpec.RestoreMetadata.ProjectUniqueName);
+            }
 
             foreach (var child in Projects)
             {

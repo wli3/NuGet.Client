@@ -141,6 +141,9 @@ namespace NuGet.SolutionRestoreManager
                                .Distinct(CentralPackageVersionNameComparer.Default)
                                .ToDictionary(cpv => cpv.Name));
                     }
+
+                    // Merge the central version information to the package information
+                    LibraryDependency.ApplyCentralVersionInformation(tfi.Dependencies, tfi.CentralPackageVersions);
                 }
 
                 if (targetFrameworkInfo2.FrameworkReferences != null)
@@ -155,7 +158,7 @@ namespace NuGet.SolutionRestoreManager
         internal static NuGetFramework GetTargetFramework(IVsProjectProperties properties, string projectFullPath)
         {
             var targetFrameworkMoniker = GetPropertyValueOrNull(properties, ProjectBuildProperties.TargetFrameworkMoniker);
-            var targetPlatformMoniker = GetPropertyValueOrNull(properties, ProjectBuildProperties.TargetPlatformIdentifier);
+            var targetPlatformMoniker = GetPropertyValueOrNull(properties, ProjectBuildProperties.TargetPlatformMoniker);
             var targetPlatformMinVersion = GetPropertyValueOrNull(properties, ProjectBuildProperties.TargetPlatformMinVersion);
 
             return MSBuildProjectFrameworkUtility.GetProjectFramework(

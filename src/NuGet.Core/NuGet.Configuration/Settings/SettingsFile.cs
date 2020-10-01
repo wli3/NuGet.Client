@@ -220,7 +220,7 @@ namespace NuGet.Configuration
                 catch (Exception e)
                 {
                     throw new NuGetConfigurationException(
-                        string.Format(CultureInfo.CurrentCulture, Resources.Unknown_Config_Exception, ConfigFilePath, e.Message), e);
+                        string.Format(CultureInfo.CurrentCulture, Resources.Unknown_Config_Exception, ConfigFilePath, e.Message + ":" + e.HResult), e);
                 }
             });
         }

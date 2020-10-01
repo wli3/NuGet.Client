@@ -15,6 +15,7 @@ using Xunit;
 
 namespace NuGet.CommandLine.Test
 {
+    [Collection("Cache Dependency")]
     public class NuGetPushCommandTest
     {
         private const string ApiKeyHeader = "X-NuGet-ApiKey";

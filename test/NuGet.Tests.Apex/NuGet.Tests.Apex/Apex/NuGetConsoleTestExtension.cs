@@ -31,6 +31,15 @@ namespace NuGet.Tests.Apex
             Execute(command);
         }
 
+        public void InstallPackageFromPMC(string packageId, string source, bool hasVersion=false)
+        {
+            if (!hasVersion)
+            {
+                var command = $"Install-Package {packageId} -ProjectName {ProjectName} -Source {source}";
+                Execute(command);
+            }
+        }
+
         public void UninstallPackageFromPMC(string packageId)
         {
             var command = $"Uninstall-Package {packageId} -ProjectName {ProjectName}";

@@ -1158,7 +1158,7 @@ namespace NuGet.PackageManagement.UI
                 _packageList.IsBrowseTab = _topPanel.Filter == ItemFilter.All;
 
                 var timeSpan = GetTimeSinceLastRefreshAndRestart();
-                _packageList.ResetLoadingStatusIndicator();
+                _packageList.ResetLoadingStatusIndicator(); //TODO: remove this?
 
                 // Collapse the Update controls when the current tab is not "Updates".
                 _packageList.CheckBoxesEnabled = _topPanel.Filter == ItemFilter.UpdatesAvailable;
@@ -1171,7 +1171,7 @@ namespace NuGet.PackageManagement.UI
                 oldCts?.Cancel();
                 oldCts?.Dispose();
 
-                var isUiFiltering = _packageList.IsBrowseTab == false;
+                var isUiFiltering = !_packageList.IsBrowseTab;
 
                 if (isUiFiltering)
                 {
@@ -1179,6 +1179,7 @@ namespace NuGet.PackageManagement.UI
                     _packageList.FilterInstalledDataItems(_topPanel.Filter, _loadCts.Token);
                 }
 
+                //TODO: remove telemetry since UI filtering will be implied on InstalledData tabs?
                 EmitRefreshEvent(timeSpan, RefreshOperationSource.FilterSelectionChanged, RefreshOperationStatus.Success, isUiFiltering);
 
                 _detailModel.OnFilterChanged(e.PreviousFilter, _topPanel.Filter);

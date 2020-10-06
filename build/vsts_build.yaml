@@ -432,9 +432,9 @@ jobs:
       scriptType: "inlineScript"
       inlineScript: |
         $Part1 = "InstallPackageTest.ps1,UninstallPackageTest.ps1,UpdatePackageTest.ps1"
-        $Part2 = "A-TopDownloadedPackages.ps1,BuildIntegratedTest.ps1,ExecuteInitScriptTest.ps1,FindPackageTest.ps1,GetPackageTest.ps1,GetProjectTest.ps1,LegacyPackageRefProjectTest.ps1,NativeProjectTest.ps1,NetCoreProjectTest.ps1,PackageRestoreTest.ps1,PackTest.ps1,ProjectRetargeting.ps1,ServicesTest.ps1,Settings.ps1,SyncPackageTest.ps1,TabExpansionTest.ps1,UniversalWindowsProjectTest.ps1"
-        $EndToEndTestCommandToRunPart1 = "Run-Test -Exclude $Part2 -Verbose *>&1 | Tee-Object $(System.DefaultWorkingDirectory)\artifacts\EndToEnd\FullLog_Part1_$(Build.BuildNumber).txt"
-        $EndToEndTestCommandToRunPart2 = "Run-Test -Exclude $Part1 -Verbose *>&1 | Tee-Object $(System.DefaultWorkingDirectory)\artifacts\EndToEnd\FullLog_Part2_$(Build.BuildNumber).txt"
+        $Part2 = "A-TopDownloadedPackages.ps1,BuildIntegratedTest.ps1,ExecuteInitScriptTest.ps1,FindPackageTest.ps1,GetPackageTest.ps1,GetProjectTest.ps1,LegacyPackageRefProjectTest.ps1,NativeProjectTest.ps1,NetCoreProjectTest.ps1,PackageRestoreTest.ps1,PackTest.ps1,ProjectRetargeting.ps1,ServicesTest.ps1,Settings.ps1,SyncPackageTest.ps1,TabExpansionTest.ps1,UniversalWindowsProjectTest.ps1"'
+        $EndToEndTestCommandToRunPart1 = '"Run-Test -Exclude $Part2 -Verbose *>&1 | Tee-Object $(System.DefaultWorkingDirectory)\artifacts\EndToEnd\FullLog_Part1_$(Build.BuildNumber).txt"'
+        $EndToEndTestCommandToRunPart2 = '"Run-Test -Exclude $Part1 -Verbose *>&1 | Tee-Object $(System.DefaultWorkingDirectory)\artifacts\EndToEnd\FullLog_Part2_$(Build.BuildNumber).txt"
         Write-Host "##vso[task.setvariable variable=EndToEndTestCommandToRunPart1]$EndToEndTestCommandToRunPart1
         Write-Host "##vso[task.setvariable variable=EndToEndTestCommandToRunPart2]$EndToEndTestCommandToRunPart2
 
@@ -567,8 +567,8 @@ jobs:
       inlineScript: |
         $Part1 = "InstallPackageTest.ps1,UninstallPackageTest.ps1,UpdatePackageTest.ps1"
         $Part2 = "A-TopDownloadedPackages.ps1,BuildIntegratedTest.ps1,ExecuteInitScriptTest.ps1,FindPackageTest.ps1,GetPackageTest.ps1,GetProjectTest.ps1,LegacyPackageRefProjectTest.ps1,NativeProjectTest.ps1,NetCoreProjectTest.ps1,PackageRestoreTest.ps1,PackTest.ps1,ProjectRetargeting.ps1,ServicesTest.ps1,Settings.ps1,SyncPackageTest.ps1,TabExpansionTest.ps1,UniversalWindowsProjectTest.ps1"
-        $EndToEndTestCommandToRunPart1 = "Run-Test -Exclude $Part2 -Verbose *>&1 | Tee-Object $(System.DefaultWorkingDirectory)\artifacts\EndToEnd\FullLog_Part1_$(Build.BuildNumber).txt"
-        $EndToEndTestCommandToRunPart2 = "Run-Test -Exclude $Part1 -Verbose *>&1 | Tee-Object $(System.DefaultWorkingDirectory)\artifacts\EndToEnd\FullLog_Part2_$(Build.BuildNumber).txt"
+        $EndToEndTestCommandToRunPart1 = '"Run-Test -Exclude $Part2 -Verbose *>&1 | Tee-Object $(System.DefaultWorkingDirectory)\artifacts\EndToEnd\FullLog_Part1_$(Build.BuildNumber).txt"'
+        $EndToEndTestCommandToRunPart2 = '"Run-Test -Exclude $Part1 -Verbose *>&1 | Tee-Object $(System.DefaultWorkingDirectory)\artifacts\EndToEnd\FullLog_Part2_$(Build.BuildNumber).txt"'
         Write-Host "##vso[task.setvariable variable=EndToEndTestCommandToRunPart1]$EndToEndTestCommandToRunPart1
         Write-Host "##vso[task.setvariable variable=EndToEndTestCommandToRunPart2]$EndToEndTestCommandToRunPart2
 

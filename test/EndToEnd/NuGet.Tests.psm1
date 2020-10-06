@@ -114,7 +114,7 @@ function Run-Test {
         [parameter(ParameterSetName="File", Mandatory=$true, Position=2)]
         [string]$File,
         [parameter(ParameterSetName="Exclude", Mandatory=$true, Position=2)]
-        [string]$Exclude,
+        [string[]]$Exclude,
         [parameter(Position=3)]
         [bool]$launchResultsOnFailure=$false
     )

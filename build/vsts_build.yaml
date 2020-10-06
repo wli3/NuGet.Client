@@ -431,10 +431,10 @@ jobs:
     inputs:
       scriptType: "inlineScript"
       inlineScript: |
-        $Part1 = @('InstallPackageTest.ps1', 
+        [string[]]$Part1 = @('InstallPackageTest.ps1', 
                    'UninstallPackageTest.ps1', 
                    'UpdatePackageTest.ps1')
-        $Part2 = @('A-TopDownloadedPackages.ps1',
+        [string[]]$Part2 = @('A-TopDownloadedPackages.ps1',
                    'BuildIntegratedTest.ps1',
                    'ExecuteInitScriptTest.ps1',
                    'FindPackageTest.ps1',
@@ -583,10 +583,10 @@ jobs:
     inputs:
       scriptType: "inlineScript"
       inlineScript: |
-        $Part1 = @('InstallPackageTest.ps1', 
+        [string[]]$Part1 = @('InstallPackageTest.ps1', 
                     'UninstallPackageTest.ps1', 
                     'UpdatePackageTest.ps1')
-        $Part2 = @('A-TopDownloadedPackages.ps1',
+        [string[]]$Part2 = @('A-TopDownloadedPackages.ps1',
                    'BuildIntegratedTest.ps1',
                    'ExecuteInitScriptTest.ps1',
                    'FindPackageTest.ps1',

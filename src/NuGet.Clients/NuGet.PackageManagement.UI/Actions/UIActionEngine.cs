@@ -770,6 +770,7 @@ namespace NuGet.PackageManagement.UI
 
             if (userAction.Action == NuGetProjectActionType.Install)
             {
+                NuGetFileLogger.DefaultInstance.Write($"Non-parallel.");
                 NuGetFileLogger.DefaultInstance.Write($"Install: {projects.Count()} {userAction.PackageId}-{userAction.Version}");
                 var packageIdentity = new PackageIdentity(userAction.PackageId, userAction.Version);
                 string[] projectIds = projects

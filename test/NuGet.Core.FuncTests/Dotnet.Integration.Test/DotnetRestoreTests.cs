@@ -891,7 +891,7 @@ EndGlobal";
             }
         }
 
-#if NET5_0
+#if NETCOREAPP5_0
         [Fact]
         public async Task DotnetRestore_WithTargetFrameworksProperty_StaticGraphAndRegularRestore_AreEquivalent()
         {

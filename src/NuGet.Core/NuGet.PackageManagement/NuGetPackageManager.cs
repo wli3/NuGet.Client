@@ -2645,13 +2645,10 @@ namespace NuGet.PackageManagement
             var logger = new ProjectContextLogger(nuGetProjectContext);
             var result = new List<ResolvedAction>();
 
-            var lockFileLookup = new Dictionary<string, LockFile>(PathUtility.GetStringComparerBasedOnOS());
+            var nugetProjectDetailsLookup = new NugetProjectDetailsLookup();
             var dependencyGraphContext = new DependencyGraphCacheContext(logger, Settings);
             var pathContext = NuGetPathContext.Create(Settings);
             var providerCache = new RestoreCommandProvidersCache();
-            var updatedNugetPackageSpecLookup = new Dictionary<string, PackageSpec>(PathUtility.GetStringComparerBasedOnOS());
-            var originalNugetPackageSpecLookup = new Dictionary<string, PackageSpec>(PathUtility.GetStringComparerBasedOnOS());
-            var nuGetProjectSourceLookup = new Dictionary<string, HashSet<SourceRepository>>(PathUtility.GetStringComparerBasedOnOS());
 
             // For installs only use cache entries newer than the current time.
             // This is needed for scenarios where a new package shows up in search
@@ -2662,112 +2659,36 @@ namespace NuGet.PackageManagement
             void cacheModifier(SourceCacheContext cache) => cache.MaxAge = now;
 
             // Add all enabled sources for the existing projects
-            var enabledSources = SourceRepositoryProvider.GetRepositories();
+            var enabledSources = SourceRepositoryProvider.GetRepositories().ToList();
             var allSources = new HashSet<SourceRepository>(enabledSources, new SourceRepositoryComparer());
+
+            var options = new ExecutionDataflowBlockOptions()
+            {
+                MaxDegreeOfParallelism = Environment.ProcessorCount
+            };
+            var actionBlock = new ActionBlock<BuildIntegratedProjectActionInput>(GetBuildIntegratedProjectAction, options);
 
             foreach (var buildIntegratedProject in buildIntegratedProjects)
             {
-                NuGetProjectAction[] nuGetProjectActions;
-
-                if (packageIdentity != null)
-                {
-                    if (primarySources == null || primarySources.Count == 0)
-                    {
-                        throw new ArgumentNullException($"Should have value in {nameof(primarySources)} if there is value for {nameof(packageIdentity)}");
-                    }
-
-                    var nugetAction = NuGetProjectAction.CreateInstallProjectAction(packageIdentity, primarySources.First(), buildIntegratedProject);
-                    nuGetProjectActions = new[] { nugetAction };
-                    nugetProjectActionsLookup[buildIntegratedProject.MSBuildProjectPath] = nuGetProjectActions;
-                }
-                else
-                {
-                    if (!nugetProjectActionsLookup.ContainsKey(buildIntegratedProject.MSBuildProjectPath))
-                    {
-                        throw new ArgumentNullException($"Either should have value in {nameof(nugetProjectActionsLookup)} for {buildIntegratedProject.MSBuildProjectPath} or {nameof(packageIdentity)} & {nameof(primarySources)}");
-                    }
-
-                    nuGetProjectActions = nugetProjectActionsLookup[buildIntegratedProject.MSBuildProjectPath];
-
-                    if (nuGetProjectActions.Length == 0)
-                    {
-                        // Continue to next project if there are no actions for current project.
-                        continue;
-                    }
-                }
-
-                // Find all sources used in the project actions
-                var sources = new HashSet<SourceRepository>(
-                    nuGetProjectActions.Where(action => action.SourceRepository != null)
-                        .Select(action => action.SourceRepository),
-                        new SourceRepositoryComparer());
-
-                allSources.UnionWith(sources);
-                sources.UnionWith(enabledSources);
-                nuGetProjectSourceLookup[buildIntegratedProject.MSBuildProjectPath] = sources;
-
-                // Read the current lock file if it exists
-                LockFile originalLockFile = null;
-                var lockFileFormat = new LockFileFormat();
-
-                var lockFilePath = await buildIntegratedProject.GetAssetsFilePathAsync();
-
-                if (File.Exists(lockFilePath))
-                {
-                    originalLockFile = lockFileFormat.Read(lockFilePath);
-                }
-
-                // Get Package Spec as json object
-                var originalPackageSpec = await DependencyGraphRestoreUtility.GetProjectSpec(buildIntegratedProject, dependencyGraphContext);
-                originalNugetPackageSpecLookup[buildIntegratedProject.MSBuildProjectPath] = originalPackageSpec;
-
-                // Create a copy to avoid modifying the original spec which may be shared.
-                var updatedPackageSpec = originalPackageSpec.Clone();
-
-                // If the lock file does not exist, restore before starting the operations
-                if (originalLockFile == null)
-                {
-                    var originalRestoreResult = await DependencyGraphRestoreUtility.PreviewRestoreAsync(
-                        SolutionManager,
-                        buildIntegratedProject,
-                        originalPackageSpec,
-                        dependencyGraphContext,
-                        providerCache,
-                        cacheModifier,
-                        sources,
-                        nuGetProjectContext.OperationId,
-                        logger,
-                        token);
-
-                    originalLockFile = originalRestoreResult.Result.LockFile;
-                }
-
-                lockFileLookup[buildIntegratedProject.MSBuildProjectPath] = originalLockFile;
-
-                foreach (var action in nuGetProjectActions)
-                {
-                    if (action.NuGetProjectActionType == NuGetProjectActionType.Uninstall)
-                    {
-                        // Remove the package from all frameworks and dependencies section.
-                        PackageSpecOperations.RemoveDependency(updatedPackageSpec, action.PackageIdentity.Id);
-                    }
-                    else if (action.NuGetProjectActionType == NuGetProjectActionType.Install)
-                    {
-                        if (updatedPackageSpec.RestoreMetadata.ProjectStyle == ProjectStyle.PackageReference)
-                        {
-                            PackageSpecOperations.AddOrUpdateDependency(updatedPackageSpec, action.PackageIdentity, updatedPackageSpec.TargetFrameworks.Select(e => e.FrameworkName));
-                        }
-                        else
-                        {
-                            PackageSpecOperations.AddOrUpdateDependency(updatedPackageSpec, action.PackageIdentity);
-                        }
-                    }
-
-                    updatedNugetPackageSpecLookup[buildIntegratedProject.MSBuildProjectPath] = updatedPackageSpec;
-                    dependencyGraphContext.PackageSpecCache[buildIntegratedProject.MSBuildProjectPath] = updatedPackageSpec;
-                }
+                await actionBlock.SendAsync(new BuildIntegratedProjectActionInput(
+                                                     buildIntegratedProject,
+                                                     packageIdentity,
+                                                     primarySources,
+                                                     nugetProjectDetailsLookup,
+                                                     nugetProjectActionsLookup,
+                                                     logger,
+                                                     token,
+                                                     dependencyGraphContext,
+                                                     enabledSources,
+                                                     allSources,
+                                                     cacheModifier,
+                                                     providerCache,
+                                                     nuGetProjectContext.OperationId
+                                             ));
             }
 
+            actionBlock.Complete();
+            await actionBlock.Completion;
             stopWatch2.Stop();
             RestoreActionTotal += stopWatch.Elapsed.Milliseconds;
             RestoreActionCount++;
@@ -2780,7 +2701,7 @@ namespace NuGet.PackageManagement
             var restoreResults = await DependencyGraphRestoreUtility.PreviewRestoreProjectsAsync(
                 SolutionManager,
                 buildIntegratedProjects,
-                updatedNugetPackageSpecLookup.Values,
+                nugetProjectDetailsLookup.UpdatedNugetPackageSpecLookup.Values,
                 dependencyGraphContext,
                 providerCache,
                 cacheModifier,
@@ -2793,10 +2714,10 @@ namespace NuGet.PackageManagement
             {
                 var nuGetProjectActions = nugetProjectActionsLookup[buildIntegratedProject.MSBuildProjectPath];
                 var nuGetProjectActionsList = nuGetProjectActions;
-                var updatedPackageSpec = updatedNugetPackageSpecLookup[buildIntegratedProject.MSBuildProjectPath];
-                var originalPackageSpec = originalNugetPackageSpecLookup[buildIntegratedProject.MSBuildProjectPath];
-                var originalLockFile = lockFileLookup[buildIntegratedProject.MSBuildProjectPath];
-                var sources = nuGetProjectSourceLookup[buildIntegratedProject.MSBuildProjectPath];
+                var updatedPackageSpec = nugetProjectDetailsLookup.UpdatedNugetPackageSpecLookup[buildIntegratedProject.MSBuildProjectPath];
+                var originalPackageSpec = nugetProjectDetailsLookup.OriginalNugetPackageSpecLookup[buildIntegratedProject.MSBuildProjectPath];
+                var originalLockFile = nugetProjectDetailsLookup.LockFileLookup[buildIntegratedProject.MSBuildProjectPath];
+                var sources = nugetProjectDetailsLookup.NuGetProjectSourceLookup[buildIntegratedProject.MSBuildProjectPath];
 
                 var allFrameworks = updatedPackageSpec
                     .TargetFrameworks

@@ -10,82 +10,112 @@ namespace NuGet.CommandLine.Test
 {
     public class NuGetVerifyCommandTest
     {
-        private const int _failureCode = 1;
-        private const int _successCode = 0;
+        private const int FailureCode = 1;
+        private const int SuccessCode = 0;
 
         [Fact]
-        public void VerifyCommand_VerifyUnknownVerificationType()
+        public void VerifyCommand_WithHelpWhenMinArgsNotSatisfied_DoesNotRaiseError()
         {
-            var nugetexe = Util.GetNuGetExePath();
+            CommandAttribute attribute = typeof(VerifyCommand).GetCustomAttribute<CommandAttribute>();
 
-            using (var packageDirectory = TestDirectory.Create())
+            Assert.NotNull(attribute);
+
+            // The "-help" option should display help without erroring out, even when
+            // a command's "minimum arguments" requirement is not satisfied.
+            Assert.Equal(1, attribute.MinArgs);
+
+            string nugetExeFilePath = Util.GetNuGetExePath();
+
+            using (TestDirectory workingDirectory = TestDirectory.Create())
+            {
+                var args = new string[] { "verify", "-help" };
+
+                CommandRunnerResult result = CommandRunner.Run(
+                    nugetExeFilePath,
+                    workingDirectory,
+                    string.Join(" ", args),
+                    waitForExit: true);
+
+                Assert.True(result.Success);
+                Assert.Equal(0, result.ExitCode);
+                Assert.StartsWith("usage: NuGet verify", result.Output);
+                Assert.DoesNotContain("verify: invalid arguments.", result.Errors);
+            }
+        }
+
+        [Fact]
+        public void VerifyCommand_WhenVerificationTypeIsUnknown_Fails()
+        {
+            string nugetExeFilePath = Util.GetNuGetExePath();
+
+            using (TestDirectory packageDirectory = TestDirectory.Create())
             {
                 // Arrange
-                var packageFileName = Util.CreateTestPackage("testPackage1", "1.1.0", packageDirectory);
+                string packageFileName = Util.CreateTestPackage("testPackage1", "1.1.0", packageDirectory);
 
                 // Act
                 var args = new string[] { "verify", packageFileName };
-                var result = CommandRunner.Run(
-                    nugetexe,
+                CommandRunnerResult result = CommandRunner.Run(
+                    nugetExeFilePath,
                     packageDirectory,
                     string.Join(" ", args),
-                    true);
+                    waitForExit: true);
 
                 // Assert
-                Assert.Equal(_failureCode, result.Item1);
-                Assert.Contains("Verification type not supported.", result.Item3);
+                Assert.Equal(FailureCode, result.ExitCode);
+                Assert.Contains("Verification type not supported.", result.Errors);
             }
         }
 
         [Fact]
         public void VerifyCommand_WrongInput_NotFound()
         {
-            var nugetexe = Util.GetNuGetExePath();
+            string nugetExeFilePath = Util.GetNuGetExePath();
 
-            using (var packageDirectory = TestDirectory.Create())
+            using (TestDirectory packageDirectory = TestDirectory.Create())
             {
                 // Act
                 var args = new string[] { "verify", "-Signatures", "testPackage1" };
-                var result = CommandRunner.Run(
-                    nugetexe,
+                CommandRunnerResult result = CommandRunner.Run(
+                    nugetExeFilePath,
                     packageDirectory,
                     string.Join(" ", args),
-                    true);
+                    waitForExit: true);
 
                 // Assert
-                Assert.Equal(_failureCode, result.Item1);
-                Assert.Contains("File does not exist", result.Item3);
+                Assert.Equal(FailureCode, result.ExitCode);
+                Assert.Contains("File does not exist", result.Errors);
             }
         }
 
         [PlatformFact(Platform.Windows, SkipMono = true)]
         public void VerifyCommand_WithAuthorSignedPackage_FailsGracefully()
         {
-            var nugetExe = Util.GetNuGetExePath();
+            string nugetExeFilePath = Util.GetNuGetExePath();
 
-            using (var directory = TestDirectory.Create())
+            using (TestDirectory directory = TestDirectory.Create())
             {
                 var packageFile = new FileInfo(Path.Combine(directory.Path, "TestPackage.AuthorSigned.1.0.0.nupkg"));
-                var package = GetResource(packageFile.Name);
+                byte[] package = GetResource(packageFile.Name);
 
                 File.WriteAllBytes(packageFile.FullName, package);
 
                 var args = new string[] { "verify", "-Signatures", packageFile.Name };
-                var result = CommandRunner.Run(
-                    nugetExe,
+                CommandRunnerResult result = CommandRunner.Run(
+                    nugetExeFilePath,
                     packageFile.Directory.FullName,
                     string.Join(" ", args),
                     waitForExit: true);
 
                 if (RuntimeEnvironmentHelper.IsMono)
                 {
-                    Assert.True(_failureCode == result.ExitCode, result.AllOutput);
+                    Assert.True(FailureCode == result.ExitCode, result.AllOutput);
                     Assert.False(result.Success);
                     Assert.Contains("NU3004: The package is not signed.", result.AllOutput);
                 }
                 else
                 {
-                    Assert.True(_successCode == result.ExitCode, result.AllOutput);
+                    Assert.True(SuccessCode == result.ExitCode, result.AllOutput);
                     Assert.True(result.Success);
                     Assert.Contains("Successfully verified package 'TestPackage.AuthorSigned.1.0.0'", result.AllOutput);
                 }

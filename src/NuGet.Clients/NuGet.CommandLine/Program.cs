@@ -123,16 +123,25 @@ namespace NuGet.CommandLine
                 var command = parser.ParseCommandLine(args) ?? p.HelpCommand;
                 command.CurrentDirectory = workingDirectory;
 
-                if (command is Command commandImpl)
+                var commandImpl = command as Command;
+
+                if (commandImpl != null)
                 {
                     console.Verbosity = commandImpl.Verbosity;
                 }
 
-                // Fallback on the help command if we failed to parse a valid command
-                if (!ArgumentCountValid(command))
+                if (commandImpl != null && commandImpl.Help)
                 {
+                    string commandName = command.CommandAttribute.CommandName;
+
+                    p.HelpCommand.ViewHelpForCommand(commandName);
+                }
+                else if (!ArgumentCountValid(command))
+                {
+                    // Fallback on the help command if we failed to parse a valid command
+
                     // Get the command name and add it to the argument list of the help command
-                    var commandName = command.CommandAttribute.CommandName;
+                    string commandName = command.CommandAttribute.CommandName;
 
                     // Print invalid arguments command error message in stderr
                     console.WriteError(LocalizedResourceManager.GetString("InvalidArguments"), commandName);
@@ -144,7 +153,7 @@ namespace NuGet.CommandLine
                 }
                 else
                 {
-                    SetConsoleInteractivity(console, command as Command);
+                    SetConsoleInteractivity(console, commandImpl);
 
                     try
                     {

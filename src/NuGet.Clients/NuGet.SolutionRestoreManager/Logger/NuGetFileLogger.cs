@@ -1,10 +1,11 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+#if DEBUG
+
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Threading;
 using NuGet.Common;
 
@@ -89,17 +90,14 @@ namespace NuGet.SolutionRestoreManager
 
         private string FormatWithTime(string logMessage)
         {
-            return Now.ToString("O") + " MI:" + System.Threading.Thread.CurrentThread.ManagedThreadId + " : " + logMessage;
+            return Now.ToString("O") + " MI:" + Thread.CurrentThread.ManagedThreadId + " : " + logMessage;
         }
 
         private StreamWriter CreateStreamWriter(string message)
         {
             if (IsEnabled)
             {
-                var project = Assembly.GetCallingAssembly().GetName().Name;
-                var process = System.Diagnostics.Process.GetCurrentProcess(); // Or whatever method you are using
-                string fullPath = process.MainModule.FileName.Replace("\\", @"").Replace(":", @"");
-                var fileName = $"NuGet_Log_{DateTime.UtcNow.Ticks:x}_{fullPath}.log";
+                var fileName = $"NuGet_Log_{DateTime.UtcNow.Ticks:x}.log";
                 var filePath = Path.Combine(_logDirectoryPath, fileName);
                 var stream = File.Open(filePath, FileMode.Create, FileAccess.Write, FileShare.Read);
 
@@ -125,3 +123,4 @@ namespace NuGet.SolutionRestoreManager
         }
     }
 }
+#endif

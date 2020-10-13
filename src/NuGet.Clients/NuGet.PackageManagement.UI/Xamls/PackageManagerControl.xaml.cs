@@ -1032,7 +1032,7 @@ namespace NuGet.PackageManagement.UI
 
         private void EmitSearchSelectionTelemetry(PackageItemListViewModel selectedPackage)
         {
-            var operationId = _packageList.OperationId;
+            var operationId = _packageList.OperationIdBrowse;
             var selectedIndex = _packageList.SelectedIndex;
             var recommendedCount = _packageList.PackageItemsInstalled.Where(item => item.Recommended == true).Count();
             if (_topPanel.Filter == ItemFilter.All
@@ -1166,10 +1166,6 @@ namespace NuGet.PackageManagement.UI
                 var timeSpan = GetTimeSinceLastRefreshAndRestart();
                 _packageList.ResetLoadingStatusIndicator(); //TODO: remove this?
 
-                // Collapse the Update controls when the current tab is not "Updates".
-                _packageList.CheckBoxesEnabled = _topPanel.Filter == ItemFilter.UpdatesAvailable;
-                _packageList._updateButtonContainer.Visibility = _topPanel.Filter == ItemFilter.UpdatesAvailable ? Visibility.Visible : Visibility.Collapsed;
-
                 var isUiFiltering = !_packageList.IsBrowseTab;
 
                 if (isUiFiltering)
@@ -1188,6 +1184,8 @@ namespace NuGet.PackageManagement.UI
         private void SynchronizeTabSelectionFlag()
         {
             _packageList.IsBrowseTab = _topPanel.Filter == ItemFilter.All;
+            _packageList.CheckBoxesEnabled = _topPanel.Filter == ItemFilter.UpdatesAvailable;
+            _packageList._updateButtonContainer.Visibility = _topPanel.Filter == ItemFilter.UpdatesAvailable ? Visibility.Visible : Visibility.Collapsed;
         }
 
         /// <summary>

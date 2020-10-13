@@ -95,22 +95,1549 @@ namespace NuGet.Packaging.FuncTest
 
                     var trustProvider = result.Results.Single();
 
-                    StringBuilder warnings = new StringBuilder();
-                    foreach (var warning in trustProvider.GetWarningIssues())
-                    {
-                        warnings.AppendLine(warning.Message);
-                    }
-
-                    StringBuilder errors = new StringBuilder();
-                    foreach (var error in trustProvider.GetErrorIssues())
-                    {
-                        errors.AppendLine(error.Message);
-                    }
+                    var msg = GetErrorsAndWarnings(trustProvider);
 
                     Assert.True(result.IsValid);
                     Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
-                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, errors.ToString());
-                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, warnings.ToString());
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_2()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_3()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_4()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_5()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_6()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_7()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_8()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_9()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_10()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_11()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_12()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_13()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_14()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_15()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_16()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_17()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_18()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_19()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_20()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_21()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_22()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_23()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_24()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_25()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_26()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_27()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_28()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_29()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_30()
+        {
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var notAfter = certificate.NotAfter.ToUniversalTime();
+
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                await Task.Delay(waitDuration);
+
+                Assert.True(DateTime.UtcNow > notAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                    var trustProvider = result.Results.Single();
+
+                    var msg = GetErrorsAndWarnings(trustProvider);
+
+                    Assert.True(result.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, msg);
+                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
                 }
             }
         }
@@ -162,89 +1689,17 @@ namespace NuGet.Packaging.FuncTest
                 {
                     var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
                     var result = results.Results.Single();
-                    StringBuilder warnings = new StringBuilder();
-                    foreach (var warning in result.GetWarningIssues())
-                    {
-                        warnings.AppendLine(warning.Message);
-                    }
-
-                    StringBuilder errors = new StringBuilder();
-                    foreach (var error in result.GetErrorIssues())
-                    {
-                        errors.AppendLine(error.Message);
-                    }
+                    var msg = GetErrorsAndWarnings(result);
+                    
                     Assert.False(results.IsValid);
                     Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
-                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, errors.ToString());
-                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, warnings.ToString());
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
 
                     Assert.Contains(result.Issues, issue =>
                         issue.Code == NuGetLogCode.NU3037 &&
                         issue.Level == LogLevel.Error &&
                         issue.Message.Contains("validity period has expired."));
-                }
-            }
-        }
-
-        [CIOnlyFact]
-        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_2()
-        {
-            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
-            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
-            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
-            var now = DateTimeOffset.UtcNow;
-            var issueOptions = new IssueCertificateOptions()
-            {
-                KeyPair = keyPair,
-                NotAfter = now.AddSeconds(10),
-                NotBefore = now.AddSeconds(-2),
-                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
-            };
-            var bcCertificate = ca.IssueCertificate(issueOptions);
-
-            using (var directory = TestDirectory.Create())
-            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
-            {
-                var notAfter = certificate.NotAfter.ToUniversalTime();
-
-                var packageContext = new SimpleTestPackageContext();
-                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
-                    certificate,
-                    packageContext,
-                    directory,
-                    timestampService.Url);
-
-                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
-
-                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
-                await Task.Delay(waitDuration);
-
-                Assert.True(DateTime.UtcNow > notAfter);
-
-                var verifier = new PackageSignatureVerifier(_trustProviders);
-
-                using (var packageReader = new PackageArchiveReader(signedPackagePath))
-                {
-                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
-
-                    var trustProvider = result.Results.Single();
-
-                    StringBuilder warnings = new StringBuilder();
-                    foreach (var warning in trustProvider.GetWarningIssues())
-                    {
-                        warnings.AppendLine(warning.Message);
-                    }
-
-                    StringBuilder errors = new StringBuilder();
-                    foreach (var error in trustProvider.GetErrorIssues())
-                    {
-                        errors.AppendLine(error.Message);
-                    }
-
-                    Assert.True(result.IsValid);
-                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
-                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, errors.ToString());
-                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, warnings.ToString());
                 }
             }
         }
@@ -295,21 +1750,12 @@ namespace NuGet.Packaging.FuncTest
                 {
                     var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
                     var result = results.Results.Single();
-                    StringBuilder warnings = new StringBuilder();
-                    foreach (var warning in result.GetWarningIssues())
-                    {
-                        warnings.AppendLine(warning.Message);
-                    }
-
-                    StringBuilder errors = new StringBuilder();
-                    foreach (var error in result.GetErrorIssues())
-                    {
-                        errors.AppendLine(error.Message);
-                    }
+                    var msg = GetErrorsAndWarnings(result);
+                    
                     Assert.False(results.IsValid);
                     Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
-                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, errors.ToString());
-                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, warnings.ToString());
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
 
                     Assert.Contains(result.Issues, issue =>
                         issue.Code == NuGetLogCode.NU3037 &&
@@ -318,70 +1764,7 @@ namespace NuGet.Packaging.FuncTest
                 }
             }
         }
-        [CIOnlyFact]
-        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_3()
-        {
-            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
-            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
-            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
-            var now = DateTimeOffset.UtcNow;
-            var issueOptions = new IssueCertificateOptions()
-            {
-                KeyPair = keyPair,
-                NotAfter = now.AddSeconds(10),
-                NotBefore = now.AddSeconds(-2),
-                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
-            };
-            var bcCertificate = ca.IssueCertificate(issueOptions);
 
-            using (var directory = TestDirectory.Create())
-            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
-            {
-                var notAfter = certificate.NotAfter.ToUniversalTime();
-
-                var packageContext = new SimpleTestPackageContext();
-                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
-                    certificate,
-                    packageContext,
-                    directory,
-                    timestampService.Url);
-
-                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
-
-                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
-                await Task.Delay(waitDuration);
-
-                Assert.True(DateTime.UtcNow > notAfter);
-
-                var verifier = new PackageSignatureVerifier(_trustProviders);
-
-                using (var packageReader = new PackageArchiveReader(signedPackagePath))
-                {
-                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
-
-                    var trustProvider = result.Results.Single();
-
-                    StringBuilder warnings = new StringBuilder();
-                    foreach (var warning in trustProvider.GetWarningIssues())
-                    {
-                        warnings.AppendLine(warning.Message);
-                    }
-
-                    StringBuilder errors = new StringBuilder();
-                    foreach (var error in trustProvider.GetErrorIssues())
-                    {
-                        errors.AppendLine(error.Message);
-                    }
-
-                    Assert.True(result.IsValid);
-                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
-                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, errors.ToString());
-                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, warnings.ToString());
-                }
-            }
-        }
-
-        //[PlatformFact(Platform.Windows)] // https://github.com/NuGet/Home/issues/9763
         [CIOnlyFact]
         public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_3()
         {
@@ -428,89 +1811,17 @@ namespace NuGet.Packaging.FuncTest
                 {
                     var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
                     var result = results.Results.Single();
-                    StringBuilder warnings = new StringBuilder();
-                    foreach (var warning in result.GetWarningIssues())
-                    {
-                        warnings.AppendLine(warning.Message);
-                    }
-
-                    StringBuilder errors = new StringBuilder();
-                    foreach (var error in result.GetErrorIssues())
-                    {
-                        errors.AppendLine(error.Message);
-                    }
+                    var msg = GetErrorsAndWarnings(result);
+                    
                     Assert.False(results.IsValid);
                     Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
-                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, errors.ToString());
-                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, warnings.ToString());
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
 
                     Assert.Contains(result.Issues, issue =>
                         issue.Code == NuGetLogCode.NU3037 &&
                         issue.Level == LogLevel.Error &&
                         issue.Message.Contains("validity period has expired."));
-                }
-            }
-        }
-
-        [CIOnlyFact]
-        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_4()
-        {
-            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
-            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
-            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
-            var now = DateTimeOffset.UtcNow;
-            var issueOptions = new IssueCertificateOptions()
-            {
-                KeyPair = keyPair,
-                NotAfter = now.AddSeconds(10),
-                NotBefore = now.AddSeconds(-2),
-                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
-            };
-            var bcCertificate = ca.IssueCertificate(issueOptions);
-
-            using (var directory = TestDirectory.Create())
-            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
-            {
-                var notAfter = certificate.NotAfter.ToUniversalTime();
-
-                var packageContext = new SimpleTestPackageContext();
-                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
-                    certificate,
-                    packageContext,
-                    directory,
-                    timestampService.Url);
-
-                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
-
-                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
-                await Task.Delay(waitDuration);
-
-                Assert.True(DateTime.UtcNow > notAfter);
-
-                var verifier = new PackageSignatureVerifier(_trustProviders);
-
-                using (var packageReader = new PackageArchiveReader(signedPackagePath))
-                {
-                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
-
-                    var trustProvider = result.Results.Single();
-
-                    StringBuilder warnings = new StringBuilder();
-                    foreach (var warning in trustProvider.GetWarningIssues())
-                    {
-                        warnings.AppendLine(warning.Message);
-                    }
-
-                    StringBuilder errors = new StringBuilder();
-                    foreach (var error in trustProvider.GetErrorIssues())
-                    {
-                        errors.AppendLine(error.Message);
-                    }
-
-                    Assert.True(result.IsValid);
-                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
-                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, errors.ToString());
-                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, warnings.ToString());
                 }
             }
         }
@@ -561,21 +1872,12 @@ namespace NuGet.Packaging.FuncTest
                 {
                     var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
                     var result = results.Results.Single();
-                    StringBuilder warnings = new StringBuilder();
-                    foreach (var warning in result.GetWarningIssues())
-                    {
-                        warnings.AppendLine(warning.Message);
-                    }
-
-                    StringBuilder errors = new StringBuilder();
-                    foreach (var error in result.GetErrorIssues())
-                    {
-                        errors.AppendLine(error.Message);
-                    }
+                    var msg = GetErrorsAndWarnings(result);
+                   
                     Assert.False(results.IsValid);
                     Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
-                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, errors.ToString());
-                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, warnings.ToString());
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
 
                     Assert.Contains(result.Issues, issue =>
                         issue.Code == NuGetLogCode.NU3037 &&
@@ -584,70 +1886,7 @@ namespace NuGet.Packaging.FuncTest
                 }
             }
         }
-        [CIOnlyFact]
-        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_5()
-        {
-            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
-            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
-            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
-            var now = DateTimeOffset.UtcNow;
-            var issueOptions = new IssueCertificateOptions()
-            {
-                KeyPair = keyPair,
-                NotAfter = now.AddSeconds(10),
-                NotBefore = now.AddSeconds(-2),
-                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
-            };
-            var bcCertificate = ca.IssueCertificate(issueOptions);
 
-            using (var directory = TestDirectory.Create())
-            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
-            {
-                var notAfter = certificate.NotAfter.ToUniversalTime();
-
-                var packageContext = new SimpleTestPackageContext();
-                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
-                    certificate,
-                    packageContext,
-                    directory,
-                    timestampService.Url);
-
-                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
-
-                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
-                await Task.Delay(waitDuration);
-
-                Assert.True(DateTime.UtcNow > notAfter);
-
-                var verifier = new PackageSignatureVerifier(_trustProviders);
-
-                using (var packageReader = new PackageArchiveReader(signedPackagePath))
-                {
-                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
-
-                    var trustProvider = result.Results.Single();
-
-                    StringBuilder warnings = new StringBuilder();
-                    foreach (var warning in trustProvider.GetWarningIssues())
-                    {
-                        warnings.AppendLine(warning.Message);
-                    }
-
-                    StringBuilder errors = new StringBuilder();
-                    foreach (var error in trustProvider.GetErrorIssues())
-                    {
-                        errors.AppendLine(error.Message);
-                    }
-
-                    Assert.True(result.IsValid);
-                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
-                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, errors.ToString());
-                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, warnings.ToString());
-                }
-            }
-        }
-
-        //[PlatformFact(Platform.Windows)] // https://github.com/NuGet/Home/issues/9763
         [CIOnlyFact]
         public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_5()
         {
@@ -694,21 +1933,12 @@ namespace NuGet.Packaging.FuncTest
                 {
                     var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
                     var result = results.Results.Single();
-                    StringBuilder warnings = new StringBuilder();
-                    foreach (var warning in result.GetWarningIssues())
-                    {
-                        warnings.AppendLine(warning.Message);
-                    }
-
-                    StringBuilder errors = new StringBuilder();
-                    foreach (var error in result.GetErrorIssues())
-                    {
-                        errors.AppendLine(error.Message);
-                    }
+                    var msg = GetErrorsAndWarnings(result);
+                    
                     Assert.False(results.IsValid);
                     Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
-                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, errors.ToString());
-                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, warnings.ToString());
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
 
                     Assert.Contains(result.Issues, issue =>
                         issue.Code == NuGetLogCode.NU3037 &&
@@ -718,68 +1948,6 @@ namespace NuGet.Packaging.FuncTest
             }
         }
 
-        [CIOnlyFact]
-        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_6()
-        {
-            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
-            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
-            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
-            var now = DateTimeOffset.UtcNow;
-            var issueOptions = new IssueCertificateOptions()
-            {
-                KeyPair = keyPair,
-                NotAfter = now.AddSeconds(10),
-                NotBefore = now.AddSeconds(-2),
-                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
-            };
-            var bcCertificate = ca.IssueCertificate(issueOptions);
-
-            using (var directory = TestDirectory.Create())
-            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
-            {
-                var notAfter = certificate.NotAfter.ToUniversalTime();
-
-                var packageContext = new SimpleTestPackageContext();
-                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
-                    certificate,
-                    packageContext,
-                    directory,
-                    timestampService.Url);
-
-                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
-
-                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
-                await Task.Delay(waitDuration);
-
-                Assert.True(DateTime.UtcNow > notAfter);
-
-                var verifier = new PackageSignatureVerifier(_trustProviders);
-
-                using (var packageReader = new PackageArchiveReader(signedPackagePath))
-                {
-                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
-
-                    var trustProvider = result.Results.Single();
-
-                    StringBuilder warnings = new StringBuilder();
-                    foreach (var warning in trustProvider.GetWarningIssues())
-                    {
-                        warnings.AppendLine(warning.Message);
-                    }
-
-                    StringBuilder errors = new StringBuilder();
-                    foreach (var error in trustProvider.GetErrorIssues())
-                    {
-                        errors.AppendLine(error.Message);
-                    }
-
-                    Assert.True(result.IsValid);
-                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
-                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, errors.ToString());
-                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, warnings.ToString());
-                }
-            }
-        }
         [CIOnlyFact]
         public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_6()
         {
@@ -826,21 +1994,12 @@ namespace NuGet.Packaging.FuncTest
                 {
                     var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
                     var result = results.Results.Single();
-                    StringBuilder warnings = new StringBuilder();
-                    foreach (var warning in result.GetWarningIssues())
-                    {
-                        warnings.AppendLine(warning.Message);
-                    }
-
-                    StringBuilder errors = new StringBuilder();
-                    foreach (var error in result.GetErrorIssues())
-                    {
-                        errors.AppendLine(error.Message);
-                    }
+                    var msg = GetErrorsAndWarnings(result);
+                    
                     Assert.False(results.IsValid);
                     Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
-                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, errors.ToString());
-                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, warnings.ToString());
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
 
                     Assert.Contains(result.Issues, issue =>
                         issue.Code == NuGetLogCode.NU3037 &&
@@ -849,70 +2008,7 @@ namespace NuGet.Packaging.FuncTest
                 }
             }
         }
-        [CIOnlyFact]
-        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_7()
-        {
-            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
-            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
-            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
-            var now = DateTimeOffset.UtcNow;
-            var issueOptions = new IssueCertificateOptions()
-            {
-                KeyPair = keyPair,
-                NotAfter = now.AddSeconds(10),
-                NotBefore = now.AddSeconds(-2),
-                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
-            };
-            var bcCertificate = ca.IssueCertificate(issueOptions);
 
-            using (var directory = TestDirectory.Create())
-            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
-            {
-                var notAfter = certificate.NotAfter.ToUniversalTime();
-
-                var packageContext = new SimpleTestPackageContext();
-                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
-                    certificate,
-                    packageContext,
-                    directory,
-                    timestampService.Url);
-
-                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
-
-                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
-                await Task.Delay(waitDuration);
-
-                Assert.True(DateTime.UtcNow > notAfter);
-
-                var verifier = new PackageSignatureVerifier(_trustProviders);
-
-                using (var packageReader = new PackageArchiveReader(signedPackagePath))
-                {
-                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
-
-                    var trustProvider = result.Results.Single();
-
-                    StringBuilder warnings = new StringBuilder();
-                    foreach (var warning in trustProvider.GetWarningIssues())
-                    {
-                        warnings.AppendLine(warning.Message);
-                    }
-
-                    StringBuilder errors = new StringBuilder();
-                    foreach (var error in trustProvider.GetErrorIssues())
-                    {
-                        errors.AppendLine(error.Message);
-                    }
-
-                    Assert.True(result.IsValid);
-                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
-                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, errors.ToString());
-                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, warnings.ToString());
-                }
-            }
-        }
-
-        //[PlatformFact(Platform.Windows)] // https://github.com/NuGet/Home/issues/9763
         [CIOnlyFact]
         public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_7()
         {
@@ -959,89 +2055,17 @@ namespace NuGet.Packaging.FuncTest
                 {
                     var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
                     var result = results.Results.Single();
-                    StringBuilder warnings = new StringBuilder();
-                    foreach (var warning in result.GetWarningIssues())
-                    {
-                        warnings.AppendLine(warning.Message);
-                    }
-
-                    StringBuilder errors = new StringBuilder();
-                    foreach (var error in result.GetErrorIssues())
-                    {
-                        errors.AppendLine(error.Message);
-                    }
+                    var msg = GetErrorsAndWarnings(result);
+                   
                     Assert.False(results.IsValid);
                     Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
-                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, errors.ToString());
-                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, warnings.ToString());
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
 
                     Assert.Contains(result.Issues, issue =>
                         issue.Code == NuGetLogCode.NU3037 &&
                         issue.Level == LogLevel.Error &&
                         issue.Message.Contains("validity period has expired."));
-                }
-            }
-        }
-
-        [CIOnlyFact]
-        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_8()
-        {
-            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
-            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
-            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
-            var now = DateTimeOffset.UtcNow;
-            var issueOptions = new IssueCertificateOptions()
-            {
-                KeyPair = keyPair,
-                NotAfter = now.AddSeconds(10),
-                NotBefore = now.AddSeconds(-2),
-                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
-            };
-            var bcCertificate = ca.IssueCertificate(issueOptions);
-
-            using (var directory = TestDirectory.Create())
-            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
-            {
-                var notAfter = certificate.NotAfter.ToUniversalTime();
-
-                var packageContext = new SimpleTestPackageContext();
-                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
-                    certificate,
-                    packageContext,
-                    directory,
-                    timestampService.Url);
-
-                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
-
-                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
-                await Task.Delay(waitDuration);
-
-                Assert.True(DateTime.UtcNow > notAfter);
-
-                var verifier = new PackageSignatureVerifier(_trustProviders);
-
-                using (var packageReader = new PackageArchiveReader(signedPackagePath))
-                {
-                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
-
-                    var trustProvider = result.Results.Single();
-
-                    StringBuilder warnings = new StringBuilder();
-                    foreach (var warning in trustProvider.GetWarningIssues())
-                    {
-                        warnings.AppendLine(warning.Message);
-                    }
-
-                    StringBuilder errors = new StringBuilder();
-                    foreach (var error in trustProvider.GetErrorIssues())
-                    {
-                        errors.AppendLine(error.Message);
-                    }
-
-                    Assert.True(result.IsValid);
-                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
-                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, errors.ToString());
-                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, warnings.ToString());
                 }
             }
         }
@@ -1092,89 +2116,17 @@ namespace NuGet.Packaging.FuncTest
                 {
                     var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
                     var result = results.Results.Single();
-                    StringBuilder warnings = new StringBuilder();
-                    foreach (var warning in result.GetWarningIssues())
-                    {
-                        warnings.AppendLine(warning.Message);
-                    }
-
-                    StringBuilder errors = new StringBuilder();
-                    foreach (var error in result.GetErrorIssues())
-                    {
-                        errors.AppendLine(error.Message);
-                    }
+                    var msg = GetErrorsAndWarnings(result);
+                    
                     Assert.False(results.IsValid);
                     Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
-                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, errors.ToString());
-                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, warnings.ToString());
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
 
                     Assert.Contains(result.Issues, issue =>
                         issue.Code == NuGetLogCode.NU3037 &&
                         issue.Level == LogLevel.Error &&
                         issue.Message.Contains("validity period has expired."));
-                }
-            }
-        }
-
-        [CIOnlyFact]
-        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_9()
-        {
-            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
-            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
-            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
-            var now = DateTimeOffset.UtcNow;
-            var issueOptions = new IssueCertificateOptions()
-            {
-                KeyPair = keyPair,
-                NotAfter = now.AddSeconds(10),
-                NotBefore = now.AddSeconds(-2),
-                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
-            };
-            var bcCertificate = ca.IssueCertificate(issueOptions);
-
-            using (var directory = TestDirectory.Create())
-            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
-            {
-                var notAfter = certificate.NotAfter.ToUniversalTime();
-
-                var packageContext = new SimpleTestPackageContext();
-                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
-                    certificate,
-                    packageContext,
-                    directory,
-                    timestampService.Url);
-
-                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
-
-                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
-                await Task.Delay(waitDuration);
-
-                Assert.True(DateTime.UtcNow > notAfter);
-
-                var verifier = new PackageSignatureVerifier(_trustProviders);
-
-                using (var packageReader = new PackageArchiveReader(signedPackagePath))
-                {
-                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
-
-                    var trustProvider = result.Results.Single();
-
-                    StringBuilder warnings = new StringBuilder();
-                    foreach (var warning in trustProvider.GetWarningIssues())
-                    {
-                        warnings.AppendLine(warning.Message);
-                    }
-
-                    StringBuilder errors = new StringBuilder();
-                    foreach (var error in trustProvider.GetErrorIssues())
-                    {
-                        errors.AppendLine(error.Message);
-                    }
-
-                    Assert.True(result.IsValid);
-                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
-                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, errors.ToString());
-                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, warnings.ToString());
                 }
             }
         }
@@ -1225,89 +2177,17 @@ namespace NuGet.Packaging.FuncTest
                 {
                     var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
                     var result = results.Results.Single();
-                    StringBuilder warnings = new StringBuilder();
-                    foreach (var warning in result.GetWarningIssues())
-                    {
-                        warnings.AppendLine(warning.Message);
-                    }
-
-                    StringBuilder errors = new StringBuilder();
-                    foreach (var error in result.GetErrorIssues())
-                    {
-                        errors.AppendLine(error.Message);
-                    }
+                    var msg = GetErrorsAndWarnings(result);
+                   
                     Assert.False(results.IsValid);
                     Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
-                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, errors.ToString());
-                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, warnings.ToString());
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
 
                     Assert.Contains(result.Issues, issue =>
                         issue.Code == NuGetLogCode.NU3037 &&
                         issue.Level == LogLevel.Error &&
                         issue.Message.Contains("validity period has expired."));
-                }
-            }
-        }
-
-        [CIOnlyFact]
-        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestamp_SuccessAsync_10()
-        {
-            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
-            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
-            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
-            var now = DateTimeOffset.UtcNow;
-            var issueOptions = new IssueCertificateOptions()
-            {
-                KeyPair = keyPair,
-                NotAfter = now.AddSeconds(10),
-                NotBefore = now.AddSeconds(-2),
-                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
-            };
-            var bcCertificate = ca.IssueCertificate(issueOptions);
-
-            using (var directory = TestDirectory.Create())
-            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
-            {
-                var notAfter = certificate.NotAfter.ToUniversalTime();
-
-                var packageContext = new SimpleTestPackageContext();
-                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
-                    certificate,
-                    packageContext,
-                    directory,
-                    timestampService.Url);
-
-                var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
-
-                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
-                await Task.Delay(waitDuration);
-
-                Assert.True(DateTime.UtcNow > notAfter);
-
-                var verifier = new PackageSignatureVerifier(_trustProviders);
-
-                using (var packageReader = new PackageArchiveReader(signedPackagePath))
-                {
-                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
-
-                    var trustProvider = result.Results.Single();
-
-                    StringBuilder warnings = new StringBuilder();
-                    foreach (var warning in trustProvider.GetWarningIssues())
-                    {
-                        warnings.AppendLine(warning.Message);
-                    }
-
-                    StringBuilder errors = new StringBuilder();
-                    foreach (var error in trustProvider.GetErrorIssues())
-                    {
-                        errors.AppendLine(error.Message);
-                    }
-
-                    Assert.True(result.IsValid);
-                    Assert.Equal(SignatureVerificationStatus.Valid, trustProvider.Trust);
-                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Error) == 0, errors.ToString());
-                    Assert.True(trustProvider.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, warnings.ToString());
                 }
             }
         }
@@ -1358,21 +2238,1232 @@ namespace NuGet.Packaging.FuncTest
                 {
                     var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
                     var result = results.Results.Single();
-                    StringBuilder warnings = new StringBuilder();
-                    foreach (var warning in result.GetWarningIssues())
-                    {
-                        warnings.AppendLine(warning.Message);
-                    }
-
-                    StringBuilder errors = new StringBuilder();
-                    foreach (var error in result.GetErrorIssues())
-                    {
-                        errors.AppendLine(error.Message);
-                    }
+                    var msg = GetErrorsAndWarnings(result);
+                   
                     Assert.False(results.IsValid);
                     Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
-                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, errors.ToString());
-                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, warnings.ToString());
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+
+                    Assert.Contains(result.Issues, issue =>
+                        issue.Code == NuGetLogCode.NU3037 &&
+                        issue.Level == LogLevel.Error &&
+                        issue.Message.Contains("validity period has expired."));
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_11()
+        {
+            var testServer = await _testFixture.GetSigningTestServerAsync();
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var accuracy = new BcAccuracy(seconds: new DerInteger(30), millis: null, micros: null);
+            var serviceOptions = new TimestampServiceOptions() { Accuracy = accuracy };
+            var timestampService = TimestampService.Create(ca, serviceOptions);
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (testServer.RegisterResponder(timestampService))
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (issueOptions.NotAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                if (waitDuration > TimeSpan.Zero)
+                {
+                    await Task.Delay(waitDuration);
+                }
+
+                Assert.True(DateTime.UtcNow > issueOptions.NotAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+                    var result = results.Results.Single();
+                    var msg = GetErrorsAndWarnings(result);
+                    
+                    Assert.False(results.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+
+                    Assert.Contains(result.Issues, issue =>
+                        issue.Code == NuGetLogCode.NU3037 &&
+                        issue.Level == LogLevel.Error &&
+                        issue.Message.Contains("validity period has expired."));
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_12()
+        {
+            var testServer = await _testFixture.GetSigningTestServerAsync();
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var accuracy = new BcAccuracy(seconds: new DerInteger(30), millis: null, micros: null);
+            var serviceOptions = new TimestampServiceOptions() { Accuracy = accuracy };
+            var timestampService = TimestampService.Create(ca, serviceOptions);
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (testServer.RegisterResponder(timestampService))
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (issueOptions.NotAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                if (waitDuration > TimeSpan.Zero)
+                {
+                    await Task.Delay(waitDuration);
+                }
+
+                Assert.True(DateTime.UtcNow > issueOptions.NotAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+                    var result = results.Results.Single();
+                    var msg = GetErrorsAndWarnings(result);
+                    
+                    Assert.False(results.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+
+                    Assert.Contains(result.Issues, issue =>
+                        issue.Code == NuGetLogCode.NU3037 &&
+                        issue.Level == LogLevel.Error &&
+                        issue.Message.Contains("validity period has expired."));
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_13()
+        {
+            var testServer = await _testFixture.GetSigningTestServerAsync();
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var accuracy = new BcAccuracy(seconds: new DerInteger(30), millis: null, micros: null);
+            var serviceOptions = new TimestampServiceOptions() { Accuracy = accuracy };
+            var timestampService = TimestampService.Create(ca, serviceOptions);
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (testServer.RegisterResponder(timestampService))
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (issueOptions.NotAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                if (waitDuration > TimeSpan.Zero)
+                {
+                    await Task.Delay(waitDuration);
+                }
+
+                Assert.True(DateTime.UtcNow > issueOptions.NotAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+                    var result = results.Results.Single();
+                    var msg = GetErrorsAndWarnings(result);
+                   
+                    Assert.False(results.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+
+                    Assert.Contains(result.Issues, issue =>
+                        issue.Code == NuGetLogCode.NU3037 &&
+                        issue.Level == LogLevel.Error &&
+                        issue.Message.Contains("validity period has expired."));
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_14()
+        {
+            var testServer = await _testFixture.GetSigningTestServerAsync();
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var accuracy = new BcAccuracy(seconds: new DerInteger(30), millis: null, micros: null);
+            var serviceOptions = new TimestampServiceOptions() { Accuracy = accuracy };
+            var timestampService = TimestampService.Create(ca, serviceOptions);
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (testServer.RegisterResponder(timestampService))
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (issueOptions.NotAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                if (waitDuration > TimeSpan.Zero)
+                {
+                    await Task.Delay(waitDuration);
+                }
+
+                Assert.True(DateTime.UtcNow > issueOptions.NotAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+                    var result = results.Results.Single();
+                    var msg = GetErrorsAndWarnings(result);
+                    
+                    Assert.False(results.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+
+                    Assert.Contains(result.Issues, issue =>
+                        issue.Code == NuGetLogCode.NU3037 &&
+                        issue.Level == LogLevel.Error &&
+                        issue.Message.Contains("validity period has expired."));
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_15()
+        {
+            var testServer = await _testFixture.GetSigningTestServerAsync();
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var accuracy = new BcAccuracy(seconds: new DerInteger(30), millis: null, micros: null);
+            var serviceOptions = new TimestampServiceOptions() { Accuracy = accuracy };
+            var timestampService = TimestampService.Create(ca, serviceOptions);
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (testServer.RegisterResponder(timestampService))
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (issueOptions.NotAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                if (waitDuration > TimeSpan.Zero)
+                {
+                    await Task.Delay(waitDuration);
+                }
+
+                Assert.True(DateTime.UtcNow > issueOptions.NotAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+                    var result = results.Results.Single();
+                    var msg = GetErrorsAndWarnings(result);
+
+                    Assert.False(results.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+
+                    Assert.Contains(result.Issues, issue =>
+                        issue.Code == NuGetLogCode.NU3037 &&
+                        issue.Level == LogLevel.Error &&
+                        issue.Message.Contains("validity period has expired."));
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_16()
+        {
+            var testServer = await _testFixture.GetSigningTestServerAsync();
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var accuracy = new BcAccuracy(seconds: new DerInteger(30), millis: null, micros: null);
+            var serviceOptions = new TimestampServiceOptions() { Accuracy = accuracy };
+            var timestampService = TimestampService.Create(ca, serviceOptions);
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (testServer.RegisterResponder(timestampService))
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (issueOptions.NotAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                if (waitDuration > TimeSpan.Zero)
+                {
+                    await Task.Delay(waitDuration);
+                }
+
+                Assert.True(DateTime.UtcNow > issueOptions.NotAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+                    var result = results.Results.Single();
+                    var msg = GetErrorsAndWarnings(result);
+
+                    Assert.False(results.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+
+                    Assert.Contains(result.Issues, issue =>
+                        issue.Code == NuGetLogCode.NU3037 &&
+                        issue.Level == LogLevel.Error &&
+                        issue.Message.Contains("validity period has expired."));
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_17()
+        {
+            var testServer = await _testFixture.GetSigningTestServerAsync();
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var accuracy = new BcAccuracy(seconds: new DerInteger(30), millis: null, micros: null);
+            var serviceOptions = new TimestampServiceOptions() { Accuracy = accuracy };
+            var timestampService = TimestampService.Create(ca, serviceOptions);
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (testServer.RegisterResponder(timestampService))
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (issueOptions.NotAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                if (waitDuration > TimeSpan.Zero)
+                {
+                    await Task.Delay(waitDuration);
+                }
+
+                Assert.True(DateTime.UtcNow > issueOptions.NotAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+                    var result = results.Results.Single();
+                    var msg = GetErrorsAndWarnings(result);
+
+                    Assert.False(results.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+
+                    Assert.Contains(result.Issues, issue =>
+                        issue.Code == NuGetLogCode.NU3037 &&
+                        issue.Level == LogLevel.Error &&
+                        issue.Message.Contains("validity period has expired."));
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_18()
+        {
+            var testServer = await _testFixture.GetSigningTestServerAsync();
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var accuracy = new BcAccuracy(seconds: new DerInteger(30), millis: null, micros: null);
+            var serviceOptions = new TimestampServiceOptions() { Accuracy = accuracy };
+            var timestampService = TimestampService.Create(ca, serviceOptions);
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (testServer.RegisterResponder(timestampService))
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (issueOptions.NotAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                if (waitDuration > TimeSpan.Zero)
+                {
+                    await Task.Delay(waitDuration);
+                }
+
+                Assert.True(DateTime.UtcNow > issueOptions.NotAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+                    var result = results.Results.Single();
+                    var msg = GetErrorsAndWarnings(result);
+
+                    Assert.False(results.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+
+                    Assert.Contains(result.Issues, issue =>
+                        issue.Code == NuGetLogCode.NU3037 &&
+                        issue.Level == LogLevel.Error &&
+                        issue.Message.Contains("validity period has expired."));
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_19()
+        {
+            var testServer = await _testFixture.GetSigningTestServerAsync();
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var accuracy = new BcAccuracy(seconds: new DerInteger(30), millis: null, micros: null);
+            var serviceOptions = new TimestampServiceOptions() { Accuracy = accuracy };
+            var timestampService = TimestampService.Create(ca, serviceOptions);
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (testServer.RegisterResponder(timestampService))
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (issueOptions.NotAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                if (waitDuration > TimeSpan.Zero)
+                {
+                    await Task.Delay(waitDuration);
+                }
+
+                Assert.True(DateTime.UtcNow > issueOptions.NotAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+                    var result = results.Results.Single();
+                    var msg = GetErrorsAndWarnings(result);
+
+                    Assert.False(results.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+
+                    Assert.Contains(result.Issues, issue =>
+                        issue.Code == NuGetLogCode.NU3037 &&
+                        issue.Level == LogLevel.Error &&
+                        issue.Message.Contains("validity period has expired."));
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_20()
+        {
+            var testServer = await _testFixture.GetSigningTestServerAsync();
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var accuracy = new BcAccuracy(seconds: new DerInteger(30), millis: null, micros: null);
+            var serviceOptions = new TimestampServiceOptions() { Accuracy = accuracy };
+            var timestampService = TimestampService.Create(ca, serviceOptions);
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (testServer.RegisterResponder(timestampService))
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (issueOptions.NotAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                if (waitDuration > TimeSpan.Zero)
+                {
+                    await Task.Delay(waitDuration);
+                }
+
+                Assert.True(DateTime.UtcNow > issueOptions.NotAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+                    var result = results.Results.Single();
+                    var msg = GetErrorsAndWarnings(result);
+
+                    Assert.False(results.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+
+                    Assert.Contains(result.Issues, issue =>
+                        issue.Code == NuGetLogCode.NU3037 &&
+                        issue.Level == LogLevel.Error &&
+                        issue.Message.Contains("validity period has expired."));
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_21()
+        {
+            var testServer = await _testFixture.GetSigningTestServerAsync();
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var accuracy = new BcAccuracy(seconds: new DerInteger(30), millis: null, micros: null);
+            var serviceOptions = new TimestampServiceOptions() { Accuracy = accuracy };
+            var timestampService = TimestampService.Create(ca, serviceOptions);
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (testServer.RegisterResponder(timestampService))
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (issueOptions.NotAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                if (waitDuration > TimeSpan.Zero)
+                {
+                    await Task.Delay(waitDuration);
+                }
+
+                Assert.True(DateTime.UtcNow > issueOptions.NotAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+                    var result = results.Results.Single();
+                    var msg = GetErrorsAndWarnings(result);
+
+                    Assert.False(results.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+
+                    Assert.Contains(result.Issues, issue =>
+                        issue.Code == NuGetLogCode.NU3037 &&
+                        issue.Level == LogLevel.Error &&
+                        issue.Message.Contains("validity period has expired."));
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_22()
+        {
+            var testServer = await _testFixture.GetSigningTestServerAsync();
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var accuracy = new BcAccuracy(seconds: new DerInteger(30), millis: null, micros: null);
+            var serviceOptions = new TimestampServiceOptions() { Accuracy = accuracy };
+            var timestampService = TimestampService.Create(ca, serviceOptions);
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (testServer.RegisterResponder(timestampService))
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (issueOptions.NotAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                if (waitDuration > TimeSpan.Zero)
+                {
+                    await Task.Delay(waitDuration);
+                }
+
+                Assert.True(DateTime.UtcNow > issueOptions.NotAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+                    var result = results.Results.Single();
+                    var msg = GetErrorsAndWarnings(result);
+
+                    Assert.False(results.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+
+                    Assert.Contains(result.Issues, issue =>
+                        issue.Code == NuGetLogCode.NU3037 &&
+                        issue.Level == LogLevel.Error &&
+                        issue.Message.Contains("validity period has expired."));
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_23()
+        {
+            var testServer = await _testFixture.GetSigningTestServerAsync();
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var accuracy = new BcAccuracy(seconds: new DerInteger(30), millis: null, micros: null);
+            var serviceOptions = new TimestampServiceOptions() { Accuracy = accuracy };
+            var timestampService = TimestampService.Create(ca, serviceOptions);
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (testServer.RegisterResponder(timestampService))
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (issueOptions.NotAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                if (waitDuration > TimeSpan.Zero)
+                {
+                    await Task.Delay(waitDuration);
+                }
+
+                Assert.True(DateTime.UtcNow > issueOptions.NotAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+                    var result = results.Results.Single();
+                    var msg = GetErrorsAndWarnings(result);
+
+                    Assert.False(results.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+
+                    Assert.Contains(result.Issues, issue =>
+                        issue.Code == NuGetLogCode.NU3037 &&
+                        issue.Level == LogLevel.Error &&
+                        issue.Message.Contains("validity period has expired."));
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_24()
+        {
+            var testServer = await _testFixture.GetSigningTestServerAsync();
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var accuracy = new BcAccuracy(seconds: new DerInteger(30), millis: null, micros: null);
+            var serviceOptions = new TimestampServiceOptions() { Accuracy = accuracy };
+            var timestampService = TimestampService.Create(ca, serviceOptions);
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (testServer.RegisterResponder(timestampService))
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (issueOptions.NotAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                if (waitDuration > TimeSpan.Zero)
+                {
+                    await Task.Delay(waitDuration);
+                }
+
+                Assert.True(DateTime.UtcNow > issueOptions.NotAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+                    var result = results.Results.Single();
+                    var msg = GetErrorsAndWarnings(result);
+
+                    Assert.False(results.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+
+                    Assert.Contains(result.Issues, issue =>
+                        issue.Code == NuGetLogCode.NU3037 &&
+                        issue.Level == LogLevel.Error &&
+                        issue.Message.Contains("validity period has expired."));
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_25()
+        {
+            var testServer = await _testFixture.GetSigningTestServerAsync();
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var accuracy = new BcAccuracy(seconds: new DerInteger(30), millis: null, micros: null);
+            var serviceOptions = new TimestampServiceOptions() { Accuracy = accuracy };
+            var timestampService = TimestampService.Create(ca, serviceOptions);
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (testServer.RegisterResponder(timestampService))
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (issueOptions.NotAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                if (waitDuration > TimeSpan.Zero)
+                {
+                    await Task.Delay(waitDuration);
+                }
+
+                Assert.True(DateTime.UtcNow > issueOptions.NotAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+                    var result = results.Results.Single();
+                    var msg = GetErrorsAndWarnings(result);
+
+                    Assert.False(results.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+
+                    Assert.Contains(result.Issues, issue =>
+                        issue.Code == NuGetLogCode.NU3037 &&
+                        issue.Level == LogLevel.Error &&
+                        issue.Message.Contains("validity period has expired."));
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_26()
+        {
+            var testServer = await _testFixture.GetSigningTestServerAsync();
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var accuracy = new BcAccuracy(seconds: new DerInteger(30), millis: null, micros: null);
+            var serviceOptions = new TimestampServiceOptions() { Accuracy = accuracy };
+            var timestampService = TimestampService.Create(ca, serviceOptions);
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (testServer.RegisterResponder(timestampService))
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (issueOptions.NotAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                if (waitDuration > TimeSpan.Zero)
+                {
+                    await Task.Delay(waitDuration);
+                }
+
+                Assert.True(DateTime.UtcNow > issueOptions.NotAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+                    var result = results.Results.Single();
+                    var msg = GetErrorsAndWarnings(result);
+
+                    Assert.False(results.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+
+                    Assert.Contains(result.Issues, issue =>
+                        issue.Code == NuGetLogCode.NU3037 &&
+                        issue.Level == LogLevel.Error &&
+                        issue.Message.Contains("validity period has expired."));
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_27()
+        {
+            var testServer = await _testFixture.GetSigningTestServerAsync();
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var accuracy = new BcAccuracy(seconds: new DerInteger(30), millis: null, micros: null);
+            var serviceOptions = new TimestampServiceOptions() { Accuracy = accuracy };
+            var timestampService = TimestampService.Create(ca, serviceOptions);
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (testServer.RegisterResponder(timestampService))
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (issueOptions.NotAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                if (waitDuration > TimeSpan.Zero)
+                {
+                    await Task.Delay(waitDuration);
+                }
+
+                Assert.True(DateTime.UtcNow > issueOptions.NotAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+                    var result = results.Results.Single();
+                    var msg = GetErrorsAndWarnings(result);
+
+                    Assert.False(results.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+
+                    Assert.Contains(result.Issues, issue =>
+                        issue.Code == NuGetLogCode.NU3037 &&
+                        issue.Level == LogLevel.Error &&
+                        issue.Message.Contains("validity period has expired."));
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_28()
+        {
+            var testServer = await _testFixture.GetSigningTestServerAsync();
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var accuracy = new BcAccuracy(seconds: new DerInteger(30), millis: null, micros: null);
+            var serviceOptions = new TimestampServiceOptions() { Accuracy = accuracy };
+            var timestampService = TimestampService.Create(ca, serviceOptions);
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (testServer.RegisterResponder(timestampService))
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (issueOptions.NotAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                if (waitDuration > TimeSpan.Zero)
+                {
+                    await Task.Delay(waitDuration);
+                }
+
+                Assert.True(DateTime.UtcNow > issueOptions.NotAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+                    var result = results.Results.Single();
+                    var msg = GetErrorsAndWarnings(result);
+
+                    Assert.False(results.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+
+                    Assert.Contains(result.Issues, issue =>
+                        issue.Code == NuGetLogCode.NU3037 &&
+                        issue.Level == LogLevel.Error &&
+                        issue.Message.Contains("validity period has expired."));
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_29()
+        {
+            var testServer = await _testFixture.GetSigningTestServerAsync();
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var accuracy = new BcAccuracy(seconds: new DerInteger(30), millis: null, micros: null);
+            var serviceOptions = new TimestampServiceOptions() { Accuracy = accuracy };
+            var timestampService = TimestampService.Create(ca, serviceOptions);
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (testServer.RegisterResponder(timestampService))
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (issueOptions.NotAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                if (waitDuration > TimeSpan.Zero)
+                {
+                    await Task.Delay(waitDuration);
+                }
+
+                Assert.True(DateTime.UtcNow > issueOptions.NotAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+                    var result = results.Results.Single();
+                    var msg = GetErrorsAndWarnings(result);
+
+                    Assert.False(results.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
+
+                    Assert.Contains(result.Issues, issue =>
+                        issue.Code == NuGetLogCode.NU3037 &&
+                        issue.Level == LogLevel.Error &&
+                        issue.Message.Contains("validity period has expired."));
+                }
+            }
+        }
+
+        [CIOnlyFact]
+        public async Task VerifySignaturesAsync_ExpiredCertificateAndTimestampWithTooLargeRange_FailsAsync_30()
+        {
+            var testServer = await _testFixture.GetSigningTestServerAsync();
+            var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var accuracy = new BcAccuracy(seconds: new DerInteger(30), millis: null, micros: null);
+            var serviceOptions = new TimestampServiceOptions() { Accuracy = accuracy };
+            var timestampService = TimestampService.Create(ca, serviceOptions);
+            var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
+            var now = DateTimeOffset.UtcNow;
+            var issueOptions = new IssueCertificateOptions()
+            {
+                KeyPair = keyPair,
+                NotAfter = now.AddSeconds(10),
+                NotBefore = now.AddSeconds(-2),
+                SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
+            };
+            var bcCertificate = ca.IssueCertificate(issueOptions);
+
+            using (testServer.RegisterResponder(timestampService))
+            using (var directory = TestDirectory.Create())
+            using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+            {
+                var packageContext = new SimpleTestPackageContext();
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    certificate,
+                    packageContext,
+                    directory,
+                    timestampService.Url);
+
+                var waitDuration = (issueOptions.NotAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+
+                // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
+                if (waitDuration > TimeSpan.Zero)
+                {
+                    await Task.Delay(waitDuration);
+                }
+
+                Assert.True(DateTime.UtcNow > issueOptions.NotAfter);
+
+                var verifier = new PackageSignatureVerifier(_trustProviders);
+
+                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                {
+                    var results = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+                    var result = results.Results.Single();
+                    var msg = GetErrorsAndWarnings(result);
+
+                    Assert.False(results.IsValid);
+                    Assert.Equal(SignatureVerificationStatus.Disallowed, result.Trust);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Error) == 1, msg);
+                    Assert.True(result.Issues.Count(issue => issue.Level == LogLevel.Warning) == 0, msg);
 
                     Assert.Contains(result.Issues, issue =>
                         issue.Code == NuGetLogCode.NU3037 &&
@@ -1531,6 +3622,22 @@ namespace NuGet.Packaging.FuncTest
                 StoreName.Root,
                 storeLocation,
                 maximumValidityPeriod: TimeSpan.MaxValue);
+        }
+
+        private string GetErrorsAndWarnings(PackageVerificationResult result)
+        {
+            StringBuilder warnings = new StringBuilder("warnings :");
+            foreach (var warning in result.GetWarningIssues())
+            {
+                warnings.AppendLine(warning.Message);
+            }
+
+            StringBuilder errors = new StringBuilder("errors :");
+            foreach (var error in result.GetErrorIssues())
+            {
+                errors.AppendLine(error.Message);
+            }
+            return warnings.ToString() + "\n" + errors.ToString();
         }
     }
 }

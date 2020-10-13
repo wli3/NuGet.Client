@@ -104,7 +104,7 @@ jobs:
       - msbuild
 
   steps:
-  - template: templates/Build_and_UnitTest.yml  
+  - template: templates/Build_and_UnitTest.yml
 
 - job: Build_and_UnitTest_RTM
   dependsOn: Initialize_Build
@@ -117,6 +117,7 @@ jobs:
     SDKVersionForBuild: $[dependencies.Initialize_Build.outputs['getSDKVersionForBuild.SDKVersionForBuild']]
     LocalizedLanguageCount: "13"
     BuildRTM: "true"
+  condition: "failed() "
 
   pool:
     name: VSEng-MicroBuildVS2019
@@ -125,7 +126,7 @@ jobs:
       - msbuild
 
   steps:
-  - template: templates/Build_and_UnitTest.yml  
+  - template: templates/Build_and_UnitTest.yml
 
 - job: Functional_Tests_On_Windows
   dependsOn: Initialize_Build
@@ -134,7 +135,7 @@ jobs:
     BuildNumber: $[dependencies.Initialize_Build.outputs['updatebuildnumber.BuildNumber']]
     FullVstsBuildNumber: $[dependencies.Initialize_Build.outputs['updatebuildnumber.FullVstsBuildNumber']]
     SDKVersionForBuild: $[dependencies.Initialize_Build.outputs['getSDKVersionForBuild.SDKVersionForBuild']]
-  condition: "and(succeeded(),eq(variables['RunFunctionalTestsOnWindows'], 'true')) "
+  condition: "failed() "
   pool:
     name: VSEng-MicroBuildVS2019
     demands:
@@ -404,7 +405,7 @@ jobs:
   variables:
     FullVstsBuildNumber: $[dependencies.Initialize_Build.outputs['updatebuildnumber.FullVstsBuildNumber']]
     SDKVersionForBuild: $[dependencies.Initialize_Build.outputs['getSDKVersionForBuild.SDKVersionForBuild']]
-  condition: "and(succeeded(),eq(variables['RunEndToEndTests'], 'true')) "
+  condition: "failed() "
   pool:
     name: DDNuGet-Windows
     demands:
@@ -527,7 +528,7 @@ jobs:
     BuildNumber: $[dependencies.Initialize_Build.outputs['updatebuildnumber.BuildNumber']]
     FullVstsBuildNumber: $[dependencies.Initialize_Build.outputs['updatebuildnumber.FullVstsBuildNumber']]
     SDKVersionForBuild: $[dependencies.Initialize_Build.outputs['getSDKVersionForBuild.SDKVersionForBuild']]
-  condition: "and(succeeded(),eq(variables['RunApexTests'], 'true')) "
+  condition: "failed() "
   pool:
     name: DDNuGet-Windows
     demands:

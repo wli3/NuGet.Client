@@ -27,11 +27,16 @@ using NuGet.Versioning;
 using NuGet.VisualStudio;
 using Test.Utility;
 using Xunit;
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Order;
 
 namespace NuGet.PackageManagement.VisualStudio.Test
 {
+
     public class NetCorePackageReferenceProjectTests
     {
+
+
         [Fact]
         public async Task GetInstalledVersion_WithAssetsFile_ReturnsVersionsFromAssetsSpecs()
         {

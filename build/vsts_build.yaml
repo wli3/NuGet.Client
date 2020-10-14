@@ -318,7 +318,7 @@ jobs:
   dependsOn:
   - Build_and_UnitTest_NonRTM
   - Initialize_Build
-  timeoutInMinutes: 75
+  timeoutInMinutes: 150
   variables:
     FULLVSTSBUILDNUMBER: $[dependencies.Initialize_Build.outputs['updatebuildnumber.FullVstsBuildNumber']]
     SDKVersionForBuild: $[dependencies.Initialize_Build.outputs['getSDKVersionForBuild.SDKVersionForBuild']]

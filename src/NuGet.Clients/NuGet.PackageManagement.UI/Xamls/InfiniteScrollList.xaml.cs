@@ -119,6 +119,7 @@ namespace NuGet.PackageManagement.UI
             get { return _checkBoxesEnabled; }
             set
             {
+                _listInstalled.CheckBoxesEnabled = value;
                 if (_checkBoxesEnabled != value)
                 {
                     _checkBoxesEnabled = value;

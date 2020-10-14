@@ -9,5 +9,6 @@ namespace NuGet.PackageManagement.UI
     internal class InfiniteScrollListBox : ListBox
     {
         public ReentrantSemaphore ItemsLock { get; set; }
+        public bool CheckBoxesEnabled { get; set; }
     }
 }

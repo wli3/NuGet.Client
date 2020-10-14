@@ -77,6 +77,7 @@ namespace NuGet.PackageManagement.UI.Test
             var list = new InfiniteScrollList();
 
             Assert.Empty(list.ItemsBrowse);
+            Assert.Empty(list.ItemsInstalled);
         }
 
         [WpfFact]
@@ -84,7 +85,7 @@ namespace NuGet.PackageManagement.UI.Test
         {
             var list = new InfiniteScrollList();
 
-            Assert.Empty(list.PackageItemsInstalled);
+            Assert.Empty(list.CurrentlyShownPackageItems);
         }
 
         [WpfFact]

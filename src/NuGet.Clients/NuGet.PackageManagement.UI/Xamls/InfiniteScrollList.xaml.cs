@@ -148,29 +148,29 @@ namespace NuGet.PackageManagement.UI
         {
             get
             {
-                return InstalledPackageItemsFiltered.Count();
+                return CurrentlyShownPackageItemsFiltered.Count();
             }
         }
 
         /// <summary>
         /// All loaded Items (excluding Loading indicator) regardless of filtering.
         /// </summary>
-        public IEnumerable<PackageItemListViewModel> PackageItemsInstalled => ItemsInstalled.OfType<PackageItemListViewModel>().ToArray();
+        public IEnumerable<PackageItemListViewModel> CurrentlyShownPackageItems => CurrentlyShownItems.OfType<PackageItemListViewModel>().ToArray();
 
         /// <summary>
-        /// Installed Items (excluding Loading indicator) that are currently shown after applying any UI filtering.
+        /// Items (excluding Loading indicator) that are currently shown after applying any UI filtering.
         /// </summary>
-        public IEnumerable<PackageItemListViewModel> InstalledPackageItemsFiltered
+        public IEnumerable<PackageItemListViewModel> CurrentlyShownPackageItemsFiltered
         {
             get
             {
-                if (ItemsInstalledCollectionView.Filter != null)
+                if (!IsBrowseTab && ItemsInstalledCollectionView.Filter != null)
                 {
                     return ItemsInstalledCollectionView.OfType<PackageItemListViewModel>();
                 }
                 else
                 {
-                    return PackageItemsInstalled;
+                    return CurrentlyShownPackageItems;
                 }
             }
         }
@@ -244,12 +244,12 @@ namespace NuGet.PackageManagement.UI
             if (selectedItem != null)
             {
                 // select the the previously selected item if it still exists.
-                selectedItem = InstalledPackageItemsFiltered
+                selectedItem = CurrentlyShownPackageItemsFiltered
                     .FirstOrDefault(item => item.Id.Equals(selectedItem.Id, StringComparison.OrdinalIgnoreCase));
             }
 
             // select the first item if none was selected before
-            CurrentlyShownListBox.SelectedItem = selectedItem ?? InstalledPackageItemsFiltered.FirstOrDefault();
+            CurrentlyShownListBox.SelectedItem = selectedItem ?? CurrentlyShownPackageItemsFiltered.FirstOrDefault();
         }
 
         private InfiniteScrollListBox CurrentlyShownListBox
@@ -619,7 +619,7 @@ namespace NuGet.PackageManagement.UI
         /// </summary>
         private void ClearPackageList(ObservableCollection<object> itemsToClear)
         {
-            foreach (var package in PackageItemsInstalled)
+            foreach (var package in itemsToClear.OfType<PackageItemListViewModel>())
             {
                 package.PropertyChanged -= Package_PropertyChanged;
             }
@@ -633,8 +633,8 @@ namespace NuGet.PackageManagement.UI
 
         public void UpdatePackageStatus(PackageCollectionItem[] installedPackages)
         {
-            // Only update PackageStatus of Installed items shown in the current UI Filter.
-            foreach (var package in InstalledPackageItemsFiltered)
+            // Update PackageStatus of Installed items. Any UI Filter will still be applied.
+            foreach (var package in CurrentlyShownPackageItems)
             {
                 package.UpdatePackageStatus(installedPackages);
             }
@@ -782,7 +782,7 @@ namespace NuGet.PackageManagement.UI
 
         private void _updateButton_Click(object sender, RoutedEventArgs e)
         {
-            var selectedPackages = InstalledPackageItemsFiltered.Where(p => p.Selected).ToArray();
+            var selectedPackages = CurrentlyShownPackageItemsFiltered.Where(p => p.Selected).ToArray();
             UpdateButtonClicked(selectedPackages);
         }
 

@@ -69,10 +69,10 @@ namespace NuGet.PackageManagement.UI
         private PackageManagerControl()
         {
             InitializeComponent();
-            _packageList.Loaded += _packageList_Loaded;
+            _packageList.Loaded += PackageList_Loaded;
         }
 
-        private void _packageList_Loaded(object sender, RoutedEventArgs e)
+        private void PackageList_Loaded(object sender, RoutedEventArgs e)
         {
             SynchronizeTabSelectionFlag();
         }
@@ -1007,7 +1007,7 @@ namespace NuGet.PackageManagement.UI
         {
             var selectedPackage = _packageList.SelectedItem;
             var selectedIndex = _packageList.SelectedIndex;
-            var recommendedCount = _packageList.PackageItemsInstalled.Where(item => item.Recommended == true).Count();
+            var recommendedCount = _packageList.CurrentlyShownPackageItems.Where(item => item.Recommended == true).Count();
             if (selectedPackage == null)
             {
                 _packageDetail.Visibility = Visibility.Hidden;
@@ -1034,11 +1034,11 @@ namespace NuGet.PackageManagement.UI
         {
             var operationId = _packageList.OperationIdBrowse;
             var selectedIndex = _packageList.SelectedIndex;
-            var recommendedCount = _packageList.PackageItemsInstalled.Where(item => item.Recommended == true).Count();
             if (_topPanel.Filter == ItemFilter.All
                 && operationId.HasValue
                 && selectedIndex >= 0)
             {
+                var recommendedCount = _packageList.CurrentlyShownPackageItems.Where(item => item.Recommended == true).Count();
                 TelemetryActivity.EmitTelemetryEvent(new SearchSelectionTelemetryEvent(
                     operationId.Value,
                     recommendedCount,

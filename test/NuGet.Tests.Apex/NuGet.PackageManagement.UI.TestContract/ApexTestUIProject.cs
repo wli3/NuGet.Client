@@ -18,14 +18,6 @@ namespace NuGet.PackageManagement.UI.TestContract
             _packageManagerControl = packageManagerControl ?? throw new ArgumentNullException(nameof(packageManagerControl));
         }
 
-        public IEnumerable<PackageItemListViewModel> PackageItems
-        {
-            get
-            {
-                return UIInvoke(() => _packageManagerControl.PackageList.PackageItems);
-            }
-        }
-
         public PackageItemListViewModel SelectedPackage
         {
             get

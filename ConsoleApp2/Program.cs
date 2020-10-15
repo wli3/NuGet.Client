@@ -141,11 +141,7 @@ namespace ConsoleApp1
                                                 elements.AppendLine($"  status : ({chainElementStatus.Status.ToString()})");
                                                 elements.AppendLine($"  info: ({chainElementStatus.StatusInformation})");
                                             }
-
-                                            //write certs to disk
-                                            var file = new FileInfo(Path.Combine(".", $"{k}.cer"));
-                                            File.WriteAllBytes(file.FullName, chainElement.Certificate.RawData);
-                                            Console.WriteLine($"cert {k} is written to {file.FullName}");
+                                            Console.WriteLine($"The detailed status is : \n {elements.ToString()}");
                                             k++;
                                         }
                                     }

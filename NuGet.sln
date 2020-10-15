@@ -240,6 +240,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Packaging.Extraction"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.VisualStudio.Internal.Contracts.Test", "test\NuGet.Clients.Tests\NuGet.VisualStudio.Internal.Contracts.Test\NuGet.VisualStudio.Internal.Contracts.Test.csproj", "{C24DD62A-905D-4C48-A17A-B83107F17EA7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{E00466DA-10F2-4847-96FF-7C0F063507CC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -582,6 +584,10 @@ Global
 		{C24DD62A-905D-4C48-A17A-B83107F17EA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C24DD62A-905D-4C48-A17A-B83107F17EA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C24DD62A-905D-4C48-A17A-B83107F17EA7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E00466DA-10F2-4847-96FF-7C0F063507CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E00466DA-10F2-4847-96FF-7C0F063507CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E00466DA-10F2-4847-96FF-7C0F063507CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E00466DA-10F2-4847-96FF-7C0F063507CC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -681,6 +687,7 @@ Global
 		{6AF72BEE-70F0-48B2-BD63-0E80D9747342} = {08F523EC-3C2A-4A00-A54C-2E54C5AC856B}
 		{C7CE3001-1DCB-4D66-B583-AF54A59BD552} = {506AF844-92E0-4404-BBFC-0AB073890A72}
 		{C24DD62A-905D-4C48-A17A-B83107F17EA7} = {01BC4531-1E25-48D7-A8FD-A47D6FEC47FB}
+		{E00466DA-10F2-4847-96FF-7C0F063507CC} = {BB63CACA-866F-454F-BA4C-78B788D032BB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3747A66A-00D1-41B8-A9C5-ED0D7BEA9D25}

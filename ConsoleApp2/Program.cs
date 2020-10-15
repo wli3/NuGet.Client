@@ -65,7 +65,7 @@ namespace ConsoleApp1
                         directory,
                         timestampService.Url);
 
-                    var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(2));
+                    var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(3));
 
                     // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
                     await Task.Delay(waitDuration);
@@ -191,8 +191,8 @@ namespace ConsoleApp1
                                 var msg2 = warnings2.ToString() + "\n" + errors2.ToString() + "\n" + results2.ToString();
                                 Console.WriteLine("Verify for the second time: \n" + msg2);
 
-                                Console.WriteLine("Press [ENTER] to continue");
-                                Console.ReadLine();
+                                //Console.WriteLine("Press [ENTER] to continue");
+                                //Console.ReadLine();
                             }
                         }
 

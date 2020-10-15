@@ -15,7 +15,7 @@ using NuGet.Packaging;
 using Xunit;
 using System.Text;
 
-namespace ConsoleApp3
+namespace ConsoleApp2
 {
     class Program
     {
@@ -72,13 +72,14 @@ namespace ConsoleApp3
                 }
 
                 var verifier = new PackageSignatureVerifier(_trustProviders);
-                using (var packageReader = new PackageArchiveReader(signedPackagePath))
-                {
-                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
 
-                    for (int i = 0; i < 100; i++)
+                for (int i = 0; i < 100; i++)
+                {
+                    Console.WriteLine("\n test : " + i + "\n");
+
+                    using (var packageReader = new PackageArchiveReader(signedPackagePath))
                     {
-                        Console.WriteLine("\n test : " + i + "\n");
+                        var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
 
                         var trustProvider = result.Results.Single();
 

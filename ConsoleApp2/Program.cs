@@ -120,8 +120,15 @@ namespace ConsoleApp1
                                     var status = new X509ChainStatus[chain.ChainStatus.Length];
                                     chain.ChainStatus.CopyTo(status, 0);
                                     bool buildSuccessAndNotInFuture = buildSuccess && !CertificateUtility.IsCertificateValidityPeriodInTheFuture(certificate);
-                                    Console.WriteLine($"\n Try {j} : chain build, result is : {buildSuccess}, build successfully and timestamp is not in future : {buildSuccessAndNotInFuture} \n");
-
+                                    if (buildSuccessAndNotInFuture)
+                                    {
+                                        Console.WriteLine($"Try {j} : pass");
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine($"Try {j} : failed");
+                                    }
+                                
                                     //If chain build is not successful, display detailed chain build info
                                     if (!buildSuccess)
                                     {

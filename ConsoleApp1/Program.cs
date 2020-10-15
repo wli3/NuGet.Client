@@ -21,7 +21,7 @@ namespace ConsoleApp1
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("========test start=======");
+            Console.WriteLine("========Console1 test start=======");
             var _testFixture = new SigningTestFixture();
             var _trustedTestCert = _testFixture.TrustedTestCertificate;
             var _untrustedTestCertificate = _testFixture.UntrustedTestCertificate;

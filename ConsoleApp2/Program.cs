@@ -65,7 +65,7 @@ namespace ConsoleApp1
                         directory,
                         timestampService.Url);
 
-                    var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
+                    var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(2));
 
                     // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
                     await Task.Delay(waitDuration);

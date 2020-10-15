@@ -134,8 +134,8 @@ namespace ConsoleApp1
                                     chain.ChainStatus.CopyTo(status, 0);
                                     Console.WriteLine("another way to build chain, result is : " + buildSuccess + "\n");
 
-                                    bool result2 = buildSuccess && !CertificateUtility.IsCertificateValidityPeriodInTheFuture(certificate);
-                                    Console.WriteLine("another way to build chain, result2 is : " + result2 + "\n");
+                                    bool buildSuccessAndNotInFuture = buildSuccess && !CertificateUtility.IsCertificateValidityPeriodInTheFuture(certificate);
+                                    Console.WriteLine("another way to build chain, buildSuccessAndNotInFuture is : " + buildSuccessAndNotInFuture + "\n");
 
                                     //display detailed chain build info
                                     var elements = new StringBuilder();
@@ -163,15 +163,37 @@ namespace ConsoleApp1
                                         Console.WriteLine($"cert {k} is written to {file.FullName}");
                                         k++;
                                     }
-                                
-                                    Console.WriteLine("Press [ENTER] to continue");
-                                    Console.ReadLine();
-    
                                 }
 
+
+                                //verify for the second time
+                                var result2 = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
+
+                                var trustProvider2 = result2.Results.Single();
+
+                                StringBuilder warnings2 = new StringBuilder("warnings :");
+                                foreach (var warning in trustProvider2.GetWarningIssues())
+                                {
+                                    warnings2.AppendLine(warning.Message);
+                                }
+
+                                StringBuilder errors2 = new StringBuilder("errors :");
+                                foreach (var error in trustProvider2.GetErrorIssues())
+                                {
+                                    errors2.AppendLine(error.Message);
+                                }
+
+                                StringBuilder results2 = new StringBuilder("all results :");
+                                foreach (var r in trustProvider2.Issues)
+                                {
+                                    results2.AppendLine(r.Message);
+                                }
+                                var msg2 = warnings2.ToString() + "\n" + errors2.ToString() + "\n" + results2.ToString();
+                                Console.WriteLine("Verify for the second time: \n" + msg2);
+
+                                Console.WriteLine("Press [ENTER] to continue");
+                                Console.ReadLine();
                             }
-
-
                         }
 
                     }

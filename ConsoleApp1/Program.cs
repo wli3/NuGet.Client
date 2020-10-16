@@ -36,43 +36,16 @@ namespace ConsoleApp1
                 Console.WriteLine("\n test : " + i + "\n");
                 var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
                 var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
-                var keyPair = SigningTestUtility.GenerateKeyPair(publicKeyLength: 2048);
-                var now = DateTimeOffset.UtcNow;
-                var issueOptions = new IssueCertificateOptions()
-                {
-                    KeyPair = keyPair,
-                    NotAfter = now.AddSeconds(10),
-                    NotBefore = now.AddSeconds(-2),
-                    SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
-                };
-                var bcCertificate = ca.IssueCertificate(issueOptions);
-
+               
                 using (var directory = TestDirectory.Create())
-                using (X509Certificate2 certificate = CertificateUtilities.GetCertificateWithPrivateKey(bcCertificate, keyPair))
+                using (var testCertificate = new X509Certificate2(_trustedTestCert.Source.Cert))
                 {
-                    var notAfter = certificate.NotAfter.ToUniversalTime();
-
                     var packageContext = new SimpleTestPackageContext();
                     var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
-                        certificate,
+                        testCertificate,
                         packageContext,
                         directory,
                         timestampService.Url);
-
-                    var waitDuration = (notAfter - DateTimeOffset.UtcNow).Add(TimeSpan.FromSeconds(1));
-
-                    // Wait for the certificate to expire.  Trust of the signature will require a valid timestamp.
-                    await Task.Delay(waitDuration);
-
-                    if (DateTime.UtcNow > notAfter)
-                    {
-                        Console.WriteLine("As expected: DateTime.UtcNow > notAfter");
-                    }
-                    else
-                    {
-                        Console.WriteLine("Not as expected: DateTime.UtcNow <= notAfter");
-                        return;
-                    }
 
                     var verifier = new PackageSignatureVerifier(_trustProviders);
 

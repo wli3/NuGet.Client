@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Org.BouncyCastle.Asn1.X509;
@@ -54,7 +55,7 @@ namespace Test.Utility.Signing
 #if IS_SIGNING_SUPPORTED
         public override void Respond(HttpListenerContext context)
         {
-            Console.WriteLine("\nContext is :\t\t" + context.Request.RawUrl);
+            Console.WriteLine("\nContext is : " + context.Request.RawUrl);
             if (context == null)
             {
                 throw new ArgumentNullException(nameof(context));
@@ -117,15 +118,6 @@ namespace Test.Utility.Signing
             var ocspResp = ocspRespGenerator.Generate(OCSPRespGenerator.Successful, basicOcspResp);
 
             bytes = ocspResp.GetEncoded();
-            //display bytes
-            using (SHA1 sha1Hash = SHA1.Create())
-            {
-                //From String to byte array
-                byte[] hashBytes = sha1Hash.ComputeHash(bytes);
-                string hash = BitConverter.ToString(hashBytes).Replace("-", String.Empty);
-
-                Console.WriteLine($"byte hash is :  \t\t {hash}");
-            }
         
             context.Response.ContentType = ResponseContentType;
 

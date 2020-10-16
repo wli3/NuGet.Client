@@ -157,6 +157,7 @@ namespace NuGet.PackageManagement.UI
         /// All loaded Items (excluding Loading indicator) regardless of filtering.
         /// </summary>
         public IEnumerable<PackageItemListViewModel> CurrentlyShownPackageItems => CurrentlyShownItems.OfType<PackageItemListViewModel>().ToArray();
+        public IEnumerable<PackageItemListViewModel> BrowsePackageItems => ItemsBrowse.OfType<PackageItemListViewModel>().ToArray();
 
         /// <summary>
         /// Items (excluding Loading indicator) that are currently shown after applying any UI filtering.

@@ -63,7 +63,8 @@ namespace NuGet.PackageManagement.UI
         private PRMigratorBar _migratorBar;
         private bool _missingPackageStatus;
         private bool _loadedAndInitialized = false;
-        private bool _recommendPackages = false;
+        private bool _recommendBrowsePackages = false;
+
         private (string modelVersion, string vsixVersion)? _recommenderVersion;
 
         private PackageManagerControl()
@@ -809,7 +810,7 @@ namespace NuGet.PackageManagement.UI
             return _forceRecommender || ExperimentationService.Default.IsCachedFlightEnabled("nugetrecommendpkgs");
         }
 
-        private async Task<(IPackageFeed mainFeed, IPackageFeed recommenderFeed)> GetPackageFeedsAsync(string searchText, PackageLoadContext loadContext)
+        private async Task<(IPackageFeed mainFeed, IPackageFeed recommenderFeed)> GetPackageFeedsAsync(ItemFilter filterToRender, string searchText, PackageLoadContext loadContext)
         {
             var project = Model.Context.Projects.First();
 
@@ -818,28 +819,28 @@ namespace NuGet.PackageManagement.UI
             //   the package manager was opened for a project, not a solution,
             //   this is the Browse tab,
             //   and the search text is an empty string
-            _recommendPackages = false;
+            _recommendBrowsePackages = false;
             if (loadContext.IsSolution == false
-                && _topPanel.Filter == ItemFilter.All
+                && filterToRender == ItemFilter.All
                 && searchText == string.Empty
                 // also check if this is a PC-style project. We will not provide recommendations for PR-style
                 // projects until we have a way to get dependent packages without negatively impacting perf.
                 && project.ProjectStyle == ProjectModel.ProjectStyle.PackagesConfig
                 && loadContext.SourceRepositories.Any(item => TelemetryUtility.IsNuGetOrg(item.PackageSource)))
             {
-                _recommendPackages = true;
+                _recommendBrowsePackages = true;
             }
 
             // Check for A/B experiment here. For control group, call CreatePackageFeedAsync with false instead of _recommendPackages
             var packageFeeds = (mainFeed: (IPackageFeed)null, recommenderFeed: (IPackageFeed)null);
             if (IsRecommenderFlightEnabled())
             {
-                packageFeeds = await CreatePackageFeedAsync(loadContext, _topPanel.Filter, _uiLogger, _recommendPackages);
+                packageFeeds = await CreatePackageFeedAsync(loadContext, filterToRender, _uiLogger, _recommendBrowsePackages);
                 _recommenderVersion = ((RecommenderPackageFeed)packageFeeds.recommenderFeed)?.VersionInfo;
             }
             else
             {
-                packageFeeds = await CreatePackageFeedAsync(loadContext, _topPanel.Filter, _uiLogger, recommendPackages: false);
+                packageFeeds = await CreatePackageFeedAsync(loadContext, filterToRender, _uiLogger, recommendPackages: false);
             }
 
             return packageFeeds;
@@ -865,7 +866,7 @@ namespace NuGet.PackageManagement.UI
                 Model.CachedUpdates = null;
             }
 
-            var packageFeeds = await GetPackageFeedsAsync(searchText, loadContext);
+            var packageFeeds = await GetPackageFeedsAsync(filterToRender, searchText, loadContext);
 
             try
             {
@@ -996,18 +997,17 @@ namespace NuGet.PackageManagement.UI
         private void PackageList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             NuGetUIThreadHelper.JoinableTaskFactory
-                .RunAsync(UpdateDetailPaneAsync)
+                .RunAsync(() => UpdateDetailPaneAsync(sourceListBox: sender as InfiniteScrollListBox))
                 .PostOnFailure(nameof(PackageManagerControl), nameof(PackageList_SelectionChanged));
         }
 
         /// <summary>
         /// Updates the detail pane based on the selected package
         /// </summary>
-        internal async Task UpdateDetailPaneAsync()
+        internal async Task UpdateDetailPaneAsync(InfiniteScrollListBox sourceListBox)
         {
             var selectedPackage = _packageList.SelectedItem;
             var selectedIndex = _packageList.SelectedIndex;
-            var recommendedCount = _packageList.CurrentlyShownPackageItems.Where(item => item.Recommended == true).Count();
             if (selectedPackage == null)
             {
                 _packageDetail.Visibility = Visibility.Hidden;
@@ -1020,7 +1020,15 @@ namespace NuGet.PackageManagement.UI
                 EmitSearchSelectionTelemetry(selectedPackage);
 
                 await _detailModel.SetCurrentPackage(selectedPackage, _topPanel.Filter, () => _packageList.SelectedItem);
-                _detailModel.SetCurrentSelectionInfo(selectedIndex, recommendedCount, _recommendPackages, _recommenderVersion);
+
+                int recommendedCount = 0;
+                bool recommendPackages = false;
+                //Browse items support Recommended packages.
+                if (sourceListBox == _packageList._listBrowse)
+                {
+                    recommendedCount = _packageList.BrowsePackageItems.Where(item => item.Recommended == true).Count();
+                }
+                _detailModel.SetCurrentSelectionInfo(selectedIndex, recommendedCount, recommendPackages, _recommenderVersion);
 
                 _packageDetail.ScrollToHome();
 

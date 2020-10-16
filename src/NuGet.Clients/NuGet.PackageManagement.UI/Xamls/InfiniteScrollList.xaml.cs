@@ -222,7 +222,7 @@ namespace NuGet.PackageManagement.UI
 
             InfiniteScrollListBox currentListBox = filterToRender == ItemFilter.All ? _listBrowse : _listInstalled;
             ObservableCollection<object> currentItems = filterToRender == ItemFilter.All ? ItemsBrowse : ItemsInstalled;
-            
+
             await currentListBox.ItemsLock.ExecuteAsync(() =>
             {
                 ClearPackageList(currentItems);
@@ -415,7 +415,7 @@ namespace NuGet.PackageManagement.UI
             var loadedItems = await LoadNextPageAsync(currentListBox, currentItems, currentLoader, token);
             token.ThrowIfCancellationRequested();
 
-            UpdatePackageList(currentListBox, currentItems,  loadedItems, refresh: false);
+            UpdatePackageList(currentListBox, currentItems, loadedItems, refresh: false);
 
             token.ThrowIfCancellationRequested();
 

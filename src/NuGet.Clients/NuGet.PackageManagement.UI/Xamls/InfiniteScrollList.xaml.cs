@@ -31,8 +31,6 @@ namespace NuGet.PackageManagement.UI
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001")]
     public partial class InfiniteScrollList : UserControl
     {
-        private readonly LoadingStatusIndicator _loadingStatusIndicator = new LoadingStatusIndicator();
-
         public event SelectionChangedEventHandler SelectionChanged;
 
         public delegate void UpdateButtonClickEventHandler(PackageItemListViewModel[] selectedPackages);
@@ -98,20 +96,25 @@ namespace NuGet.PackageManagement.UI
 
             DataContext = this;
 
-            _loadingStatusIndicator.PropertyChanged += LoadingStatusIndicator_PropertyChanged;
+            _listBrowse.LoadingStatusIndicator_PropertyChanged += LoadingStatusIndicator_PropertyChanged;
+            _listInstalled.LoadingStatusIndicator_PropertyChanged += LoadingStatusIndicator_PropertyChanged;
         }
 
         private void LoadingStatusIndicator_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            _joinableTaskFactory.Value.Run(async delegate
+            var indicator = sender as LoadingStatusIndicator;
+            if (indicator != null)
             {
-                await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
-                if (e.PropertyName == nameof(LoadingStatusIndicator.Status)
-                    && _ltbLoading.Text != _loadingStatusIndicator.LocalizedStatus)
+                _joinableTaskFactory.Value.Run(async delegate
                 {
-                    _ltbLoading.Text = _loadingStatusIndicator.LocalizedStatus;
-                }
-            });
+                    await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
+                    if (e.PropertyName == nameof(LoadingStatusIndicator.Status)
+                        && _ltbLoading.Text != indicator.LocalizedStatus)
+                    {
+                        _ltbLoading.Text = indicator.LocalizedStatus;
+                    }
+                });
+            }
         }
 
         private bool _checkBoxesEnabled;
@@ -315,12 +318,7 @@ namespace NuGet.PackageManagement.UI
 
             try
             {
-                // add Loading... indicator if not present
-                if (!currentItems.Contains(_loadingStatusIndicator))
-                {
-                    currentItems.Add(_loadingStatusIndicator);
-                    addedLoadingIndicator = true;
-                }
+                currentListBox.BeginLoadingIndeterminate();
 
                 await LoadItemsCoreAsync(currentListBox, currentItems, currentLoader, filterToRender, loadCts.Token);
 
@@ -344,7 +342,7 @@ namespace NuGet.PackageManagement.UI
                 // Do not log to the activity log, since it is not a NuGet error
                 _logger.Log(new LogMessage(LogLevel.Error, Resx.Resources.Text_UserCanceled));
 
-                _loadingStatusIndicator.SetError(Resx.Resources.Text_UserCanceled);
+                currentListBox.SetError(Resx.Resources.Text_UserCanceled);
 
                 if (filterToRender == ItemFilter.All)
                 {
@@ -366,7 +364,7 @@ namespace NuGet.PackageManagement.UI
                 var errorMessage = ExceptionUtilities.DisplayMessage(ex);
                 _logger.Log(new LogMessage(LogLevel.Error, errorMessage));
 
-                _loadingStatusIndicator.SetError(errorMessage);
+                currentListBox.SetError(errorMessage);
 
                 if (filterToRender == ItemFilter.All)
                 {
@@ -376,22 +374,7 @@ namespace NuGet.PackageManagement.UI
             }
             finally
             {
-                if (_loadingStatusIndicator.Status != LoadingStatus.NoItemsFound
-                    && _loadingStatusIndicator.Status != LoadingStatus.ErrorOccurred)
-                {
-                    // Ideally, after a search, it should report its status, and
-                    // do not keep the LoadingStatus.Loading forever.
-                    // This is a workaround.
-                    var emptyListCount = addedLoadingIndicator ? 1 : 0;
-                    if (currentItems.Count == emptyListCount)
-                    {
-                        _loadingStatusIndicator.Status = LoadingStatus.NoItemsFound;
-                    }
-                    else
-                    {
-                        currentItems.Remove(_loadingStatusIndicator);
-                    }
-                }
+                currentListBox.EndLoadingIndeterminate();
             }
 
             UpdateCheckBoxStatus();
@@ -407,7 +390,7 @@ namespace NuGet.PackageManagement.UI
                     ItemsInstalledCollectionView.Filter = null;
                     break;
                 case ItemFilter.UpdatesAvailable:
-                    ItemsInstalledCollectionView.Filter = (item) => item == _loadingStatusIndicator || (item as PackageItemListViewModel).IsUpdateAvailable;
+                    ItemsInstalledCollectionView.Filter = (item) => item is LoadingStatusIndicator || (item as PackageItemListViewModel).IsUpdateAvailable;
                     break;
                 case ItemFilter.Consolidate:
                     ItemsInstalledCollectionView.Filter = null; //TODO: setup
@@ -560,16 +543,8 @@ namespace NuGet.PackageManagement.UI
                             _loadingStatusBarBrowse.Visibility = desiredVisibility;
                         }
                     }
-                    _loadingStatusIndicator.Status = state.LoadingStatus;
-
-                    if (!currentItems.Contains(_loadingStatusIndicator))
-                    {
-                        await currentListBox.ItemsLock.ExecuteAsync(() =>
-                        {
-                            currentItems.Add(_loadingStatusIndicator);
-                            return Task.CompletedTask;
-                        });
-                    }
+                    currentListBox.Status = state.LoadingStatus;
+                    currentListBox.BeginLoadingIndeterminate();
                 }
             });
         }
@@ -615,7 +590,7 @@ namespace NuGet.PackageManagement.UI
                 await listBoxToUpdate.ItemsLock.ExecuteAsync(() =>
                 {
                     // remove the loading status indicator if it's in the list
-                    bool removed = collectionToUpdate.Remove(_loadingStatusIndicator);
+                    bool removed = collectionToUpdate.Remove(listBoxToUpdate.);
 
                     if (refresh)
                     {

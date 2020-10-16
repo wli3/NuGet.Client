@@ -4,7 +4,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Ocsp;
@@ -52,6 +54,7 @@ namespace Test.Utility.Signing
 #if IS_SIGNING_SUPPORTED
         public override void Respond(HttpListenerContext context)
         {
+            Console.WriteLine("\nContext is :\t\t" + context.Request.RawUrl);
             if (context == null)
             {
                 throw new ArgumentNullException(nameof(context));
@@ -70,10 +73,12 @@ namespace Test.Utility.Signing
             var respId = new RespID(CertificateAuthority.Certificate.SubjectDN);
             var basicOcspRespGenerator = new BasicOcspRespGenerator(respId);
             var requests = ocspReq.GetRequestList();
-            var nonce = ocspReq.GetExtensionValue(OcspObjectIdentifiers.PkixOcspNonce);
+            var nonce = ocspReq.GetExtensionValue(OcspObjectIdentifiers.PkixOcspNonce);            
 
             if (nonce != null)
             {
+                //display nonce
+                Console.WriteLine($"nonce is :\t\t { string.Join(" ", nonce.GetEncoded()) }");
                 var extensions = new X509Extensions(new Dictionary<DerObjectIdentifier, X509Extension>()
                 {
                     { OcspObjectIdentifiers.PkixOcspNonce, new X509Extension(critical: false, value: nonce) }
@@ -87,6 +92,8 @@ namespace Test.Utility.Signing
             foreach (var request in requests)
             {
                 var certificateId = request.GetCertID();
+                Console.WriteLine("cert is : \t\t" + certificateId.SerialNumber);
+
                 var certificateStatus = CertificateAuthority.GetStatus(certificateId);
                 var thisUpdate = _options.ThisUpdate ?? now;
                 var nextUpdate = _options.NextUpdate ?? now.AddSeconds(1);
@@ -110,7 +117,16 @@ namespace Test.Utility.Signing
             var ocspResp = ocspRespGenerator.Generate(OCSPRespGenerator.Successful, basicOcspResp);
 
             bytes = ocspResp.GetEncoded();
+            //display bytes
+            using (SHA1 sha1Hash = SHA1.Create())
+            {
+                //From String to byte array
+                byte[] hashBytes = sha1Hash.ComputeHash(bytes);
+                string hash = BitConverter.ToString(hashBytes).Replace("-", String.Empty);
 
+                Console.WriteLine($"byte hash is :  \t\t {hash}");
+            }
+        
             context.Response.ContentType = ResponseContentType;
 
             WriteResponseBody(context.Response, bytes);

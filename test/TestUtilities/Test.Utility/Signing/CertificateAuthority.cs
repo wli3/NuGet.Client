@@ -231,9 +231,10 @@ namespace Test.Utility.Signing
 
                 if (!_revokedCertificates.TryGetValue(certificateId.SerialNumber, out revocationInfo))
                 {
+                    Console.WriteLine("CertificateStatus is : good");
                     return CertificateStatus.Good;
                 }
-
+                Console.WriteLine("CertificateStatus is : bad");
                 var datetimeString = DerGeneralizedTimeUtility.ToDerGeneralizedTimeString(revocationInfo.RevocationDate);
 
                 // The DateTime constructor truncates fractional seconds;
@@ -242,6 +243,7 @@ namespace Test.Utility.Signing
                 var reason = new CrlReason((int)revocationInfo.Reason);
                 var revokedInfo = new RevokedInfo(revocationDate, reason);
 
+                Console.WriteLine("revocationDate is : " + revocationDate.ToString());
                 return new RevokedStatus(revokedInfo);
             }
 

@@ -49,6 +49,8 @@ namespace NuGet.PackageManagement.UI
         private INuGetUILogger _logger;
         private Task<SearchResult<IPackageSearchMetadata>> _initialSearchResultTask;
         private readonly Lazy<JoinableTaskFactory> _joinableTaskFactory;
+        public bool BrowseInitialized { get; set; }
+        public bool InstallInitialized { get; set; }
 
         private const string LogEntrySource = "NuGet Package Manager";
 
@@ -292,6 +294,15 @@ namespace NuGet.PackageManagement.UI
             Interlocked.Exchange(ref _loadCts, loadCts)?.Cancel();
 
             await RepopulatePackageListAsync(currentListBox, currentItems, selectedPackageItem, loader, filterToRender, loadCts);
+
+            if (filterToRender == ItemFilter.All)
+            {
+                BrowseInitialized = true;
+            }
+            else
+            {
+                InstallInitialized = true;
+            }
         }
 
         private async Task RepopulatePackageListAsync(InfiniteScrollListBox currentListBox,
@@ -400,6 +411,19 @@ namespace NuGet.PackageManagement.UI
                     break;
                 case ItemFilter.Consolidate:
                     ItemsInstalledCollectionView.Filter = null; //TODO: setup
+                    //var packagesNeedingConsolidation = _installedPackages
+                    //  .GroupById()
+                    //  .Where(g => g.Count() > 1)
+                    //  .Select(g => new PackageIdentity(g.Key, g.Max()))
+                    //  .ToArray();
+
+                    //        var packages = packagesNeedingConsolidation
+                    //           .Where(p => p.Id.IndexOf(searchToken.SearchString, StringComparison.OrdinalIgnoreCase) != -1)
+                    //           .OrderBy(p => p.Id)
+                    //           .Skip(searchToken.StartIndex)
+                    //           .Take(PageSize + 1)
+                    //           .ToArray();
+
                     break;
                 default: break;
             }

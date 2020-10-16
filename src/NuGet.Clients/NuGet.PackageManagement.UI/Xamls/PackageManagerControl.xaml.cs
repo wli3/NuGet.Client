@@ -1094,33 +1094,16 @@ namespace NuGet.PackageManagement.UI
                 return packageFeeds;
             }
 
-            if (filter == ItemFilter.Installed)
+            if (filter == ItemFilter.Installed || filter == ItemFilter.UpdatesAvailable || filter == ItemFilter.Consolidate)
             {
                 packageFeeds.mainFeed = new InstalledPackageFeed(installedPackages, metadataProvider, logger);
                 return packageFeeds;
             }
 
-            if (filter == ItemFilter.Consolidate)
-            {
-                packageFeeds.mainFeed = new ConsolidatePackageFeed(installedPackages, metadataProvider, logger);
-                return packageFeeds;
-            }
-
+            //TODO: umm, what?
             // Search all / updates available cannot work without a source repo
             if (context.SourceRepositories == null)
             {
-                return packageFeeds;
-            }
-
-            if (filter == ItemFilter.UpdatesAvailable)
-            {
-                packageFeeds.mainFeed = new UpdatePackageFeed(
-                    context.ServiceBroker,
-                    installedPackages,
-                    metadataProvider,
-                    context.Projects,
-                    context.CachedPackages,
-                    logger);
                 return packageFeeds;
             }
 
@@ -1169,17 +1152,30 @@ namespace NuGet.PackageManagement.UI
         {
             if (_initialized)
             {
-                SynchronizeTabSelectionFlag();
-
                 var timeSpan = GetTimeSinceLastRefreshAndRestart();
-                _packageList.ResetLoadingStatusIndicator(); //TODO: remove this?
+                bool isUiFiltering = false;
 
-                var isUiFiltering = !_packageList.IsBrowseTab;
-
-                if (isUiFiltering)
+                //Initialize the tab if its data isn't already loaded.
+                if ((_topPanel.Filter == ItemFilter.All && _packageList.BrowseInitialized == false)
+                    || (_topPanel.Filter != ItemFilter.All && _packageList.InstallInitialized == false))
                 {
-                    //UI can apply filtering.
-                    //TODO: _packageList.FilterInstalledDataItems(_topPanel.Filter, _loadCts.Token);
+                    //Load from source.
+                    SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: false);
+
+                    //Set UI's state once data is loaded.
+                    SynchronizeTabSelectionFlag();
+                }
+                else //Current tab is initialized and has data, so set UI's state.
+                {
+                    SynchronizeTabSelectionFlag();
+                    _packageList.ResetLoadingStatusIndicator(); //TODO: remove this?
+
+                    isUiFiltering = !_packageList.IsBrowseTab;
+                    if (isUiFiltering)
+                    {
+                        //UI can apply filtering.
+                        _packageList.FilterInstalledDataItems(_topPanel.Filter, _loadCts.Token);
+                    }
                 }
 
                 //TODO: remove telemetry since UI filtering will be implied on InstalledData tabs?
@@ -1489,6 +1485,11 @@ namespace NuGet.PackageManagement.UI
             UpdatePackage(packagesToUpdate);
         }
 
+        /// <summary>
+        /// Refresh button pressed event handler.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ExecuteRestartSearchCommand(object sender, ExecutedRoutedEventArgs e)
         {
             EmitRefreshEvent(GetTimeSinceLastRefreshAndRestart(), RefreshOperationSource.RestartSearchCommand, RefreshOperationStatus.Success);

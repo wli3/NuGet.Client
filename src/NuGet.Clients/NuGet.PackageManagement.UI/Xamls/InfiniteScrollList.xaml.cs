@@ -216,7 +216,7 @@ namespace NuGet.PackageManagement.UI
 
             _logger = logger;
             _initialSearchResultTask = searchResultTask;
-            _loadingStatusIndicator.Reset(loadingMessage);
+
             if (filterToRender == ItemFilter.All)
             {
                 _loaderBrowse = loader;
@@ -228,6 +228,8 @@ namespace NuGet.PackageManagement.UI
 
             InfiniteScrollListBox currentListBox = filterToRender == ItemFilter.All ? _listBrowse : _listInstalled;
             ObservableCollection<object> currentItems = filterToRender == ItemFilter.All ? ItemsBrowse : ItemsInstalled;
+
+            currentListBox.ShowLoadingIndicator(loadingMessage);
 
             await currentListBox.ItemsLock.ExecuteAsync(() =>
             {
@@ -296,6 +298,8 @@ namespace NuGet.PackageManagement.UI
             var loadCts = CancellationTokenSource.CreateLinkedTokenSource(token);
             Interlocked.Exchange(ref _loadCts, loadCts)?.Cancel();
 
+            currentListBox.ShowLoadingIndicator();
+
             await RepopulatePackageListAsync(currentListBox, currentItems, selectedPackageItem, loader, filterToRender, loadCts);
 
             if (filterToRender == ItemFilter.All)
@@ -314,12 +318,8 @@ namespace NuGet.PackageManagement.UI
         {
             await TaskScheduler.Default;
 
-            var addedLoadingIndicator = false;
-
             try
             {
-                currentListBox.BeginLoadingIndeterminate();
-
                 await LoadItemsCoreAsync(currentListBox, currentItems, currentLoader, filterToRender, loadCts.Token);
 
                 await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
@@ -374,7 +374,7 @@ namespace NuGet.PackageManagement.UI
             }
             finally
             {
-                currentListBox.EndLoadingIndeterminate();
+                currentListBox.ShowLoadingIndicator(operationComplete: true);
             }
 
             UpdateCheckBoxStatus();
@@ -544,7 +544,7 @@ namespace NuGet.PackageManagement.UI
                         }
                     }
                     currentListBox.Status = state.LoadingStatus;
-                    currentListBox.BeginLoadingIndeterminate();
+                    currentListBox.ShowLoadingIndicator();
                 }
             });
         }
@@ -589,8 +589,7 @@ namespace NuGet.PackageManagement.UI
                 // Synchronize updating Items list
                 await listBoxToUpdate.ItemsLock.ExecuteAsync(() =>
                 {
-                    // remove the loading status indicator if it's in the list
-                    bool removed = collectionToUpdate.Remove(listBoxToUpdate.);
+                    bool removed = listBoxToUpdate.HideLoadingStatusIndicator();
 
                     if (refresh)
                     {
@@ -607,7 +606,7 @@ namespace NuGet.PackageManagement.UI
 
                     if (removed)
                     {
-                        collectionToUpdate.Add(_loadingStatusIndicator);
+                        listBoxToUpdate.ShowLoadingIndicator();
                     }
 
                     return Task.CompletedTask;
@@ -814,11 +813,6 @@ namespace NuGet.PackageManagement.UI
         private void _loadingStatusBarBrowse_DismissClick(object sender, RoutedEventArgs e)
         {
             _loadingStatusBarBrowse.Visibility = Visibility.Hidden;
-        }
-
-        public void ResetLoadingStatusIndicator()
-        {
-            _loadingStatusIndicator.Reset(string.Empty);
         }
     }
 }

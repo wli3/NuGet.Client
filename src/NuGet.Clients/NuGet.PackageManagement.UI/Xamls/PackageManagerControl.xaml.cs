@@ -1165,10 +1165,9 @@ namespace NuGet.PackageManagement.UI
                     //Set UI's state once data is loaded.
                     SynchronizeTabSelectionFlag();
                 }
-                else //Current tab is initialized and has data, so set UI's state.
+                else //Current tab is initialized and has data, so set state of UI.
                 {
                     SynchronizeTabSelectionFlag();
-                    _packageList.ResetLoadingStatusIndicator(); //TODO: remove this?
 
                     isUiFiltering = !_packageList.IsBrowseTab;
                     if (isUiFiltering)

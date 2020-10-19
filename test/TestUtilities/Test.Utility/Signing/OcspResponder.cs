@@ -97,7 +97,7 @@ namespace Test.Utility.Signing
 
                 var certificateStatus = CertificateAuthority.GetStatus(certificateId);
                 var thisUpdate = _options.ThisUpdate ?? now;
-                var nextUpdate = _options.NextUpdate ?? now.AddSeconds(1);
+                var nextUpdate = _options.NextUpdate ?? now.AddSeconds(2);
 
                 _responses.AddOrUpdate(certificateId.SerialNumber.ToString(), nextUpdate, (key, currentNextUpdate) =>
                 {

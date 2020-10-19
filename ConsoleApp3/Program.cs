@@ -50,9 +50,9 @@ namespace ConsoleApp3
                 Console.WriteLine("\n test : " + i + "\n");
                 var ca = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
                 var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
-
+                
                 using (var directory = TestDirectory.Create())
-                using (var testCertificate = new X509Certificate2(_trustedTestCert.Source.Cert))
+                using (var testCertificate = ca.IssueCertificate())
                 {
                     var packageContext = new SimpleTestPackageContext();
                     var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(

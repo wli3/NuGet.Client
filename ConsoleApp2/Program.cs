@@ -149,9 +149,9 @@ namespace ConsoleApp2
                                                 elements.AppendLine($"  info: ({chainElementStatus.StatusInformation})");
                                             }
 
-                                            var file = new FileInfo(Path.Combine(".", $"{k}.cer"));
-                                            File.WriteAllBytes(file.FullName, chainElement.Certificate.RawData);
-                                            Console.WriteLine($"cert {k} is written to {file.FullName}");
+                                            //var file = new FileInfo(Path.Combine(".", $"{k}.cer"));
+                                            //File.WriteAllBytes(file.FullName, chainElement.Certificate.RawData);
+                                            //Console.WriteLine($"cert {k} is written to {file.FullName}");
                                             k++;
                                         }
                                         Console.WriteLine("Press [ENTER] to continue");

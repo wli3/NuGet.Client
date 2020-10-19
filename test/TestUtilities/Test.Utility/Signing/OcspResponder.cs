@@ -55,7 +55,6 @@ namespace Test.Utility.Signing
 #if IS_SIGNING_SUPPORTED
         public override void Respond(HttpListenerContext context)
         {
-            Console.WriteLine("\nContext is : " + context.Request.RawUrl);
             if (context == null)
             {
                 throw new ArgumentNullException(nameof(context));
@@ -78,8 +77,6 @@ namespace Test.Utility.Signing
 
             if (nonce != null)
             {
-                //display nonce
-                Console.WriteLine($"nonce is :\t\t { string.Join(" ", nonce.GetEncoded()) }");
                 var extensions = new X509Extensions(new Dictionary<DerObjectIdentifier, X509Extension>()
                 {
                     { OcspObjectIdentifiers.PkixOcspNonce, new X509Extension(critical: false, value: nonce) }
@@ -93,7 +90,6 @@ namespace Test.Utility.Signing
             foreach (var request in requests)
             {
                 var certificateId = request.GetCertID();
-                Console.WriteLine("cert is : \t\t" + certificateId.SerialNumber);
 
                 var certificateStatus = CertificateAuthority.GetStatus(certificateId);
                 var thisUpdate = _options.ThisUpdate ?? now;

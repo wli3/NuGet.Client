@@ -43,6 +43,9 @@ namespace Dotnet.Integration.Test.Utils
                         }
                         break;
 
+                    case HandleKind.MethodDefinition:
+                        break;
+
                     default:
                         throw new NotSupportedException(customAttribute.Constructor.Kind.ToString());
                 }

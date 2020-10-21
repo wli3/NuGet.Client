@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft;
 using Microsoft.ServiceHub.Framework;
 using NuGet.VisualStudio.Internal.Contracts;
 
@@ -45,6 +46,9 @@ namespace NuGet.PackageManagement.VisualStudio
             IEnumerable<IProjectContextInfo> projects,
             CancellationToken cancellationToken)
         {
+            Assumes.NotNull(serviceBroker);
+            Assumes.NotNull(projects);
+
             // Read package references from all projects.
             IEnumerable<Task<IReadOnlyCollection<IPackageReferenceContextInfo>>>? tasks = projects
                 .Select(project => project.GetInstalledPackagesAsync(serviceBroker, cancellationToken).AsTask());

@@ -20,6 +20,11 @@ namespace NuGet.PackageManagement.VisualStudio
             IServiceBroker serviceBroker,
             CancellationToken cancellationToken)
         {
+            Assumes.NotNull(projectContextInfo);
+            Assumes.NotNull(serviceBroker);
+
+            cancellationToken.ThrowIfCancellationRequested();
+
             using (INuGetProjectUpgraderService? projectUpgrader = await serviceBroker.GetProxyAsync<INuGetProjectUpgraderService>(
                 NuGetServices.ProjectUpgraderService,
                 cancellationToken: cancellationToken))
@@ -35,6 +40,11 @@ namespace NuGet.PackageManagement.VisualStudio
             IServiceBroker serviceBroker,
             CancellationToken cancellationToken)
         {
+            Assumes.NotNull(projectContextInfo);
+            Assumes.NotNull(serviceBroker);
+
+            cancellationToken.ThrowIfCancellationRequested();
+
             using (INuGetProjectManagerService projectManager = await GetProjectManagerAsync(serviceBroker, cancellationToken))
             {
                 return await projectManager.GetInstalledPackagesAsync(new string[] { projectContextInfo.ProjectId }, cancellationToken);
@@ -46,6 +56,9 @@ namespace NuGet.PackageManagement.VisualStudio
             IServiceBroker serviceBroker,
             CancellationToken cancellationToken)
         {
+            Assumes.NotNull(projectContextInfo);
+            Assumes.NotNull(serviceBroker);
+
             cancellationToken.ThrowIfCancellationRequested();
 
             using (INuGetProjectManagerService projectManager = await GetProjectManagerAsync(serviceBroker, cancellationToken))
@@ -70,6 +83,8 @@ namespace NuGet.PackageManagement.VisualStudio
             PackageIdentity packageIdentity,
             CancellationToken cancellationToken)
         {
+            Assumes.NotNull(projectContextInfo);
+            Assumes.NotNull(serviceBroker);
             Assumes.NotNull(packageIdentity);
 
             cancellationToken.ThrowIfCancellationRequested();

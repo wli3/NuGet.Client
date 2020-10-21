@@ -26,7 +26,9 @@ namespace NuGet.CommandLine.Test
             {
                 bool owner = _mutex.WaitOne(TimeSpan.FromMinutes(2));
                 if (!owner)
-                 throw new TimeoutException(string.Format("Timedout while waiting for mutex {0}", MutexName));
+                {
+                    throw new TimeoutException(string.Format("Timedout while waiting for mutex {0}", MutexName));
+                }
             }
 
             BackupAndDeleteDefaultConfigurationFile();

@@ -18,7 +18,7 @@ using Xunit;
 
 namespace Dotnet.Integration.Test
 {
-    public class PackCommandTests : IClassFixture<MsbuildIntegrationTestFixture>
+    public class PackCommandTests
     {
         private MsbuildIntegrationTestFixture msbuildFixture;
 

@@ -11,7 +11,7 @@ using Xunit;
 
 namespace Dotnet.Integration.Test
 {
-    public class DotnetVerifyTests : IClassFixture<MsbuildIntegrationTestFixture>
+    public class DotnetVerifyTests
     {
         private readonly string _noTimestamperWarningCode = NuGetLogCode.NU3027.ToString();
         private readonly string _primarySignatureInvalidErrorCode = NuGetLogCode.NU3018.ToString();

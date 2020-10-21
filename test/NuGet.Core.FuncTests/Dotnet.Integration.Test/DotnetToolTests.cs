@@ -16,7 +16,7 @@ using Xunit;
 
 namespace Dotnet.Integration.Test
 {
-    public class DotnetToolTests : IClassFixture<MsbuildIntegrationTestFixture>
+    public class DotnetToolTests
     {
         private MsbuildIntegrationTestFixture _msbuildFixture;
 

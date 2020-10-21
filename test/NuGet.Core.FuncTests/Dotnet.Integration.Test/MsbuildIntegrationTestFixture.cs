@@ -21,6 +21,14 @@ using NuGet.Versioning;
 using NuGet.XPlat.FuncTest;
 using Xunit;
 
+// The custom test framework enables the support
+[assembly: TestFramework("Dotnet.Integration.Test.XunitExtensions.XunitTestFrameworkWithAssemblyFixture", "Dotnet.Integration.Test")]
+
+// Add one of these for every fixture classes for the assembly.
+// Just like other fixtures, you can implement IDisposable and it'll
+// get cleaned up at the end of the test run.
+[assembly: AssemblyFixture(typeof(Dotnet.Integration.Test.MsbuildIntegrationTestFixture))]
+
 namespace Dotnet.Integration.Test
 {
     public class MsbuildIntegrationTestFixture : IDisposable

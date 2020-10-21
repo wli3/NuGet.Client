@@ -11,7 +11,7 @@ using Xunit;
 
 namespace Dotnet.Integration.Test
 {
-    public class DotnetSourcesTests : IClassFixture<MsbuildIntegrationTestFixture>
+    public class DotnetSourcesTests
     {
         private readonly MsbuildIntegrationTestFixture _fixture;
 

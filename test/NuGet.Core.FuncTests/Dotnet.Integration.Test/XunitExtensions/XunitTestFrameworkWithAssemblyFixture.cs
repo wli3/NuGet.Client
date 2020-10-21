@@ -1,8 +1,8 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace AssemblyFixtureExample.XunitExtensions
+namespace Dotnet.Integration.Test.XunitExtensions
 {
     public class XunitTestFrameworkWithAssemblyFixture : XunitTestFramework
     {

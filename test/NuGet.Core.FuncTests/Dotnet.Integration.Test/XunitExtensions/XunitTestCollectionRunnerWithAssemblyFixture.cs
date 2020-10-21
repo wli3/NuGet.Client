@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace AssemblyFixtureExample.XunitExtensions
+namespace Dotnet.Integration.Test.XunitExtensions
 {
     public class XunitTestCollectionRunnerWithAssemblyFixture : XunitTestCollectionRunner
     {

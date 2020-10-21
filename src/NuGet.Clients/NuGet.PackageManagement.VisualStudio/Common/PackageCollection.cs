@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.ServiceHub.Framework;
 using NuGet.VisualStudio.Internal.Contracts;
 
 namespace NuGet.PackageManagement.VisualStudio
@@ -39,11 +40,14 @@ namespace NuGet.PackageManagement.VisualStudio
 
         public bool ContainsId(string packageId) => _uniqueIds.Contains(packageId);
 
-        public static async Task<PackageCollection> FromProjectsAsync(IEnumerable<IProjectContextInfo> projects, CancellationToken cancellationToken)
+        public static async Task<PackageCollection> FromProjectsAsync(
+            IServiceBroker serviceBroker,
+            IEnumerable<IProjectContextInfo> projects,
+            CancellationToken cancellationToken)
         {
             // Read package references from all projects.
             IEnumerable<Task<IReadOnlyCollection<IPackageReferenceContextInfo>>>? tasks = projects
-                .Select(project => project.GetInstalledPackagesAsync(cancellationToken).AsTask());
+                .Select(project => project.GetInstalledPackagesAsync(serviceBroker, cancellationToken).AsTask());
             IEnumerable<IPackageReferenceContextInfo>[]? packageReferences = await Task.WhenAll(tasks);
 
             // Group all package references for an id/version into a single item.

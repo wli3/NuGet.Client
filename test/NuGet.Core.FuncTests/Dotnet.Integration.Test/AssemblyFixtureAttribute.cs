@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
 public class AssemblyFixtureAttribute : Attribute

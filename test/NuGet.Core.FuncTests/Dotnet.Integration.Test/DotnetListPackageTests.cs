@@ -17,8 +17,7 @@ using Strings = NuGet.CommandLine.XPlat.Strings;
 
 namespace Dotnet.Integration.Test
 {
-    [Collection("Dotnet Integration Tests")]
-    public class DotnetListPackageTests
+    public class DotnetListPackageTests : IClassFixture<MsbuildIntegrationTestFixture>
     {
         private static readonly string ProjectName = "test_project_listpkg";
 

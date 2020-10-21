@@ -19,8 +19,7 @@ using static NuGet.Frameworks.FrameworkConstants;
 
 namespace Dotnet.Integration.Test
 {
-    [Collection("Dotnet Integration Tests")]
-    public class DotnetRestoreTests
+    public class DotnetRestoreTests : IClassFixture<MsbuildIntegrationTestFixture>
     {
         private MsbuildIntegrationTestFixture _msbuildFixture;
 

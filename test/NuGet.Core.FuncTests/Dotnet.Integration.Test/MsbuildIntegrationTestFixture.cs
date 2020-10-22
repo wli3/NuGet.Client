@@ -22,7 +22,7 @@ using NuGet.XPlat.FuncTest;
 using Xunit;
 
 // The custom test framework enables the support
-[assembly: TestFramework("Dotnet.Integration.Test.XunitExtensions.XunitTestFrameworkWithAssemblyFixture", "Dotnet.Integration.Test")]
+[assembly: TestFramework("NuGet.Test.Utility.XunitExtensions.XunitTestFrameworkWithAssemblyFixture", "Test.Utility")]
 
 // Add one of these for every fixture classes for the assembly.
 // Just like other fixtures, you can implement IDisposable and it'll

@@ -373,6 +373,13 @@ jobs:
       artifactName: "NuGet.CommandLine.Test"
       downloadPath: "$(Build.Repository.LocalPath)/artifacts"
 
+  - task: PowerShell@2
+    displayName: "check mono"
+    inputs:
+      targetType: "inline"
+      script: |
+        ls /Library/Frameworks/Mono.framework/*
+
   - task: ShellScript@2
     displayName: "Run Tests (continue on error)"
     continueOnError: "true"

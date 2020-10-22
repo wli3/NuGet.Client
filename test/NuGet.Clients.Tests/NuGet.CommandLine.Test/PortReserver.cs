@@ -123,7 +123,7 @@ namespace NuGet.CommandLine.Test
             Mutex mutex = new Mutex(initiallyOwned: true, name: "NuGet-RandomPortAcquisition", out bool mutexWasCreated);
             if (!mutexWasCreated && !mutex.WaitOne(30000))
             {
-                throw new InvalidOperationException();
+                throw new InvalidOperationException("Unable to get lock after 30 seconds");
             }
 
             return mutex;

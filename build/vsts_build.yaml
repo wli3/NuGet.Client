@@ -378,7 +378,7 @@ jobs:
     inputs:
       targetType: "inline"
       script: |
-        ls /Library/Frameworks/Mono.framework/*
+        ls -R /Library/Frameworks/Mono.framework/Versions/
 
   - task: ShellScript@2
     displayName: "Run Tests (continue on error)"

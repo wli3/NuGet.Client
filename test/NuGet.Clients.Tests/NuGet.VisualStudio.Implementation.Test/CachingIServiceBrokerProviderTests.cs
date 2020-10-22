@@ -3,6 +3,7 @@
 
 using System.Threading.Tasks;
 using Microsoft.ServiceHub.Framework;
+using Microsoft.VisualStudio.Sdk.TestFramework;
 using Xunit;
 
 namespace NuGet.VisualStudio.Implementation.Test
@@ -10,6 +11,11 @@ namespace NuGet.VisualStudio.Implementation.Test
     [Collection(MockedVS.Collection)]
     public class CachingIServiceBrokerProviderTests
     {
+        public CachingIServiceBrokerProviderTests(GlobalServiceProvider serviceProvider)
+        {
+            serviceProvider.Reset();
+        }
+
         [Fact]
         public async Task GetAsync_Always_IsIdempotent()
         {

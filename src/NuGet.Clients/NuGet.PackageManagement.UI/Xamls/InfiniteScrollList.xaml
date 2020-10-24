@@ -275,7 +275,7 @@
     </ControlTemplate>
 
     <!-- Template used by ListBox that represents a list of packages. -->
-    <Style x:Key="ListBoxStyle" TargetType="{x:Type ListBox}">
+    <Style x:Key="ListBoxStyle" TargetType="{x:Type nuget:InfiniteScrollListBox}">
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate>
@@ -293,7 +293,9 @@
                 Padding="{TemplateBinding Padding}"
                 HorizontalScrollBarVisibility="Disabled"
                 VerticalScrollBarVisibility="Visible">
-                <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                <WrapPanel Orientation="Vertical">
+                  <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                </WrapPanel>
               </ScrollViewer>
             </Border>
           </ControlTemplate>

@@ -3,12 +3,17 @@
         <ReporterSwitch>verbose</ReporterSwitch>
         <TargetFrameworkVersion>FrameworkCore10</TargetFrameworkVersion>
     </RunConfiguration>
+    <LoggerRunSettings>
+        <Loggers>
+            <Logger friendlyName="blame" enabled="True" />
+        </Loggers>
+    </LoggerRunSettings>
     <DataCollectionRunSettings>
         <DataCollectors>
             <DataCollector friendlyName="blame" enabled="True">
                 <Configuration>
-                    <CollectDumpOnTestSessionHang TestTimeout="15min" HangDumpType="full" />
-                    <ResultsDirectory>%AGENT_TEMPDIRECTORY%</ResultsDirectory>
+                    <CollectDumpOnTestSessionHang TestTimeout="1s" HangDumpType="Full" />
+                    <ResultsDirectory>$(TestResultsDirectory)</ResultsDirectory>
                 </Configuration>
             </DataCollector>
         </DataCollectors>

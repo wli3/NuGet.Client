@@ -135,7 +135,7 @@
 
   <!--
     ============================================================
-    Build 
+    Build
     ============================================================
   -->
   <Target Name="BuildVS"  Condition=" '$(IsXPlat)' != 'true' " >
@@ -144,7 +144,7 @@
 
     <!--
     ============================================================
-    Build for XPLAT 
+    Build for XPLAT
     ============================================================
   -->
   <Target Name="BuildXPLAT" DependsOnTargets="GetXPLATProjects">
@@ -286,7 +286,7 @@
   -->
   <Target Name="RestoreXPLAT" DependsOnTargets="GetXPLATProjects">
     <Message Text="Restoring for XPLAT" Importance="high" />
-    
+
     <PropertyGroup>
       <ProjectListValue>@(XPLATProjects)</ProjectListValue>
     </PropertyGroup>
@@ -302,7 +302,7 @@
 
   <!--
     ============================================================
-    Restore Apex 
+    Restore Apex
     ============================================================
   -->
   <Target Name="RestoreApex">
@@ -310,6 +310,27 @@
 
     <PropertyGroup>
       <ProjectListValue>@(ApexProjects)</ProjectListValue>
+    </PropertyGroup>
+
+    <MSBuild
+      Projects="restorehelper.targets"
+      Targets="Restore"
+      Properties="RestoreGraphProjectInput=$(ProjectListValue);
+                  $(CommonMSBuildProperties);
+                  VisualStudioVersion=$(VisualStudioVersion)">
+    </MSBuild>
+  </Target>
+
+  <!--
+    ============================================================
+    Restore package signing cross framework verify test project
+    ============================================================
+  -->
+  <Target Name="RestoreCrossVerifyTest">
+    <Message Text="Restoring package signing cross framework verify test project" Importance="high" />
+
+    <PropertyGroup>
+      <ProjectListValue>@(CrossVerifyProjects)</ProjectListValue>
     </PropertyGroup>
 
     <MSBuild
@@ -337,7 +358,7 @@
   <!--
     ============================================================
     RunTestsOnProjects
-    Finds all test assemblies and allows Xunit to run them as 
+    Finds all test assemblies and allows Xunit to run them as
     efficiently as the xunit.runner.json settings allow.
     ============================================================
   -->
@@ -375,7 +396,7 @@
       <!-- Sort assemblies -->
       <DesktopInputTestAssemblies>@(TestAssemblyPath->WithMetadataValue("IsDesktop", "true"))</DesktopInputTestAssemblies>
       <DesktopInputTestAssembliesSpaced>$(DesktopInputTestAssemblies.Replace(';', ' '))</DesktopInputTestAssembliesSpaced>
-      
+
       <!-- Build exe commands -->
       <DesktopTestCommand>$(XunitConsoleExePath) $(DesktopInputTestAssembliesSpaced) -verbose</DesktopTestCommand>
       <DesktopTestCommand Condition=" '$(TestResultsXunit)' != '' ">$(DesktopTestCommand) -$(TestResultOutputFormat) $(TestResultsXunit)</DesktopTestCommand>
@@ -390,7 +411,7 @@
     </PropertyGroup>
 
     <!-- Desktop -->
-    <Message Text="Running $(DesktopTestCommand)" 
+    <Message Text="Running $(DesktopTestCommand)"
           Condition=" '$(SkipDesktopAssemblies)' != 'true' AND '$(DesktopInputTestAssemblies)' != '' "/>
 
     <Exec Command="$(DesktopTestCommand)"
@@ -400,7 +421,7 @@
     </Exec>
 
     <!-- VSTest/NETCore -->
-    <Message Text="Running $(VSTestCommand)" 
+    <Message Text="Running $(VSTestCommand)"
           Condition=" '$(SkipCoreAssemblies)' != 'true' AND '$(CoreInputTestAssemblies)' != '' "/>
 
     <Exec Command="$(VSTestCommand)"

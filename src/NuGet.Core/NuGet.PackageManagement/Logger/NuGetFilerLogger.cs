@@ -77,14 +77,14 @@ namespace NuGet.PackageManagement
                 AllValues.Add(value);
             }
 
-            if(Values.Count>0 && Values.Count%5==0)
+            if (Values.Count > 0 && Values.Count % 5 == 0)
             {
                 foreach (var val in Values)
                 {
                     _streamWriter.Value.WriteLine(val);
                 }
 
-                _streamWriter.Value.WriteLine($"Current avg:" + AllValues.Sum()/AllValues.Count );
+                _streamWriter.Value.WriteLine($"Current avg:" + AllValues.Sum() / AllValues.Count);
                 Values.Clear();
             }
 

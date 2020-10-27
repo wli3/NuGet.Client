@@ -2,14 +2,14 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.ComponentModel;
-using System.Windows;
 using System.Windows.Controls;
 using NuGet.PackageManagement.VisualStudio;
 using Resx = NuGet.PackageManagement.UI.Resources;
 
 namespace NuGet.PackageManagement.UI
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1501:AvoidExcessiveInheritance")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1501:AvoidExcessiveInheritance",
+        Justification = "Needs to be capable of adding/removing from ListBox Children")]
     internal class LoadingStatusIndicator : ContentControl, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -64,14 +64,6 @@ namespace NuGet.PackageManagement.UI
                     OnPropertyChanged(nameof(ErrorMessage));
                 }
             }
-        }
-
-        public LoadingStatusIndicator()
-        {
-            //Resources.FindName("LoadingStatusIndicatorTemplate") as ControlTemplate;
-            //Template = Application.Current.FindResource("LoadingStatusIndicatorTemplate") as ControlTemplate;
-            //Template = Resources.FindName("LoadingStatusIndicatorTemplate") as ControlTemplate;
-            DefaultStyleKey = "loadingStatusIndicatorStyle";
         }
 
         protected void OnPropertyChanged(string propertyName)

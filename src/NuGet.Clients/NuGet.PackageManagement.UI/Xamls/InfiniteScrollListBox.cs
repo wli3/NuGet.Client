@@ -1,15 +1,10 @@
-using System;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Windows;
-using System.Windows.Automation.Peers;
 using System.Windows.Controls;
 using Microsoft.VisualStudio.Threading;
 using NuGet.PackageManagement.VisualStudio;
-using NuGet.VisualStudio;
 
 namespace NuGet.PackageManagement.UI
 {
@@ -56,7 +51,6 @@ namespace NuGet.PackageManagement.UI
 
         public InfiniteScrollListBox()
         {
-            //Style = Resources.FindName("loadingStatusIndicatorStyle") as Style;
             _loadingStatusIndicator.PropertyChanged += LoadingStatusIndicator_PropertyChanged;
         }
 
@@ -147,12 +141,10 @@ namespace NuGet.PackageManagement.UI
             //}
         //}
 
-
         private bool _showingLoadingStatusIndicator;
 
         public void ShowLoadingIndicator(string loadingMessage = null, bool operationComplete = false, bool show = true)
         {
-
             //Border
             //>ScrollViewer
             //>>WrapPanel
@@ -169,7 +161,7 @@ namespace NuGet.PackageManagement.UI
                         wrapPanel.Children.Add(_loadingStatusIndicator);
                         _showingLoadingStatusIndicator = true;
                     }
-                }                
+                }
             }
             else
             {

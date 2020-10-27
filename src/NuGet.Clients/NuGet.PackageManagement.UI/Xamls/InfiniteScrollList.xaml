@@ -32,8 +32,7 @@
         DataContext="{Binding}" />
     </DataTemplate>
 
-    <DataTemplate
-      DataType="{x:Type nuget:LoadingStatusIndicator}">
+    <ControlTemplate x:Key="LoadingStatusIndicatorTemplate" TargetType="{x:Type nuget:LoadingStatusIndicator}">
       <Grid
         Margin="0,8">
         <TextBlock
@@ -67,7 +66,7 @@
             VerticalAlignment="Center"/>
         </Grid>
       </Grid>
-      <DataTemplate.Triggers>
+      <ControlTemplate.Triggers>
         <DataTrigger
           Binding="{Binding Path=Status}"
           Value="Loading">
@@ -92,8 +91,8 @@
             Property="Visibility"
             Value="Visible" />
         </DataTrigger>
-      </DataTemplate.Triggers>
-    </DataTemplate>
+      </ControlTemplate.Triggers>
+    </ControlTemplate>
 
     <!-- Template used by ListBoxItem that represents a package. -->
     <ControlTemplate
@@ -214,11 +213,10 @@
     <!-- the style of the ListBoxItem when the item is the loading status indicator. -->
     <Style
       x:Key="loadingStatusIndicatorStyle"
-      TargetType="{x:Type ListBoxItem}"
-      BasedOn="{StaticResource listBoxItemStyle}">
+      TargetType="{x:Type nuget:LoadingStatusIndicator}">
       <Setter
         Property="Template"
-        Value="{StaticResource LoadingIndicatorListBoxItemTemplate}" />
+        Value="{StaticResource LoadingStatusIndicatorTemplate}" />
       <Setter
         Property="Focusable"
         Value="False" />
@@ -293,8 +291,8 @@
                 Padding="{TemplateBinding Padding}"
                 HorizontalScrollBarVisibility="Disabled"
                 VerticalScrollBarVisibility="Visible">
-                <WrapPanel Orientation="Vertical">
-                  <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                <WrapPanel x:Name="ListBoxWrapPanel" Orientation="Vertical">
+                  <ItemsPresenter Width="{TemplateBinding ActualWidth}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                 </WrapPanel>
               </ScrollViewer>
             </Border>
@@ -374,6 +372,7 @@
         d:DataContext="{d:DesignData Source=/Design/PackageItemListViewSampleData.xaml,IsDesignTimeCreatable=True}"
         x:Name="_listBrowse"
         Style="{StaticResource ListBoxStyle}"
+        LoadingStatusIndicatorStyle="{StaticResource loadingStatusIndicatorStyle}"
         AutomationProperties.Name="{x:Static nuget:Resources.Accessibility_Packages}"
         PreviewKeyUp="List_PreviewKeyUp"
         SelectionChanged="List_SelectionChanged"
@@ -384,6 +383,7 @@
         d:DataContext="{d:DesignData Source=/Design/PackageItemListViewSampleData.xaml,IsDesignTimeCreatable=True}"
         x:Name="_listInstalled"
         Style="{StaticResource ListBoxStyle}"
+        LoadingStatusIndicatorStyle="{StaticResource loadingStatusIndicatorStyle}"
         AutomationProperties.Name="{x:Static nuget:Resources.Accessibility_Packages}"
         PreviewKeyUp="List_PreviewKeyUp"
         SelectionChanged="List_SelectionChanged"

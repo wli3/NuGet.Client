@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Windows;
 using System.Windows.Automation.Peers;
 using System.Windows.Controls;
 using Microsoft.VisualStudio.Threading;
@@ -16,6 +17,18 @@ namespace NuGet.PackageManagement.UI
     {
         public ReentrantSemaphore ItemsLock { get; set; }
         private readonly LoadingStatusIndicator _loadingStatusIndicator = new LoadingStatusIndicator();
+
+        public Style LoadingStatusIndicatorStyle
+        {
+            get
+            {
+                return _loadingStatusIndicator.Style;
+            }
+            set
+            {
+                _loadingStatusIndicator.Style = value;
+            }
+        }
 
         private bool _checkBoxesEnabled;
         public bool CheckBoxesEnabled
@@ -35,7 +48,7 @@ namespace NuGet.PackageManagement.UI
         {
             get
             {
-                return this.DataContext as ObservableCollection<PackageItemListViewModel>;
+                return DataContext as ObservableCollection<PackageItemListViewModel>;
             }
         }
 
@@ -43,6 +56,7 @@ namespace NuGet.PackageManagement.UI
 
         public InfiniteScrollListBox()
         {
+            //Style = Resources.FindName("loadingStatusIndicatorStyle") as Style;
             _loadingStatusIndicator.PropertyChanged += LoadingStatusIndicator_PropertyChanged;
         }
 
@@ -96,30 +110,30 @@ namespace NuGet.PackageManagement.UI
         /// </summary>
         /// <param name="loadingMessage">If provided, reset's the indicator to show the specified message.</param>
         /// <param name="operationComplete">When true, set a finalized state based on <c>Items</c> count.</param>
-        public void ShowLoadingIndicator(string loadingMessage = null, bool operationComplete = false)
-        {
-            lock (_loadingStatusIndicator)
-            {
-                if (loadingMessage != null)
-                {
-                    _loadingStatusIndicator.Reset(loadingMessage);
-                }
+        //public void ShowLoadingIndicator(string loadingMessage = null, bool operationComplete = false)
+        //{
+        //    lock (_loadingStatusIndicator)
+        //    {
+        //        if (loadingMessage != null)
+        //        {
+        //            _loadingStatusIndicator.Reset(loadingMessage);
+        //        }
 
-                // add Loading... indicator if not present
-                //if (!Items.Contains(_loadingStatusIndicator))
-                //{
-                //    Items.Add(_loadingStatusIndicator);
-                //}
+        //        // add Loading... indicator if not present
+        //        //if (!Items.Contains(_loadingStatusIndicator))
+        //        //{
+        //        //    Items.Add(_loadingStatusIndicator);
+        //        //}
 
-                if (operationComplete)
-                {
-                    SetLoadingIndicatorBasedOnItemsCount();
-                }
-            }
-        }
+        //        if (operationComplete)
+        //        {
+        //            SetLoadingIndicatorBasedOnItemsCount();
+        //        }
+        //    }
+        //}
 
-        private void SetLoadingIndicatorBasedOnItemsCount()
-        {
+        //private void SetLoadingIndicatorBasedOnItemsCount()
+       //{
             // Ideally, after a search, it should report its status, and
             // do not keep the LoadingStatus.Loading forever.
             // This is a workaround.
@@ -131,6 +145,40 @@ namespace NuGet.PackageManagement.UI
             //{ 
             //    Items.Remove(_loadingStatusIndicator);
             //}
+        //}
+
+
+        private bool _showingLoadingStatusIndicator;
+
+        public void ShowLoadingIndicator(string loadingMessage = null, bool operationComplete = false, bool show = true)
+        {
+
+            //Border
+            //>ScrollViewer
+            //>>WrapPanel
+            //>>>ItemsPresenter
+            //>>>*Loading Indicator here*
+            WrapPanel wrapPanel = (WrapPanel)Template.FindName("ListBoxWrapPanel", this);
+
+            if (show)
+            {
+                lock (_loadingStatusIndicator)
+                {
+                    if (!_showingLoadingStatusIndicator)
+                    {
+                        wrapPanel.Children.Add(_loadingStatusIndicator);
+                        _showingLoadingStatusIndicator = true;
+                    }
+                }                
+            }
+            else
+            {
+                lock (_loadingStatusIndicator)
+                {
+                    wrapPanel.Children.Remove(_loadingStatusIndicator);
+                    _showingLoadingStatusIndicator = false;
+                }
+            }
         }
         #endregion
     }

@@ -2,11 +2,15 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.ComponentModel;
+using System.Windows;
+using System.Windows.Controls;
 using NuGet.PackageManagement.VisualStudio;
+using Resx = NuGet.PackageManagement.UI.Resources;
 
 namespace NuGet.PackageManagement.UI
 {
-    internal class LoadingStatusIndicator : INotifyPropertyChanged
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1501:AvoidExcessiveInheritance")]
+    internal class LoadingStatusIndicator : ContentControl, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -62,6 +66,14 @@ namespace NuGet.PackageManagement.UI
             }
         }
 
+        public LoadingStatusIndicator()
+        {
+            //Resources.FindName("LoadingStatusIndicatorTemplate") as ControlTemplate;
+            //Template = Application.Current.FindResource("LoadingStatusIndicatorTemplate") as ControlTemplate;
+            //Template = Resources.FindName("LoadingStatusIndicatorTemplate") as ControlTemplate;
+            DefaultStyleKey = "loadingStatusIndicatorStyle";
+        }
+
         protected void OnPropertyChanged(string propertyName)
         {
             if (PropertyChanged != null)
@@ -93,19 +105,19 @@ namespace NuGet.PackageManagement.UI
                         return LoadingMessage;
 
                     case LoadingStatus.NoItemsFound:
-                        return Resources.Text_NoPackagesFound;
+                        return Resx.Text_NoPackagesFound;
 
                     case LoadingStatus.Cancelled:
-                        return Resources.Status_Canceled;
+                        return Resx.Status_Canceled;
 
                     case LoadingStatus.ErrorOccurred:
-                        return Resources.Status_ErrorOccurred;
+                        return Resx.Status_ErrorOccurred;
 
                     case LoadingStatus.NoMoreItems:
-                        return Resources.Status_NoMoreItems;
+                        return Resx.Status_NoMoreItems;
 
                     case LoadingStatus.Ready:
-                        return Resources.Status_Ready;
+                        return Resx.Status_Ready;
 
                     default:
                         return string.Empty;

@@ -66,6 +66,11 @@ namespace NuGet.PackageManagement.UI
             }
         }
 
+        public LoadingStatusIndicator()
+        {
+            DataContext = this;
+        }
+
         protected void OnPropertyChanged(string propertyName)
         {
             if (PropertyChanged != null)

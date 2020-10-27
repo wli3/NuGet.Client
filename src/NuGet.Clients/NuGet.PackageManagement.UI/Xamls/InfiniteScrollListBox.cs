@@ -61,101 +61,49 @@ namespace NuGet.PackageManagement.UI
 
         #region Loading Status Indicator
         public event PropertyChangedEventHandler LoadingStatusIndicator_PropertyChanged;
-        public LoadingStatus Status
-        {
-            get
-            {
-                return _loadingStatusIndicator.Status;
-            }
-            set
-            {
-                _loadingStatusIndicator.Status = value;
-            }
-        }
-
 
         public void SetError(string message)
         {
             _loadingStatusIndicator.SetError(message);
         }
 
-        /// <summary>
-        /// Resets the indicator status. If it's in the list, it's removed.
-        /// </summary>
-        /// <returns>Whether the indicator was in the list and was removed.</returns>
-        public bool HideLoadingStatusIndicator()
-        {
-            lock (_loadingStatusIndicator)
-            {
-                _loadingStatusIndicator.Reset(string.Empty);
-                
-                //if (ObservableCollectionDataContext.Contains(_loadingStatusIndicator))
-                //{
-                //    //Items.Remove(_loadingStatusIndicator);
-                //    return true;
-                //}
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Show the Loading Indicator in the list with the provided loading message.
-        /// If the operation is complete, set the finalized state.
-        /// </summary>
-        /// <param name="loadingMessage">If provided, reset's the indicator to show the specified message.</param>
-        /// <param name="operationComplete">When true, set a finalized state based on <c>Items</c> count.</param>
-        //public void ShowLoadingIndicator(string loadingMessage = null, bool operationComplete = false)
-        //{
-        //    lock (_loadingStatusIndicator)
-        //    {
-        //        if (loadingMessage != null)
-        //        {
-        //            _loadingStatusIndicator.Reset(loadingMessage);
-        //        }
-
-        //        // add Loading... indicator if not present
-        //        //if (!Items.Contains(_loadingStatusIndicator))
-        //        //{
-        //        //    Items.Add(_loadingStatusIndicator);
-        //        //}
-
-        //        if (operationComplete)
-        //        {
-        //            SetLoadingIndicatorBasedOnItemsCount();
-        //        }
-        //    }
-        //}
-
-        //private void SetLoadingIndicatorBasedOnItemsCount()
-       //{
-            // Ideally, after a search, it should report its status, and
-            // do not keep the LoadingStatus.Loading forever.
-            // This is a workaround.
-            //if (Items.Count == 1) //Only contains the indicator itself.
-            //{
-            //    _loadingStatusIndicator.Status = LoadingStatus.NoItemsFound;
-            //}
-            //else //There are actual Items.
-            //{ 
-            //    Items.Remove(_loadingStatusIndicator);
-            //}
-        //}
-
         private bool _showingLoadingStatusIndicator;
 
-        public void ShowLoadingIndicator(string loadingMessage = null, bool operationComplete = false, bool show = true)
+        /// <summary>
+        /// Renders or removes the LoadingStatusIndicator from the ListBox with any specified state information.
+        /// </summary>
+        /// <param name="show">When true, add the Loading Indicator to the ListBox with the provided loading message.
+        /// When false, Resets the indicator status. If it's currently in the VisualTree, remove it.</param>
+        /// <param name="status">Optional Status for the indicator, default <c>Unknown</c>.
+        /// Ignored when <paramref name="operationComplete"/> is <c>true</c> and there's no Items in the list.</param>
+        /// <param name="loadingMessage">Text to show in the loading indicator when <c>show</c> is <c>true</c>.</param>
+        /// <param name="operationComplete">If the operation is complete, set the finalized state.</param>
+        public void UpdateLoadingIndicator(bool show, LoadingStatus status = LoadingStatus.Unknown, string loadingMessage = null,
+            bool operationComplete = false)
         {
-            //Border
-            //>ScrollViewer
-            //>>WrapPanel
-            //>>>ItemsPresenter
-            //>>>*Loading Indicator here*
             WrapPanel wrapPanel = (WrapPanel)Template.FindName("ListBoxWrapPanel", this);
 
-            if (show)
+            bool operationCompleteItemsShown = operationComplete && Items.Count > 0;
+
+            //Render the indicator.
+            if (show && !operationCompleteItemsShown)
             {
                 lock (_loadingStatusIndicator)
                 {
+                    if (loadingMessage != null)
+                    {
+                        _loadingStatusIndicator.Reset(loadingMessage);
+                    }
+
+                    if (operationComplete && !operationCompleteItemsShown)
+                    {
+                        _loadingStatusIndicator.Status = LoadingStatus.NoItemsFound;
+                    }
+                    else if (status != LoadingStatus.Unknown)
+                    {
+                        _loadingStatusIndicator.Status = status;
+                    }
+
                     if (!_showingLoadingStatusIndicator)
                     {
                         wrapPanel.Children.Add(_loadingStatusIndicator);
@@ -163,10 +111,11 @@ namespace NuGet.PackageManagement.UI
                     }
                 }
             }
-            else
+            else //Remove the indicator.
             {
                 lock (_loadingStatusIndicator)
                 {
+                    _loadingStatusIndicator.Reset(string.Empty);
                     wrapPanel.Children.Remove(_loadingStatusIndicator);
                     _showingLoadingStatusIndicator = false;
                 }

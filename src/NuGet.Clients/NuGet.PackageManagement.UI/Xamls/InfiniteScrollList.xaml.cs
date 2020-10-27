@@ -188,7 +188,16 @@ namespace NuGet.PackageManagement.UI
 
         public Guid? OperationIdBrowse => _loaderBrowse?.State.OperationId;
 
-        // Load items using the specified loader
+        /// <summary>
+        /// Load items using the specified loader. Main entry point for a Parent control to begin populating the <c>ItemsControl</c>.
+        /// </summary>
+        /// <param name="loader"></param>
+        /// <param name="loadingMessage"></param>
+        /// <param name="logger"></param>
+        /// <param name="searchResultTask"></param>
+        /// <param name="filterToRender"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
         internal async Task LoadItemsAsync(
             IPackageItemLoader loader,
             string loadingMessage,
@@ -213,34 +222,40 @@ namespace NuGet.PackageManagement.UI
             }
 
             token.ThrowIfCancellationRequested();
-
-            _logger = logger;
-            _initialSearchResultTask = searchResultTask;
-
-            if (filterToRender == ItemFilter.All)
-            {
-                _loaderBrowse = loader;
-                _loadingStatusBarBrowse.Visibility = Visibility.Hidden;
-                _loadingStatusBarBrowse.Reset(loadingMessage, loader.IsMultiSource);
-            }
-
-            var selectedPackageItem = SelectedPackageItem;
-
             InfiniteScrollListBox currentListBox = filterToRender == ItemFilter.All ? _listBrowse : _listInstalled;
             ObservableCollection<object> currentItems = filterToRender == ItemFilter.All ? ItemsBrowse : ItemsInstalled;
 
-            currentListBox.ShowLoadingIndicator(loadingMessage);
+            currentListBox.UpdateLoadingIndicator(show: true, loadingMessage: loadingMessage);
 
-            await currentListBox.ItemsLock.ExecuteAsync(() =>
+            try
             {
-                ClearPackageList(currentItems);
-                return Task.CompletedTask;
-            });
+                _logger = logger;
+                _initialSearchResultTask = searchResultTask;
 
-            _selectedCount = 0;
+                if (filterToRender == ItemFilter.All)
+                {
+                    _loaderBrowse = loader;
+                    _loadingStatusBarBrowse.Visibility = Visibility.Hidden;
+                    _loadingStatusBarBrowse.Reset(loadingMessage, loader.IsMultiSource);
+                }
 
-            // triggers the package list loader
-            await LoadItemsAsync(currentListBox, currentItems, loader, selectedPackageItem, filterToRender, token);
+                var selectedPackageItem = SelectedPackageItem;
+
+                await currentListBox.ItemsLock.ExecuteAsync(() =>
+                {
+                    ClearPackageList(currentItems);
+                    return Task.CompletedTask;
+                });
+
+                _selectedCount = 0;
+
+                // triggers the package list loader
+                await LoadItemsAsync(currentListBox, currentItems, loader, selectedPackageItem, filterToRender, token);
+            }
+            finally
+            {
+                currentListBox.UpdateLoadingIndicator(show: true, operationComplete: true);
+            }
         }
 
         /// <summary>
@@ -297,8 +312,6 @@ namespace NuGet.PackageManagement.UI
             // If there is another async loading process - cancel it.
             var loadCts = CancellationTokenSource.CreateLinkedTokenSource(token);
             Interlocked.Exchange(ref _loadCts, loadCts)?.Cancel();
-
-            currentListBox.ShowLoadingIndicator();
 
             await RepopulatePackageListAsync(currentListBox, currentItems, selectedPackageItem, loader, filterToRender, loadCts);
 
@@ -371,10 +384,6 @@ namespace NuGet.PackageManagement.UI
                     _loadingStatusBarBrowse.SetError();
                     _loadingStatusBarBrowse.Visibility = Visibility.Visible;
                 }
-            }
-            finally
-            {
-                currentListBox.ShowLoadingIndicator(operationComplete: true);
             }
 
             UpdateCheckBoxStatus();
@@ -543,8 +552,7 @@ namespace NuGet.PackageManagement.UI
                             _loadingStatusBarBrowse.Visibility = desiredVisibility;
                         }
                     }
-                    currentListBox.Status = state.LoadingStatus;
-                    currentListBox.ShowLoadingIndicator();
+                    currentListBox.UpdateLoadingIndicator(show: true, status: state.LoadingStatus);
                 }
             });
         }
@@ -589,8 +597,6 @@ namespace NuGet.PackageManagement.UI
                 // Synchronize updating Items list
                 await listBoxToUpdate.ItemsLock.ExecuteAsync(() =>
                 {
-                    bool removed = listBoxToUpdate.HideLoadingStatusIndicator();
-
                     if (refresh)
                     {
                         ClearPackageList(collectionToUpdate);
@@ -602,11 +608,6 @@ namespace NuGet.PackageManagement.UI
                         package.PropertyChanged += Package_PropertyChanged;
                         collectionToUpdate.Add(package);
                         _selectedCount = package.Selected ? _selectedCount + 1 : _selectedCount;
-                    }
-
-                    if (removed)
-                    {
-                        listBoxToUpdate.ShowLoadingIndicator();
                     }
 
                     return Task.CompletedTask;
@@ -731,25 +732,35 @@ namespace NuGet.PackageManagement.UI
 
         private void BrowseScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
-            if (_loaderBrowse?.State.LoadingStatus == LoadingStatus.Ready && e.VerticalChange > 0)
+            var loadingMessage = Resx.Resources.Text_Loading;
+            _listBrowse.UpdateLoadingIndicator(show: true, loadingMessage: loadingMessage);
+
+            try
             {
-                var scrollViewer = e.OriginalSource as ScrollViewer;
-                if (scrollViewer != null)
+                if (_loaderBrowse?.State.LoadingStatus == LoadingStatus.Ready && e.VerticalChange > 0)
                 {
-                    var first = scrollViewer.VerticalOffset;
-                    var last = scrollViewer.ViewportHeight + first;
-                    if (scrollViewer.ViewportHeight > 0 && last >= ItemsBrowse.Count)
+                    var scrollViewer = e.OriginalSource as ScrollViewer;
+                    if (scrollViewer != null)
                     {
-                        NuGetUIThreadHelper.JoinableTaskFactory.RunAsync(() =>
-                            LoadItemsAsync(currentListBox: _listBrowse,
-                                currentItems: ItemsBrowse,
-                                loader: _loaderBrowse,
-                                selectedPackageItem: null,
-                                filterToRender: ItemFilter.All,
-                                token: CancellationToken.None)
-                        );
+                        var first = scrollViewer.VerticalOffset;
+                        var last = scrollViewer.ViewportHeight + first;
+                        if (scrollViewer.ViewportHeight > 0 && last >= ItemsBrowse.Count)
+                        {
+                            NuGetUIThreadHelper.JoinableTaskFactory.RunAsync(() =>
+                                LoadItemsAsync(currentListBox: _listBrowse,
+                                    currentItems: ItemsBrowse,
+                                    loader: _loaderBrowse,
+                                    selectedPackageItem: null,
+                                    filterToRender: ItemFilter.All,
+                                    token: CancellationToken.None)
+                            );
+                        }
                     }
                 }
+            }
+            finally
+            {
+                _listBrowse.UpdateLoadingIndicator(show: true, operationComplete: true);
             }
         }
 
@@ -799,14 +810,24 @@ namespace NuGet.PackageManagement.UI
 
         private void _loadingStatusBarBrowse_ShowMoreResultsClick(object sender, RoutedEventArgs e)
         {
-            var packageItems = _loaderBrowse?.GetCurrent() ?? Enumerable.Empty<PackageItemListViewModel>();
-            UpdatePackageList(_listBrowse, ItemsBrowse, packageItems, refresh: true);
-            _loadingStatusBarBrowse.ItemsLoaded = _loaderBrowse?.State.ItemsCount ?? 0;
+            var loadingMessage = Resx.Resources.Text_Loading;
+            _listBrowse.UpdateLoadingIndicator(show: true, loadingMessage: loadingMessage);
 
-            var desiredVisibility = EvaluateStatusBarVisibility(_loaderBrowse, _loaderBrowse.State);
-            if (_loadingStatusBarBrowse.Visibility != desiredVisibility)
+            try
             {
-                _loadingStatusBarBrowse.Visibility = desiredVisibility;
+                var packageItems = _loaderBrowse?.GetCurrent() ?? Enumerable.Empty<PackageItemListViewModel>();
+                UpdatePackageList(_listBrowse, ItemsBrowse, packageItems, refresh: true);
+                _loadingStatusBarBrowse.ItemsLoaded = _loaderBrowse?.State.ItemsCount ?? 0;
+
+                var desiredVisibility = EvaluateStatusBarVisibility(_loaderBrowse, _loaderBrowse.State);
+                if (_loadingStatusBarBrowse.Visibility != desiredVisibility)
+                {
+                    _loadingStatusBarBrowse.Visibility = desiredVisibility;
+                }
+            }
+            finally
+            {
+                _listBrowse.UpdateLoadingIndicator(show: true, operationComplete: true);
             }
         }
 

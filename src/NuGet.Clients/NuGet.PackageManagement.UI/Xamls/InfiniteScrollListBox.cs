@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -70,52 +71,53 @@ namespace NuGet.PackageManagement.UI
         private bool _showingLoadingStatusIndicator;
 
         /// <summary>
-        /// Renders or removes the LoadingStatusIndicator from the ListBox with any specified state information.
+        /// Adds or removes the LoadingStatusIndicator from the ListBox's VisualTree with any specified state information.
         /// </summary>
-        /// <param name="show">When true, add the Loading Indicator to the ListBox with the provided loading message.
-        /// When false, Resets the indicator status. If it's currently in the VisualTree, remove it.</param>
-        /// <param name="status">Optional Status for the indicator, default <c>Unknown</c>.
-        /// Ignored when <paramref name="operationComplete"/> is <c>true</c> and there's no Items in the list.</param>
-        /// <param name="loadingMessage">Text to show in the loading indicator when <c>show</c> is <c>true</c>.</param>
-        /// <param name="operationComplete">If the operation is complete, set the finalized state.</param>
-        public void UpdateLoadingIndicator(bool show, LoadingStatus status = LoadingStatus.Unknown, string loadingMessage = null,
-            bool operationComplete = false)
+        /// <param name="status">Status for the indicator.
+        /// <param name="loadingMessage">Text to show in the loading indicator when <c>show</c> is <c>true</c>.
+        /// If not provided, the previous text persists.</param>
+        public void UpdateLoadingIndicator(LoadingStatus status, string loadingMessage = null)
         {
             WrapPanel wrapPanel = (WrapPanel)Template.FindName("ListBoxWrapPanel", this);
 
-            bool operationCompleteItemsShown = operationComplete && Items.Count > 0;
+            bool show = false;
+
+            if (status != LoadingStatus.Unknown)
+            {
+                bool operationComplete = LoadingStatus.Completed.HasFlag(status);
+
+                //NoItemsFound (can be shown or hidden)
+                if (operationComplete)
+                {
+                    int itemsCount = (ItemsSource as ObservableCollection<object>).Count;
+                    show = itemsCount == 0; //Indicator needs to be visible to display NoItemsFound (No packages found).
+                }
+
+                if (status == LoadingStatus.Loading || status == LoadingStatus.Ready)
+                {
+                    show = true;
+                }
+            }
 
             //Render the indicator.
-            if (show && !operationCompleteItemsShown)
+            lock (_loadingStatusIndicator)
             {
-                lock (_loadingStatusIndicator)
+                if (loadingMessage != null)
                 {
-                    if (loadingMessage != null)
-                    {
-                        _loadingStatusIndicator.Reset(loadingMessage);
-                    }
+                    _loadingStatusIndicator.LoadingMessage = loadingMessage;
+                }
+                _loadingStatusIndicator.Status = status;
 
-                    if (operationComplete && !operationCompleteItemsShown)
-                    {
-                        _loadingStatusIndicator.Status = LoadingStatus.NoItemsFound;
-                    }
-                    else if (status != LoadingStatus.Unknown)
-                    {
-                        _loadingStatusIndicator.Status = status;
-                    }
-
+                if (show)
+                {
                     if (!_showingLoadingStatusIndicator)
                     {
                         wrapPanel.Children.Add(_loadingStatusIndicator);
                         _showingLoadingStatusIndicator = true;
                     }
                 }
-            }
-            else //Remove the indicator.
-            {
-                lock (_loadingStatusIndicator)
+                else //Remove the indicator.
                 {
-                    _loadingStatusIndicator.Reset(string.Empty);
                     wrapPanel.Children.Remove(_loadingStatusIndicator);
                     _showingLoadingStatusIndicator = false;
                 }

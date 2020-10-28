@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using System.ComponentModel;
 using System.Windows.Controls;
 using NuGet.PackageManagement.VisualStudio;
@@ -80,6 +81,10 @@ namespace NuGet.PackageManagement.UI
             }
         }
 
+        /// <summary>
+        /// Sets the default Status, and sets the provided Loading message.
+        /// </summary>
+        /// <param name="loadingMessage"></param>
         public void Reset(string loadingMessage)
         {
             Status = LoadingStatus.Unknown;

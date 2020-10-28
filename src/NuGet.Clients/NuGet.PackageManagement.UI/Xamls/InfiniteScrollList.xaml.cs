@@ -225,7 +225,7 @@ namespace NuGet.PackageManagement.UI
             InfiniteScrollListBox currentListBox = filterToRender == ItemFilter.All ? _listBrowse : _listInstalled;
             ObservableCollection<object> currentItems = filterToRender == ItemFilter.All ? ItemsBrowse : ItemsInstalled;
 
-            currentListBox.UpdateLoadingIndicator(show: true, loadingMessage: loadingMessage);
+            currentListBox.UpdateLoadingIndicator(status: LoadingStatus.Loading, loadingMessage: loadingMessage);
 
             try
             {
@@ -254,7 +254,7 @@ namespace NuGet.PackageManagement.UI
             }
             finally
             {
-                currentListBox.UpdateLoadingIndicator(show: true, operationComplete: true);
+                currentListBox.UpdateLoadingIndicator(status: loader.State.LoadingStatus, loadingMessage);
             }
         }
 
@@ -552,7 +552,7 @@ namespace NuGet.PackageManagement.UI
                             _loadingStatusBarBrowse.Visibility = desiredVisibility;
                         }
                     }
-                    currentListBox.UpdateLoadingIndicator(show: true, status: state.LoadingStatus);
+                    currentListBox.UpdateLoadingIndicator(status: state.LoadingStatus);
                 }
             });
         }
@@ -732,35 +732,37 @@ namespace NuGet.PackageManagement.UI
 
         private void BrowseScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
-            var loadingMessage = Resx.Resources.Text_Loading;
-            _listBrowse.UpdateLoadingIndicator(show: true, loadingMessage: loadingMessage);
-
-            try
+            //Scrolled down and there's more to load.
+            if (e.VerticalChange > 0 && !e.Handled && _loaderBrowse?.State.LoadingStatus == LoadingStatus.Ready)
             {
-                if (_loaderBrowse?.State.LoadingStatus == LoadingStatus.Ready && e.VerticalChange > 0)
+                var scrollViewer = e.OriginalSource as ScrollViewer;
+                if (scrollViewer != null)
                 {
-                    var scrollViewer = e.OriginalSource as ScrollViewer;
-                    if (scrollViewer != null)
+                    //We reached the bottom of the viewport.
+                    if (scrollViewer.VerticalOffset == scrollViewer.ScrollableHeight)
                     {
-                        var first = scrollViewer.VerticalOffset;
-                        var last = scrollViewer.ViewportHeight + first;
-                        if (scrollViewer.ViewportHeight > 0 && last >= ItemsBrowse.Count)
+                        e.Handled = true;
+                        _listBrowse.UpdateLoadingIndicator(status: LoadingStatus.Loading);
+
+                        NuGetUIThreadHelper.JoinableTaskFactory.RunAsync(async () =>
                         {
-                            NuGetUIThreadHelper.JoinableTaskFactory.RunAsync(() =>
-                                LoadItemsAsync(currentListBox: _listBrowse,
-                                    currentItems: ItemsBrowse,
-                                    loader: _loaderBrowse,
-                                    selectedPackageItem: null,
-                                    filterToRender: ItemFilter.All,
-                                    token: CancellationToken.None)
-                            );
-                        }
+                            try
+                            {
+                                await LoadItemsAsync(currentListBox: _listBrowse,
+                                        currentItems: ItemsBrowse,
+                                        loader: _loaderBrowse,
+                                        selectedPackageItem: null,
+                                        filterToRender: ItemFilter.All,
+                                        token: CancellationToken.None);
+                            }
+                            finally
+                            {
+                                LoadingStatus finalStatus = _loaderBrowse != null ? _loaderBrowse.State.LoadingStatus : LoadingStatus.Unknown;
+                                _listBrowse.UpdateLoadingIndicator(status: finalStatus);
+                            }
+                        });
                     }
                 }
-            }
-            finally
-            {
-                _listBrowse.UpdateLoadingIndicator(show: true, operationComplete: true);
             }
         }
 
@@ -811,7 +813,7 @@ namespace NuGet.PackageManagement.UI
         private void _loadingStatusBarBrowse_ShowMoreResultsClick(object sender, RoutedEventArgs e)
         {
             var loadingMessage = Resx.Resources.Text_Loading;
-            _listBrowse.UpdateLoadingIndicator(show: true, loadingMessage: loadingMessage);
+            _listBrowse.UpdateLoadingIndicator(status: LoadingStatus.Loading, loadingMessage: loadingMessage);
 
             try
             {
@@ -827,7 +829,8 @@ namespace NuGet.PackageManagement.UI
             }
             finally
             {
-                _listBrowse.UpdateLoadingIndicator(show: true, operationComplete: true);
+                LoadingStatus finalStatus = _loaderBrowse != null ? _loaderBrowse.State.LoadingStatus : LoadingStatus.Unknown;
+                _listBrowse.UpdateLoadingIndicator(status: finalStatus);
             }
         }
 

@@ -140,7 +140,6 @@ namespace NuGet.Packaging.FuncTest
             var issueOptions = new IssueCertificateOptions()
             {
                 KeyPair = keyPair,
-                NotAfter = now.AddSeconds(10),
                 NotBefore = now.AddSeconds(-2),
                 SubjectName = new X509Name("CN=NuGet Test Expired Certificate")
             };

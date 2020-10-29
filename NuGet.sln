@@ -240,7 +240,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Packaging.Extraction"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.VisualStudio.Internal.Contracts.Test", "test\NuGet.Clients.Tests\NuGet.VisualStudio.Internal.Contracts.Test\NuGet.VisualStudio.Internal.Contracts.Test.csproj", "{C24DD62A-905D-4C48-A17A-B83107F17EA7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NuGet.Signing.CrossFramework.Test", "test\NuGet.Core.FuncTests\NuGet.Signing.CrossFramework.Test\NuGet.Signing.CrossFramework.Test.csproj", "{81126758-EDA9-4EE6-BAA0-19A715329A7E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Signing.CrossFramework.Test", "test\NuGet.Core.FuncTests\NuGet.Signing.CrossFramework.Test\NuGet.Signing.CrossFramework.Test.csproj", "{81126758-EDA9-4EE6-BAA0-19A715329A7E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

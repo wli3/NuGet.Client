@@ -4,87 +4,407 @@
 #if IS_SIGNING_SUPPORTED
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
 using System.Threading.Tasks;
-using FluentAssertions;
-using NuGet.Common;
-using NuGet.Packaging.Signing;
 using NuGet.Test.Utility;
-using Org.BouncyCastle.Asn1;
-using Org.BouncyCastle.Asn1.X509;
-using Org.BouncyCastle.Crypto.Parameters;
-using Test.Utility;
 using Test.Utility.Signing;
+using System.Collections.Generic;
+using NuGet.Packaging;
 using Xunit;
-using BcAccuracy = Org.BouncyCastle.Asn1.Tsp.Accuracy;
-using DotNetUtilities = Org.BouncyCastle.Security.DotNetUtilities;
-using HashAlgorithmName = NuGet.Common.HashAlgorithmName;
-#if NETCOREAPP5_0
-using Dotnet.Integration.Test;
-#else
-using NuGet.CommandLine.Test;
-#endif
+using FluentAssertions;
+using System.Text.RegularExpressions;
+using System.Security.Cryptography.X509Certificates;
+using System.IO;
+using NuGet.Packaging.Signing;
 
 namespace NuGet.Signing.CrossFramework.Test
 {
-    [Collection(SigningTestCollection.Name)]
+    [Collection(CrossVerifyTestCollection.Name)]
     public class CrossFrameworkVerificationTest
     {
-        private readonly SignedPackageVerifierSettings _verifyCommandSettings = SignedPackageVerifierSettings.GetVerifyCommandDefaultPolicy(TestEnvironmentVariableReader.EmptyInstance);
-        private readonly SignedPackageVerifierSettings _defaultSettings = SignedPackageVerifierSettings.GetDefault(TestEnvironmentVariableReader.EmptyInstance);
-        private readonly SigningTestFixture _testFixture;
-        private readonly TrustedTestCert<TestCertificate> _trustedTestCert;
-        private readonly TestCertificate _untrustedTestCertificate;
-        private readonly IList<ISignatureVerificationProvider> _trustProviders;
-#if NETCOREAPP5_0
-        private readonly string _dotnetCommand;
-#else
-        private readonly string _nugetCommand;
-#endif
+        private const int SHA1HashLength = 20;
 
-        public CrossFrameworkVerificationTest(SigningTestFixture fixture)
+        private readonly string _successfullyVerified = "Successfully verified package 'packageA.1.0.0'";
+        private readonly string _noTimestamperWarning = "NU3027: The signature should be timestamped to enable long-term signature validity after the certificate has expired";
+        
+        private readonly CrossVerifyTestFixture _testFixture;
+
+        public CrossFrameworkVerificationTest(CrossVerifyTestFixture fixture)
         {
             _testFixture = fixture ?? throw new ArgumentNullException(nameof(fixture));
-            _trustedTestCert = _testFixture.TrustedTestCertificate;
-            _untrustedTestCertificate = _testFixture.UntrustedTestCertificate;
-            _trustProviders = new List<ISignatureVerificationProvider>()
-            {
-                new SignatureTrustAndValidityVerificationProvider()
-            };
-#if NETCOREAPP5_0
-            msbuildFixture = new MsbuildIntegrationTestFixture();
-            _dotnetCommand = msbuildFixture.
-#else
-            
-            _nugetExePath = Util.GetNuGetExePath();
-#endif
         }
 
-        [CIOnlyFact]
-        public async Task VerifySignaturesAsync_ValidCertificate_SuccessAsync()
+        [Fact]
+        public async Task Verify_AuthorSignedPackage_SuccessAsync()
         {
             // Arrange
             var nupkg = new SimpleTestPackageContext();
 
             using (var dir = TestDirectory.Create())
-            using (var testCertificate = new X509Certificate2(_trustedTestCert.Source.Cert))
+            using (var authorCertificate = await _testFixture.GetDefaultAuthorSigningCertificateAsync())
             {
-                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(testCertificate, nupkg, dir);
-                var verifier = new PackageSignatureVerifier(_trustProviders);
-                using (var packageReader = new PackageArchiveReader(signedPackagePath))
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    authorCertificate,
+                    nupkg,
+                    dir);
+
+                // Act
+                var result = RunVerifyCommand(".", signedPackagePath);
+
+                // Assert
+                result.Success.Should().BeTrue(because: result.AllOutput);
+                result.AllOutput.Should().Contain(_successfullyVerified);
+                Regex.Matches(result.AllOutput, _noTimestamperWarning).Count.Should().Be(1);
+            }
+        }
+
+        [Fact]
+        public async Task Verify_AuthorSignedTimestampedPackage_SuccessAsync()
+        {
+            // Arrange
+            var nupkg = new SimpleTestPackageContext();
+
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+
+            using (var dir = TestDirectory.Create())
+            using (var authorCertificate = await _testFixture.GetDefaultAuthorSigningCertificateAsync())
+            {
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                    authorCertificate,
+                    nupkg,
+                    dir,
+                    timestampService.Url);
+
+                // Act
+                var result = RunVerifyCommand(".", signedPackagePath);
+
+                // Assert
+                result.Success.Should().BeTrue(because: result.AllOutput);
+                result.AllOutput.Should().Contain(_successfullyVerified);
+                Regex.Matches(result.AllOutput, _noTimestamperWarning).Count.Should().Be(0);
+            }
+        }
+
+        [Fact]
+        public async Task Verify_RepositorySignedPackage_SuccessAsync()
+        {
+            // Arrange
+            var nupkg = new SimpleTestPackageContext();
+
+            using (var dir = TestDirectory.Create())
+            using (var repositoryCertificate = await _testFixture.GetDefaultRepositorySigningCertificateAsync())
+            {
+                var signedPackagePath = await SignedArchiveTestUtility.RepositorySignPackageAsync(
+                    repositoryCertificate,
+                    nupkg,
+                    dir,
+                    new Uri("https://v3serviceIndex.test/api/index.json"));
+
+                // Act
+                var result = RunVerifyCommand(".", signedPackagePath);
+
+                // Assert
+                result.Success.Should().BeTrue(because: result.AllOutput);
+                result.AllOutput.Should().Contain(_successfullyVerified);
+                Regex.Matches(result.AllOutput, _noTimestamperWarning).Count.Should().Be(1);
+            }
+        }
+
+        [Fact]
+        public async Task Verify_RepositorySignedTimestampedPackage_SuccessAsync()
+        {
+            // Arrange
+            var nupkg = new SimpleTestPackageContext();
+
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+
+            using (var dir = TestDirectory.Create())
+            using (var repositoryCertificate = await _testFixture.GetDefaultRepositorySigningCertificateAsync())
+            {
+                var signedPackagePath = await SignedArchiveTestUtility.RepositorySignPackageAsync(
+                    repositoryCertificate,
+                    nupkg,
+                    dir,
+                    new Uri("https://v3serviceIndex.test/api/index.json"),
+                    timestampService.Url);
+
+                // Act
+                var result = RunVerifyCommand(".", signedPackagePath);
+
+                // Assert
+                result.Success.Should().BeTrue(because: result.AllOutput);
+                result.AllOutput.Should().Contain(_successfullyVerified);
+                Regex.Matches(result.AllOutput, _noTimestamperWarning).Count.Should().Be(0);
+            }
+        }
+
+        [Fact]
+        public async Task Verify_AuthorSignedRepositoryCounterSignedPackage_SuccessAsync()
+        {
+            // Arrange
+            var nupkg = new SimpleTestPackageContext();
+
+            using (var dir = TestDirectory.Create())
+            using (var authorCertificate = await _testFixture.GetDefaultAuthorSigningCertificateAsync())
+            using (var repositoryCertificate = await _testFixture.GetDefaultRepositorySigningCertificateAsync())
+            {
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                   authorCertificate,
+                   nupkg,
+                   dir);
+
+                var countersignedPackagePath = await SignedArchiveTestUtility.RepositorySignPackageAsync(
+                    repositoryCertificate,
+                    signedPackagePath,
+                    dir,
+                    new Uri("https://v3serviceIndex.test/api/index.json"));
+            
+                // Act
+                var result = RunVerifyCommand(".", countersignedPackagePath);
+
+                // Assert
+                result.Success.Should().BeTrue(because: result.AllOutput);
+                result.AllOutput.Should().Contain(_successfullyVerified);
+                Regex.Matches(result.AllOutput, _noTimestamperWarning).Count.Should().Be(2);
+            }
+        }
+
+        [Fact]
+        public async Task Verify_AuthorSignedTimestampedRepositoryCounterSignedPackage_SuccessAsync()
+        {
+            // Arrange
+            var nupkg = new SimpleTestPackageContext();
+
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+
+            using (var dir = TestDirectory.Create())
+            using (var authorCertificate = await _testFixture.GetDefaultAuthorSigningCertificateAsync())
+            using (var repositoryCertificate = await _testFixture.GetDefaultRepositorySigningCertificateAsync())
+            {
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                   authorCertificate,
+                   nupkg,
+                   dir,
+                   timestampService.Url);
+
+                var countersignedPackagePath = await SignedArchiveTestUtility.RepositorySignPackageAsync(
+                    repositoryCertificate,
+                    signedPackagePath,
+                    dir,
+                    new Uri("https://v3serviceIndex.test/api/index.json"));
+
+                // Act
+                var result = RunVerifyCommand(".", countersignedPackagePath);
+
+                // Assert
+                result.Success.Should().BeTrue(because: result.AllOutput);
+                result.AllOutput.Should().Contain(_successfullyVerified);
+                Regex.Matches(result.AllOutput, _noTimestamperWarning).Count.Should().Be(1);
+            }
+        }
+
+        [Fact]
+        public async Task Verify_AuthorSignedRepositoryCounterSignedTimestampedPackage_SuccessAsync()
+        {
+            // Arrange
+            var nupkg = new SimpleTestPackageContext();
+
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+
+            using (var dir = TestDirectory.Create())
+            using (var authorCertificate = await _testFixture.GetDefaultAuthorSigningCertificateAsync())
+            using (var repositoryCertificate = await _testFixture.GetDefaultRepositorySigningCertificateAsync())
+            {
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                   authorCertificate,
+                   nupkg,
+                   dir);
+
+                var countersignedPackagePath = await SignedArchiveTestUtility.RepositorySignPackageAsync(
+                    repositoryCertificate,
+                    signedPackagePath,
+                    dir,
+                    new Uri("https://v3serviceIndex.test/api/index.json"),
+                    timestampService.Url);
+
+                // Act
+                var result = RunVerifyCommand(".", countersignedPackagePath);
+
+                // Assert
+                result.Success.Should().BeTrue(because: result.AllOutput);
+                result.AllOutput.Should().Contain(_successfullyVerified);
+                Regex.Matches(result.AllOutput, _noTimestamperWarning).Count.Should().Be(1);
+            }
+        }
+
+        [Fact]
+        public async Task Verify_AuthorSignedTimestampedRepositoryCounterSignedTimestampedPackage_SuccessAsync()
+        {
+            // Arrange
+            var nupkg = new SimpleTestPackageContext();
+
+            var timestampService = await _testFixture.GetDefaultTrustedTimestampServiceAsync();
+
+            using (var dir = TestDirectory.Create())
+            using (var authorCertificate = await _testFixture.GetDefaultAuthorSigningCertificateAsync())
+            using (var repositoryCertificate = await _testFixture.GetDefaultRepositorySigningCertificateAsync())
+            {
+                var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                   authorCertificate,
+                   nupkg,
+                   dir,
+                   timestampService.Url);
+
+                var countersignedPackagePath = await SignedArchiveTestUtility.RepositorySignPackageAsync(
+                    repositoryCertificate,
+                    signedPackagePath,
+                    dir,
+                    new Uri("https://v3serviceIndex.test/api/index.json"),
+                    timestampService.Url);
+
+                // Act
+                var result = RunVerifyCommand(".", countersignedPackagePath);
+
+                // Assert
+                result.Success.Should().BeTrue(because: result.AllOutput);
+                result.AllOutput.Should().Contain(_successfullyVerified);
+                Regex.Matches(result.AllOutput, _noTimestamperWarning).Count.Should().Be(0);
+            }
+        }
+
+#if IS_DESKTOP
+        //The following tests are from NuGet.Core.FuncTests\NuGet.Packaging.FuncTest\SigningTests\SignatureUtilityTests.cs.
+        //As timestamping in net5.0 is stricter, they could not be enabled in net5.0 code path. That's why we cross verify them.
+        [Fact]
+        public async Task GetTimestampCertificateChain_WithNoSigningCertificateUsage_Throws()
+        {
+            ISigningTestServer testServer = await _testFixture.GetSigningTestServerAsync();
+            CertificateAuthority rootCa = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var options = new TimestampServiceOptions()
+            {
+                SigningCertificateUsage = SigningCertificateUsage.None
+            };
+            TimestampService timestampService = TimestampService.Create(rootCa, options);
+
+            using (testServer.RegisterResponder(timestampService))
+            {
+                var nupkg = new SimpleTestPackageContext();
+
+                using (var certificate = new X509Certificate2(_testFixture.TrustedTestCertificate.Source.Cert))
+                using (var directory = TestDirectory.Create())
                 {
+                    var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                        certificate,
+                        nupkg,
+                        directory,
+                        timestampService.Url);
+
                     // Act
-                    var result = await verifier.VerifySignaturesAsync(packageReader, _verifyCommandSettings, CancellationToken.None);
-                    var resultsWithErrors = result.Results.Where(r => r.GetErrorIssues().Any());
+                    var result = RunVerifyCommand(".", signedPackagePath);
 
                     // Assert
-                    result.IsValid.Should().BeTrue();
-                    resultsWithErrors.Count().Should().Be(0);
+                    result.Success.Should().BeFalse(because: result.AllOutput);
+                    result.Errors.Should().Contain("Either the signing-certificate or signing-certificate-v2 attribute must be present.");
+                    result.AllOutput.Should().NotContain(_successfullyVerified);
                 }
             }
         }
+
+        [Theory]
+        [InlineData(SigningCertificateUsage.V1)]
+        public async Task GetTimestampCertificateChain_WithShortEssCertIdCertificateHash_Throws(
+            SigningCertificateUsage signingCertificateUsage)
+        {
+            ISigningTestServer testServer = await _testFixture.GetSigningTestServerAsync();
+            CertificateAuthority rootCa = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var options = new TimestampServiceOptions()
+            {
+                SigningCertificateUsage = signingCertificateUsage,
+                SigningCertificateV1Hash = new byte[SHA1HashLength - 1]
+            };
+            TimestampService timestampService = TimestampService.Create(rootCa, options);
+
+            using (testServer.RegisterResponder(timestampService))
+            {
+                var nupkg = new SimpleTestPackageContext();
+
+                using (var certificate = new X509Certificate2(_testFixture.TrustedTestCertificate.Source.Cert))
+                using (var directory = TestDirectory.Create())
+                {
+                    var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                        certificate,
+                        nupkg,
+                        directory,
+                        timestampService.Url);
+
+                    // Act
+                    var result = RunVerifyCommand(".", signedPackagePath);
+
+                    // Assert
+                    result.Success.Should().BeFalse(because: result.AllOutput);
+                    result.Errors.Should().Contain("A certificate referenced by the signing-certificate attribute could not be found.");
+                    result.AllOutput.Should().NotContain(_successfullyVerified);
+                }
+            }
+        }
+
+        [Theory]
+        [InlineData(SigningCertificateUsage.V1)]
+        public async Task GetTimestampCertificateChain_WithMismatchedEssCertIdCertificateHash_ReturnsChain(
+            SigningCertificateUsage signingCertificateUsage)
+        {
+            ISigningTestServer testServer = await _testFixture.GetSigningTestServerAsync();
+            CertificateAuthority rootCa = await _testFixture.GetDefaultTrustedCertificateAuthorityAsync();
+            var options = new TimestampServiceOptions()
+            {
+                SigningCertificateUsage = signingCertificateUsage,
+                SigningCertificateV1Hash = new byte[SHA1HashLength]
+            };
+            TimestampService timestampService = TimestampService.Create(rootCa, options);
+
+            using (testServer.RegisterResponder(timestampService))
+            {
+                var nupkg = new SimpleTestPackageContext();
+
+                using (var certificate = new X509Certificate2(_testFixture.TrustedTestCertificate.Source.Cert))
+                using (var directory = TestDirectory.Create())
+                {
+                    var signedPackagePath = await SignedArchiveTestUtility.AuthorSignPackageAsync(
+                        certificate,
+                        nupkg,
+                        directory,
+                        timestampService.Url);
+
+                    // Act
+                    var result = RunVerifyCommand(".", signedPackagePath);
+
+                    // Assert
+                    result.Success.Should().BeTrue(because: result.AllOutput);
+                    result.AllOutput.Should().Contain(_successfullyVerified);
+                    Regex.Matches(result.AllOutput, _noTimestamperWarning).Count.Should().Be(0);
+                }
+            }
+        }
+#endif
+        private CommandRunnerResult RunVerifyCommand(string workingDirectory, string packagePath)
+        {
+#if IS_DESKTOP
+            //command and arguments for dotnet.exe nuget verify command
+            string command = _testFixture._dotnetExePath;
+            string arguments = $"nuget verify {packagePath} -v n";
+#else
+            //command and arguments for nuget.exe verify command
+            string command = _testFixture._nugetExePath;
+            string arguments = $"verify {packagePath} -Signatures";
+#endif
+            var verifyResult = CommandRunner.Run(
+                command,
+                workingDirectory,
+                arguments,
+                waitForExit: true);
+
+            return verifyResult;
+        }
+    
+    }
+}
+#endif

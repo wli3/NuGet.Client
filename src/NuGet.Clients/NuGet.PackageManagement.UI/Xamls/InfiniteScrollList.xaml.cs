@@ -237,6 +237,9 @@ namespace NuGet.PackageManagement.UI
                     _loaderBrowse = loader;
                     _loadingStatusBarBrowse.Visibility = Visibility.Hidden;
                     _loadingStatusBarBrowse.Reset(loadingMessage, loader.IsMultiSource);
+
+                    //Prevent ScrollViewer from restoring its scroll position once the ListBox is repopulated.
+                    currentListBox.ScrollToHome();
                 }
 
                 var selectedPackageItem = SelectedPackageItem;

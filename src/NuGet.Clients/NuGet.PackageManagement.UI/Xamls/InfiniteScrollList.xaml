@@ -286,6 +286,7 @@
             SnapsToDevicePixels="true"
             Visibility="{TemplateBinding Visibility}">
               <ScrollViewer
+                x:Name="ListBoxScrollViewer"
                 Template="{StaticResource ScrollViewerWithScrollBarExtraLargeOnTop}"
                 Focusable="false"
                 Padding="{TemplateBinding Padding}"

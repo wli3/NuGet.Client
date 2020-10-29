@@ -60,6 +60,15 @@ namespace NuGet.PackageManagement.UI
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
+        public void ScrollToHome()
+        {
+            ScrollViewer scrollViewer = (ScrollViewer)Template.FindName("ListBoxScrollViewer", this);
+            if (scrollViewer != null)
+            {
+                scrollViewer.ScrollToHome();
+            }
+        }
+
         #region Loading Status Indicator
         public event PropertyChangedEventHandler LoadingStatusIndicator_PropertyChanged;
 

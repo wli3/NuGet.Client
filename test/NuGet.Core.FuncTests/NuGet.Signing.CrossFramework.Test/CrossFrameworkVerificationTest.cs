@@ -43,7 +43,7 @@ namespace NuGet.Signing.CrossFramework.Test
                     dir);
 
                 // Act
-                var result = RunVerifyCommand(".", signedPackagePath);
+                var result = RunVerifyCommand(signedPackagePath);
 
                 // Assert
                 result.Success.Should().BeTrue(because: result.AllOutput);
@@ -70,7 +70,7 @@ namespace NuGet.Signing.CrossFramework.Test
                     timestampService.Url);
 
                 // Act
-                var result = RunVerifyCommand(".", signedPackagePath);
+                var result = RunVerifyCommand(signedPackagePath);
 
                 // Assert
                 result.Success.Should().BeTrue(because: result.AllOutput);
@@ -95,7 +95,7 @@ namespace NuGet.Signing.CrossFramework.Test
                     new Uri("https://v3serviceIndex.test/api/index.json"));
 
                 // Act
-                var result = RunVerifyCommand(".", signedPackagePath);
+                var result = RunVerifyCommand(signedPackagePath);
 
                 // Assert
                 result.Success.Should().BeTrue(because: result.AllOutput);
@@ -123,7 +123,7 @@ namespace NuGet.Signing.CrossFramework.Test
                     timestampService.Url);
 
                 // Act
-                var result = RunVerifyCommand(".", signedPackagePath);
+                var result = RunVerifyCommand(signedPackagePath);
 
                 // Assert
                 result.Success.Should().BeTrue(because: result.AllOutput);
@@ -152,9 +152,9 @@ namespace NuGet.Signing.CrossFramework.Test
                     signedPackagePath,
                     dir,
                     new Uri("https://v3serviceIndex.test/api/index.json"));
-            
+
                 // Act
-                var result = RunVerifyCommand(".", countersignedPackagePath);
+                var result = RunVerifyCommand(countersignedPackagePath);
 
                 // Assert
                 result.Success.Should().BeTrue(because: result.AllOutput);
@@ -188,7 +188,7 @@ namespace NuGet.Signing.CrossFramework.Test
                     new Uri("https://v3serviceIndex.test/api/index.json"));
 
                 // Act
-                var result = RunVerifyCommand(".", countersignedPackagePath);
+                var result = RunVerifyCommand(countersignedPackagePath);
 
                 // Assert
                 result.Success.Should().BeTrue(because: result.AllOutput);
@@ -222,7 +222,7 @@ namespace NuGet.Signing.CrossFramework.Test
                     timestampService.Url);
 
                 // Act
-                var result = RunVerifyCommand(".", countersignedPackagePath);
+                var result = RunVerifyCommand(countersignedPackagePath);
 
                 // Assert
                 result.Success.Should().BeTrue(because: result.AllOutput);
@@ -257,7 +257,7 @@ namespace NuGet.Signing.CrossFramework.Test
                     timestampService.Url);
 
                 // Act
-                var result = RunVerifyCommand(".", countersignedPackagePath);
+                var result = RunVerifyCommand(countersignedPackagePath);
 
                 // Assert
                 result.Success.Should().BeTrue(because: result.AllOutput);
@@ -294,7 +294,7 @@ namespace NuGet.Signing.CrossFramework.Test
                         timestampService.Url);
 
                     // Act
-                    var result = RunVerifyCommand(".", signedPackagePath);
+                    var result = RunVerifyCommand(signedPackagePath);
 
                     // Assert
                     result.Success.Should().BeFalse(because: result.AllOutput);
@@ -332,7 +332,7 @@ namespace NuGet.Signing.CrossFramework.Test
                         timestampService.Url);
 
                     // Act
-                    var result = RunVerifyCommand(".", signedPackagePath);
+                    var result = RunVerifyCommand(signedPackagePath);
 
                     // Assert
                     result.Success.Should().BeFalse(because: result.AllOutput);
@@ -370,7 +370,7 @@ namespace NuGet.Signing.CrossFramework.Test
                         timestampService.Url);
 
                     // Act
-                    var result = RunVerifyCommand(".", signedPackagePath);
+                    var result = RunVerifyCommand(signedPackagePath);
 
                     // Assert
                     result.Success.Should().BeTrue(because: result.AllOutput);
@@ -380,7 +380,7 @@ namespace NuGet.Signing.CrossFramework.Test
             }
         }
 #endif
-        private CommandRunnerResult RunVerifyCommand(string workingDirectory, string packagePath)
+        private CommandRunnerResult RunVerifyCommand(string packagePath)
         {
 #if IS_DESKTOP
             //command and arguments for dotnet.exe nuget verify command
@@ -393,7 +393,7 @@ namespace NuGet.Signing.CrossFramework.Test
 #endif
             var verifyResult = CommandRunner.Run(
                 command,
-                workingDirectory,
+                workingDirectory: ".",
                 arguments,
                 waitForExit: true);
 

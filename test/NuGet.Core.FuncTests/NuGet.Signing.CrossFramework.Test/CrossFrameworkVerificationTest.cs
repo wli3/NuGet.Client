@@ -319,7 +319,7 @@ namespace NuGet.Signing.CrossFramework.Test
 
                     // Assert
                     result.Success.Should().BeFalse(because: result.AllOutput);
-                    result.Errors.Should().Contain("Either the signing-certificate or signing-certificate-v2 attribute must be present.");
+                    result.AllOutput.Should().Contain("Either the signing-certificate or signing-certificate-v2 attribute must be present.");
                     result.AllOutput.Should().NotContain(_successfullyVerified);
                 }
             }
@@ -357,7 +357,7 @@ namespace NuGet.Signing.CrossFramework.Test
 
                     // Assert
                     result.Success.Should().BeFalse(because: result.AllOutput);
-                    result.Errors.Should().Contain("A certificate referenced by the signing-certificate attribute could not be found.");
+                    result.AllOutput.Should().Contain("A certificate referenced by the signing-certificate attribute could not be found.");
                     result.AllOutput.Should().NotContain(_successfullyVerified);
                 }
             }

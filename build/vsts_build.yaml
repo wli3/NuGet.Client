@@ -248,12 +248,6 @@ jobs:
     demands:
         - DotNetFramework
         - msbuild
-  strategy:
-    matrix:
-      IsDesktop:
-        SkipCoreAssemblies: "true"
-      IsCore:
-        SkipDesktopAssemblies: "true"
 
   steps:
   - task: PowerShell@1

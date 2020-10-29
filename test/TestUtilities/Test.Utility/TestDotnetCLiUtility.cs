@@ -42,7 +42,7 @@ namespace NuGet.Test.Utility
             else
             {
                 // Use specified sdkVersion
-                SdkVersion = GetSdkToTest(sdkVersion); 
+                SdkVersion = GetSdkToTest(sdkVersion);
             }
 
 
@@ -67,8 +67,6 @@ namespace NuGet.Test.Utility
 
         private static void CopyLatestCliToTestDirectory(string destinationDir)
         {
-            
-
             WriteGlobalJson(destinationDir);
 
             var sdkPath = Path.Combine(SdkDir, SdkVersion + Path.DirectorySeparatorChar);

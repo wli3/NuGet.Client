@@ -4,17 +4,13 @@
 #if IS_SIGNING_SUPPORTED
 
 using System;
+using System.Security.Cryptography.X509Certificates;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using FluentAssertions;
 using NuGet.Test.Utility;
 using Test.Utility.Signing;
-using System.Collections.Generic;
-using NuGet.Packaging;
 using Xunit;
-using FluentAssertions;
-using System.Text.RegularExpressions;
-using System.Security.Cryptography.X509Certificates;
-using System.IO;
-using NuGet.Packaging.Signing;
 
 namespace NuGet.Signing.CrossFramework.Test
 {
@@ -25,7 +21,6 @@ namespace NuGet.Signing.CrossFramework.Test
 
         private readonly string _successfullyVerified = "Successfully verified package 'packageA.1.0.0'";
         private readonly string _noTimestamperWarning = "NU3027: The signature should be timestamped to enable long-term signature validity after the certificate has expired";
-        
         private readonly CrossVerifyTestFixture _testFixture;
 
         public CrossFrameworkVerificationTest(CrossVerifyTestFixture fixture)
@@ -404,7 +399,6 @@ namespace NuGet.Signing.CrossFramework.Test
 
             return verifyResult;
         }
-    
     }
 }
 #endif

@@ -4,8 +4,8 @@
 using System;
 using System.IO;
 using System.Linq;
-using NuGet.Versioning;
 using NuGet.Test.Utility;
+using NuGet.Versioning;
 
 namespace NuGet.XPlat.FuncTest
 {

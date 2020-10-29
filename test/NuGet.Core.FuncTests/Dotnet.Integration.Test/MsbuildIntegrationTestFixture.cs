@@ -343,7 +343,7 @@ namespace Dotnet.Integration.Test
 
             return testDirectory;
         }
-    
+
         public void Dispose()
         {
             RunDotnet(Path.GetDirectoryName(TestDotnetCli), "build-server shutdown");

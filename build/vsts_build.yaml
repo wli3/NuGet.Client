@@ -298,7 +298,7 @@ jobs:
       solution: "build\\build.proj"
       msbuildVersion: "16.0"
       configuration: "$(BuildConfiguration)"
-      msbuildArguments: "/t:CrossVerifyTests /p:BuildRTM=false /p:BuildNumber=$(BuildNumber) /p:TestResultOutputFormat=xml
+      msbuildArguments: "/t:CrossVerifyTests /p:BuildRTM=false /p:BuildNumber=$(BuildNumber) /p:TestResultOutputFormat=xml"
     condition: "eq(variables['IsOfficialBuild'], 'true')"
 
   - task: MSBuild@1
@@ -308,7 +308,7 @@ jobs:
       solution: "build\\build.proj"
       msbuildVersion: "16.0"
       configuration: "$(BuildConfiguration)"
-      msbuildArguments: "/t:CrossVerifyTests /p:BuildRTM=false /p:BuildNumber=$(BuildNumber) /p:TestResultOutputFormat=xml
+      msbuildArguments: "/t:CrossVerifyTests /p:BuildRTM=false /p:BuildNumber=$(BuildNumber) /p:TestResultOutputFormat=xml"
     condition: "not(eq(variables['IsOfficialBuild'], 'true'))"
 
   - task: PublishTestResults@2

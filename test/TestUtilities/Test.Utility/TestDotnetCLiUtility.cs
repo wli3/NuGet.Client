@@ -22,15 +22,15 @@ namespace NuGet.Test.Utility
     {
         internal static string SdkVersion { get; private set; }
         internal static NuGetFramework SdkTfm { get; private set; }
-        internal static string CliDir { get; private set; }
-        internal static string SdkDir { get; private set; }
+        internal static string CliDirSource { get; private set; }
+        internal static string SdkDirSource { get; private set; }
 
 
         public static TestDirectory CopyAndPatchLatestDotnetCli(string sdkVersion = null, string sdkTfm = null)
         {
 
-            CliDir = Path.GetDirectoryName(TestFileSystemUtility.GetDotnetCli());
-            SdkDir = Path.Combine(CliDir, "sdk" + Path.DirectorySeparatorChar);
+            CliDirSource = Path.GetDirectoryName(TestFileSystemUtility.GetDotnetCli());
+            SdkDirSource = Path.Combine(CliDirSource, "sdk" + Path.DirectorySeparatorChar);
 
             if (sdkVersion == null)
             {
@@ -50,7 +50,7 @@ namespace NuGet.Test.Utility
             {
 #if !IS_DESKTOP
                 // Dynamically determine the TFM of the dotnet.dll
-                SdkTfm = AssemblyReader.GetTargetFramework(Path.Combine(SdkDir, SdkVersion, "dotnet.dll"));
+                SdkTfm = AssemblyReader.GetTargetFramework(Path.Combine(SdkDirSource, SdkVersion, "dotnet.dll"));
 #endif
             }
             else
@@ -59,27 +59,27 @@ namespace NuGet.Test.Utility
                 SdkTfm = NuGetFramework.Parse(sdkTfm);
             }
 
-            var cliDirectory = TestDirectory.Create();
-            CopyLatestCliToTestDirectory(cliDirectory);
-            UpdateCliWithLatestNuGetAssemblies(cliDirectory);
+            var cliDirDestination = TestDirectory.Create();
+            CopyLatestCliToTestDirectory(cliDirDestination);
+            UpdateCliWithLatestNuGetAssemblies(cliDirDestination);
 
             // TODO - remove when SDK version for testing has Cryptography Dlls. See https://github.com/NuGet/Home/issues/8952
-            var patchPath = Directory.EnumerateDirectories(SdkDir).Single();
+            var patchPath = Directory.EnumerateDirectories(Path.Combine(cliDirDestination, "sdk")).Single();
             PatchSDKWithCryptographyDlls(patchPath);
 
-            return cliDirectory;
+            return cliDirDestination;
         }
 
         private static void CopyLatestCliToTestDirectory(string destinationDir)
         {
             WriteGlobalJson(destinationDir);
 
-            var sdkPath = Path.Combine(SdkDir, SdkVersion + Path.DirectorySeparatorChar);
-            var fallbackFolderPath = Path.Combine(SdkDir, "NuGetFallbackFolder");
+            var sdkPath = Path.Combine(SdkDirSource, SdkVersion + Path.DirectorySeparatorChar);
+            var fallbackFolderPath = Path.Combine(SdkDirSource, "NuGetFallbackFolder");
 
             Func<string, bool> predicate = path =>
             {
-                if (!path.StartsWith(SdkDir))
+                if (!path.StartsWith(SdkDirSource))
                 {
                     return true;
                 }
@@ -88,9 +88,9 @@ namespace NuGet.Test.Utility
             };
 
             //Create sub-directory structure in destination, ignoring any SDK version not selected.
-            foreach (var directory in Directory.EnumerateDirectories(CliDir, "*", SearchOption.AllDirectories).Where(predicate))
+            foreach (var directory in Directory.EnumerateDirectories(CliDirSource, "*", SearchOption.AllDirectories).Where(predicate))
             {
-                var destDir = destinationDir + directory.Substring(CliDir.Length);
+                var destDir = destinationDir + directory.Substring(CliDirSource.Length);
                 if (!Directory.Exists(destDir))
                 {
                     Directory.CreateDirectory(destDir);
@@ -100,9 +100,9 @@ namespace NuGet.Test.Utility
             var lastWriteTime = DateTime.Now.AddDays(-2);
 
             //Copy files recursively to destination directories, ignoring any SDK version not selected.
-            foreach (var fileName in Directory.EnumerateFiles(CliDir, "*", SearchOption.AllDirectories).Where(predicate))
+            foreach (var fileName in Directory.EnumerateFiles(CliDirSource, "*", SearchOption.AllDirectories).Where(predicate))
             {
-                var destFileName = destinationDir + fileName.Substring(CliDir.Length);
+                var destFileName = destinationDir + fileName.Substring(CliDirSource.Length);
                 File.Copy(fileName, destFileName);
                 File.SetLastWriteTime(destFileName, lastWriteTime);
             }
@@ -115,7 +115,7 @@ namespace NuGet.Test.Utility
             var testTfm = AssemblyReader.GetTargetFramework(typeof(TestDotnetCLiUtility).Assembly.Location);
 
             var selectedVersion =
-                Directory.EnumerateDirectories(SdkDir) // get all directories in sdk folder
+                Directory.EnumerateDirectories(SdkDirSource) // get all directories in sdk folder
                 .Where(path =>
                 { // SDK is for TFM to test
                     if (string.Equals(Path.GetFileName(path), "NuGetFallbackFolder", StringComparison.OrdinalIgnoreCase))
@@ -134,9 +134,9 @@ namespace NuGet.Test.Utility
 
             if (selectedVersion == null)
             {
-                var message = $@"Could not find suitable SDK to test in {SdkDir}
+                var message = $@"Could not find suitable SDK to test in {SdkDirSource}
 TFM being tested: {testTfm.DotNetFrameworkName}
-SDKs found: {string.Join(", ", Directory.EnumerateDirectories(SdkDir).Select(Path.GetFileName).Where(d => !string.Equals(d, "NuGetFallbackFolder", StringComparison.OrdinalIgnoreCase)))}";
+SDKs found: {string.Join(", ", Directory.EnumerateDirectories(SdkDirSource).Select(Path.GetFileName).Where(d => !string.Equals(d, "NuGetFallbackFolder", StringComparison.OrdinalIgnoreCase)))}";
 
                 throw new Exception(message);
             }
@@ -147,7 +147,7 @@ SDKs found: {string.Join(", ", Directory.EnumerateDirectories(SdkDir).Select(Pat
         private static string GetSdkToTest(string sdkVersion)
         {
             var selectedVersion =
-                Directory.EnumerateDirectories(SdkDir) // get all directories in sdk folder
+                Directory.EnumerateDirectories(SdkDirSource) // get all directories in sdk folder
                 .Where(path =>
                 { // SDK is for TFM to test
                     if (string.Equals(Path.GetFileName(path), "NuGetFallbackFolder", StringComparison.OrdinalIgnoreCase))
@@ -165,9 +165,9 @@ SDKs found: {string.Join(", ", Directory.EnumerateDirectories(SdkDir).Select(Pat
 
             if (selectedVersion == null)
             {
-                var message = $@"Could not find suitable SDK to test in {SdkDir}
+                var message = $@"Could not find suitable SDK to test in {SdkDirSource}
 sdkVersion specified: {sdkVersion}
-SDKs found: {string.Join(", ", Directory.EnumerateDirectories(SdkDir).Select(Path.GetFileName).Where(d => !string.Equals(d, "NuGetFallbackFolder", StringComparison.OrdinalIgnoreCase)))}";
+SDKs found: {string.Join(", ", Directory.EnumerateDirectories(SdkDirSource).Select(Path.GetFileName).Where(d => !string.Equals(d, "NuGetFallbackFolder", StringComparison.OrdinalIgnoreCase)))}";
 
                 throw new Exception(message);
             }
@@ -322,7 +322,7 @@ project TFMs found: {string.Join(", ", compiledTfms.Keys.Select(k => k.ToString(
             string userProfilePath = Environment.GetEnvironmentVariable(RuntimeEnvironmentHelper.IsWindows ? "USERPROFILE" : "HOME");
             string globalPackagesPath = Path.Combine(userProfilePath, ".nuget", "packages");
 
-            CopyNewlyAddedDlls(assemblyNames, Directory.GetCurrentDirectory(), sdkPath);
+            CopyNewlyAddedDlls(assemblyNames, GetPkcsDllPath("System.Security.Cryptography.Pkcs.dll"), sdkPath);
         }
 
         private static void PatchDepsJsonFiles(string[] assemblyNames, string patchDir)
@@ -362,7 +362,7 @@ project TFMs found: {string.Join(", ", compiledTfms.Keys.Select(k => k.ToString(
 
                     JObject runtime = nugetBuildTasks.GetJObjectProperty<JObject>("runtime");
 
-                    var assemblyPath = GetPkcsDllPath(assemblyName);
+                    var assemblyPath = Path.Combine(GetPkcsDllPath(assemblyName), assemblyName);
                     var assemblyVersion = Assembly.LoadFile(assemblyPath).GetName().Version.ToString();
                     var assemblyFileVersion = FileVersionInfo.GetVersionInfo(assemblyPath).FileVersion;
                     var jproperty = new JProperty("lib/netcoreapp5.0/" + assemblyName,
@@ -434,15 +434,15 @@ project TFMs found: {string.Join(", ", compiledTfms.Keys.Select(k => k.ToString(
 #else
                 "Release";
 #endif
-            var assemblyPath = Path.Combine(currentDir.FullName, "test", "NuGet.Core.FuncTests", "NuGet.Packaging.FuncTest", "bin", configuration, "netcoreapp5.0", assemblyName);
+            var assemblyDir = Path.Combine(currentDir.FullName, "test", "NuGet.Core.FuncTests", "NuGet.Packaging.FuncTest", "bin", configuration, "netcoreapp5.0");
 
-            if (!File.Exists(assemblyPath))
+            if (!File.Exists(Path.Combine(assemblyDir, assemblyName)))
             {
-                var message = $@"Could not find {assemblyPath} to copy";
+                var message = $@"Could not find {assemblyName} in {assemblyDir}";
 
                 throw new Exception(message);
             }
-            return assemblyPath;
+            return assemblyDir;
         }
     }
 }

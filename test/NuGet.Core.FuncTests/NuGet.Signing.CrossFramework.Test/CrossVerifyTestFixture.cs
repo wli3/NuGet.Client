@@ -35,7 +35,7 @@ namespace NuGet.Signing.CrossFramework.Test
         public CrossVerifyTestFixture()
         {
 #if IS_DESKTOP
-            var patchedCliFolder = TestDotnetCLiUtility.CopyAndPatchLatestCliForPack(sdkVersion: "5", sdkTfm: "net5.0");
+            var patchedCliFolder = TestDotnetCLiUtility.CopyAndPatchLatestDotnetCli(sdkVersion: "5", sdkTfm: "net5.0");
             _dotnetExePath = Path.Combine(patchedCliFolder, DotnetExe);
 #else
             var nugetExeFolder = TestFileSystemUtility.GetNuGetExeDirectoryInRepo();

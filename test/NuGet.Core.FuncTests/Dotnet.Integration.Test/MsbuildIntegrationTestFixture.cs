@@ -33,14 +33,11 @@ namespace Dotnet.Integration.Test
 
         public MsbuildIntegrationTestFixture()
         {
-            _cliDirectory = TestDotnetCLiUtility.CopyAndPatchLatestCliForPack();
+            _cliDirectory = TestDotnetCLiUtility.CopyAndPatchLatestDotnetCli();
             var dotnetExecutableName = RuntimeEnvironmentHelper.IsWindows ? "dotnet.exe" : "dotnet";
             TestDotnetCli = Path.Combine(_cliDirectory, dotnetExecutableName);
 
             var sdkPath = Directory.EnumerateDirectories(Path.Combine(_cliDirectory, "sdk")).Single();
-
-            // TODO - remove when SDK version for testing has Cryptography Dlls. See https://github.com/NuGet/Home/issues/8952
-            TestDotnetCLiUtility.PatchSDKWithCryptographyDlls(sdkPath);
 
             MsBuildSdksPath = Path.Combine(sdkPath, "Sdks");
 

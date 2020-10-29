@@ -26,7 +26,7 @@ namespace NuGet.Test.Utility
         internal static string SdkDir { get; private set; }
 
 
-        public static TestDirectory CopyAndPatchLatestCliForPack(string sdkVersion = null, string sdkTfm = null)
+        public static TestDirectory CopyAndPatchLatestDotnetCli(string sdkVersion = null, string sdkTfm = null)
         {
 
             CliDir = Path.GetDirectoryName(TestFileSystemUtility.GetDotnetCli());
@@ -62,6 +62,11 @@ namespace NuGet.Test.Utility
             var cliDirectory = TestDirectory.Create();
             CopyLatestCliToTestDirectory(cliDirectory);
             UpdateCliWithLatestNuGetAssemblies(cliDirectory);
+
+            // TODO - remove when SDK version for testing has Cryptography Dlls. See https://github.com/NuGet/Home/issues/8952
+            var patchPath = Directory.EnumerateDirectories(SdkDir).Single();
+            PatchSDKWithCryptographyDlls(patchPath);
+
             return cliDirectory;
         }
 
@@ -305,13 +310,11 @@ project TFMs found: {string.Join(", ", compiledTfms.Keys.Select(k => k.ToString(
             File.WriteAllText(globalJsonPath, globalJsonText);
         }
 
-        // Temporary added methods for processing deps.json files for patching
-
         /// <summary>
         /// Temporary patching process to bring in Cryptography DLLs for testing while SDK gets around to including them in 5.0.
         /// See also: https://github.com/NuGet/Home/issues/8508
         /// </summary>
-        public static void PatchSDKWithCryptographyDlls(string sdkPath)
+        private static void PatchSDKWithCryptographyDlls(string sdkPath)
         {
             var assemblyNames = new string[1] { "System.Security.Cryptography.Pkcs.dll" };
             PatchDepsJsonFiles(assemblyNames, sdkPath);

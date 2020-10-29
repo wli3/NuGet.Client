@@ -362,7 +362,7 @@ project TFMs found: {string.Join(", ", compiledTfms.Keys.Select(k => k.ToString(
 
                     JObject runtime = nugetBuildTasks.GetJObjectProperty<JObject>("runtime");
 
-                    var assemblyPath = Path.Combine(Directory.GetCurrentDirectory(), assemblyName);
+                    var assemblyPath = GetPkcsDllPath(assemblyName);
                     var assemblyVersion = Assembly.LoadFile(assemblyPath).GetName().Version.ToString();
                     var assemblyFileVersion = FileVersionInfo.GetVersionInfo(assemblyPath).FileVersion;
                     var jproperty = new JProperty("lib/netcoreapp5.0/" + assemblyName,
@@ -413,6 +413,36 @@ project TFMs found: {string.Join(", ", compiledTfms.Keys.Select(k => k.ToString(
                 }
             },
             jsonFilePath);
+        }
+
+        private static string GetPkcsDllPath(string assemblyName)
+        {
+            var currentDir = Directory.CreateDirectory(Directory.GetCurrentDirectory());
+            while (currentDir != null)
+            {
+                if (currentDir.GetFiles().Any(e => e.Name.Equals("NuGet.sln", StringComparison.OrdinalIgnoreCase)))
+                {
+                    // We have found the repo root.
+                    break;
+                }
+
+                currentDir = currentDir.Parent;
+            }
+            const string configuration =
+#if DEBUG
+                "Debug";
+#else
+                "Release";
+#endif
+            var assemblyPath = Path.Combine(currentDir.FullName, "test", "NuGet.Core.FuncTests", "NuGet.Packaging.FuncTest", "bin", configuration, "netcoreapp5.0", assemblyName);
+
+            if (!File.Exists(assemblyPath))
+            {
+                var message = $@"Could not find {assemblyPath} to copy";
+
+                throw new Exception(message);
+            }
+            return assemblyPath;
         }
     }
 }

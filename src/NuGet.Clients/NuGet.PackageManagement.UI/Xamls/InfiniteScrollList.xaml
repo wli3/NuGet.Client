@@ -172,23 +172,6 @@
       </ControlTemplate.Triggers>
     </ControlTemplate>
 
-    <!-- Template used by the LoadingIndicator. We use it to disable the background change when mouse hovers over it. -->
-    <ControlTemplate
-      x:Key="LoadingIndicatorListBoxItemTemplate"
-      TargetType="{x:Type ListBoxItem}">
-      <Border
-        x:Name="Bd"
-        BorderThickness="0"
-        Background="{DynamicResource {x:Static nuget:Brushes.ListPaneBackground}}"
-        Padding="0"
-        SnapsToDevicePixels="true">
-        <ContentPresenter
-          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-          SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
-          VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
-      </Border>
-    </ControlTemplate>
-
     <!-- the base style of the ListBoxItem. -->
     <Style
       x:Key="listBoxItemStyle"
@@ -210,7 +193,7 @@
         Value="Transparent" />
     </Style>
 
-    <!-- the style of the ListBoxItem when the item is the loading status indicator. -->
+    <!-- the style of the loading status indicator within the ListBox. -->
     <Style
       x:Key="loadingStatusIndicatorStyle"
       TargetType="{x:Type nuget:LoadingStatusIndicator}">

@@ -148,7 +148,7 @@ namespace NuGet.PackageManagement.UI
         }
 
         /// <summary>
-        /// Count of Items (excluding Loading indicator) that are currently shown after applying any UI filtering.
+        /// Count of Items that are currently shown after applying any UI filtering.
         /// </summary>
         private int FilteredInstalledItemsCount
         {
@@ -159,13 +159,13 @@ namespace NuGet.PackageManagement.UI
         }
 
         /// <summary>
-        /// All loaded Items (excluding Loading indicator) regardless of filtering.
+        /// All loaded Items regardless of filtering.
         /// </summary>
         public IEnumerable<PackageItemListViewModel> CurrentlyShownPackageItems => CurrentlyShownItems.OfType<PackageItemListViewModel>().ToArray();
         public IEnumerable<PackageItemListViewModel> BrowsePackageItems => ItemsBrowse.OfType<PackageItemListViewModel>().ToArray();
 
         /// <summary>
-        /// Items (excluding Loading indicator) that are currently shown after applying any UI filtering.
+        /// Items that are currently shown after applying any UI filtering.
         /// </summary>
         public IEnumerable<PackageItemListViewModel> CurrentlyShownPackageItemsFiltered
         {
@@ -402,7 +402,7 @@ namespace NuGet.PackageManagement.UI
                     ItemsInstalledCollectionView.Filter = null;
                     break;
                 case ItemFilter.UpdatesAvailable:
-                    ItemsInstalledCollectionView.Filter = (item) => item is LoadingStatusIndicator || (item as PackageItemListViewModel).IsUpdateAvailable;
+                    ItemsInstalledCollectionView.Filter = (item) => (item as PackageItemListViewModel).IsUpdateAvailable;
                     break;
                 case ItemFilter.Consolidate:
                     ItemsInstalledCollectionView.Filter = null; //TODO: setup
@@ -711,25 +711,9 @@ namespace NuGet.PackageManagement.UI
 
         private void List_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (e.AddedItems.Count > 0
-                && e.AddedItems[0] is LoadingStatusIndicator)
+            if (SelectionChanged != null)
             {
-                // make the loading object not selectable
-                if (e.RemovedItems.Count > 0)
-                {
-                    CurrentlyShownListBox.SelectedItem = e.RemovedItems[0];
-                }
-                else
-                {
-                    CurrentlyShownListBox.SelectedIndex = -1;
-                }
-            }
-            else
-            {
-                if (SelectionChanged != null)
-                {
-                    SelectionChanged(this, e);
-                }
+                SelectionChanged(this, e);
             }
         }
 
@@ -775,8 +759,6 @@ namespace NuGet.PackageManagement.UI
             {
                 var package = item as PackageItemListViewModel;
 
-                // note that item could be the loading indicator, thus we need to check
-                // for null here.
                 if (package != null)
                 {
                     package.Selected = true;

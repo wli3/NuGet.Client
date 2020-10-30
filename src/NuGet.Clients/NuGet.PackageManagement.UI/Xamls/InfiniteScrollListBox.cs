@@ -84,8 +84,9 @@ namespace NuGet.PackageManagement.UI
         /// </summary>
         /// <param name="status">Status for the indicator.
         /// <param name="loadingMessage">Text to show in the loading indicator when <c>show</c> is <c>true</c>.
+        /// <paramref name="itemsCount">Number of items to indicate as loaded.</paramref>
         /// If not provided, the previous text persists.</param>
-        public void UpdateLoadingIndicator(LoadingStatus status, string loadingMessage = null)
+        public void UpdateLoadingIndicator(LoadingStatus status, string loadingMessage = null, int itemsCount = 0)
         {
             WrapPanel wrapPanel = (WrapPanel)Template.FindName("ListBoxWrapPanel", this);
 
@@ -95,11 +96,19 @@ namespace NuGet.PackageManagement.UI
             {
                 bool operationComplete = LoadingStatus.Completed.HasFlag(status);
 
-                //NoItemsFound (can be shown or hidden)
+                //Completed can be shown or hidden depending on whether items is non-zero.
                 if (operationComplete)
                 {
-                    int itemsCount = (ItemsSource as ObservableCollection<object>).Count;
-                    show = itemsCount == 0; //Indicator needs to be visible to display NoItemsFound (No packages found).
+                    var noItemsFound = itemsCount == 0; //Indicator needs to be visible to display NoItemsFound (No packages found).
+                    if (noItemsFound)
+                    {
+                        show = true;
+                        status = LoadingStatus.NoItemsFound;
+                    }
+                    else
+                    {
+                        status = LoadingStatus.NoMoreItems;
+                    }
                 }
 
                 if (status == LoadingStatus.Loading || status == LoadingStatus.Ready)

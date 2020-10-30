@@ -150,7 +150,7 @@ namespace NuGet.PackageManagement.UI
         /// <summary>
         /// Count of Items that are currently shown after applying any UI filtering.
         /// </summary>
-        private int FilteredInstalledItemsCount
+        private int FilteredItemsCount
         {
             get
             {
@@ -227,38 +227,31 @@ namespace NuGet.PackageManagement.UI
 
             currentListBox.UpdateLoadingIndicator(status: LoadingStatus.Loading, loadingMessage: loadingMessage);
 
-            try
+            _logger = logger;
+            _initialSearchResultTask = searchResultTask;
+
+            if (filterToRender == ItemFilter.All)
             {
-                _logger = logger;
-                _initialSearchResultTask = searchResultTask;
+                _loaderBrowse = loader;
+                _loadingStatusBarBrowse.Visibility = Visibility.Hidden;
+                _loadingStatusBarBrowse.Reset(loadingMessage, loader.IsMultiSource);
 
-                if (filterToRender == ItemFilter.All)
-                {
-                    _loaderBrowse = loader;
-                    _loadingStatusBarBrowse.Visibility = Visibility.Hidden;
-                    _loadingStatusBarBrowse.Reset(loadingMessage, loader.IsMultiSource);
-
-                    //Prevent ScrollViewer from restoring its scroll position once the ListBox is repopulated.
-                    currentListBox.ScrollToHome();
-                }
-
-                var selectedPackageItem = SelectedPackageItem;
-
-                await currentListBox.ItemsLock.ExecuteAsync(() =>
-                {
-                    ClearPackageList(currentItems);
-                    return Task.CompletedTask;
-                });
-
-                _selectedCount = 0;
-
-                // triggers the package list loader
-                await LoadItemsAsync(currentListBox, currentItems, loader, selectedPackageItem, filterToRender, token);
+                //Prevent ScrollViewer from restoring its scroll position once the ListBox is repopulated.
+                currentListBox.ScrollToHome();
             }
-            finally
+
+            var selectedPackageItem = SelectedPackageItem;
+
+            await currentListBox.ItemsLock.ExecuteAsync(() =>
             {
-                currentListBox.UpdateLoadingIndicator(status: loader.State.LoadingStatus, loadingMessage);
-            }
+                ClearPackageList(currentItems);
+                return Task.CompletedTask;
+            });
+
+            _selectedCount = 0;
+
+            // triggers the package list loader
+            await LoadItemsAsync(currentListBox, currentItems, loader, selectedPackageItem, filterToRender, token);
         }
 
         /// <summary>
@@ -423,6 +416,7 @@ namespace NuGet.PackageManagement.UI
                 default: break;
             }
 
+            _listInstalled.UpdateLoadingIndicator(status: LoadingStatus.Completed, itemsCount: FilteredItemsCount);
             UpdateCheckBoxStatus();
             LoadItemsCompleted?.Invoke(this, EventArgs.Empty);
         }
@@ -555,8 +549,16 @@ namespace NuGet.PackageManagement.UI
                             _loadingStatusBarBrowse.Visibility = desiredVisibility;
                         }
                     }
-                    currentListBox.UpdateLoadingIndicator(status: state.LoadingStatus);
                 }
+
+                LoadingStatus resolvedStatus = state.LoadingStatus;
+
+                //When loading is complete, check whether any items are shown with the current UI filter.
+                if (state.LoadingStatus == LoadingStatus.NoMoreItems && FilteredItemsCount == 0)
+                {
+                    resolvedStatus = LoadingStatus.NoItemsFound;
+                }
+                currentListBox.UpdateLoadingIndicator(status: resolvedStatus, itemsCount: FilteredItemsCount);
             });
         }
 
@@ -673,7 +675,7 @@ namespace NuGet.PackageManagement.UI
             }
 
             //Are any packages shown with the current filter?
-            int packageCount = FilteredInstalledItemsCount;
+            int packageCount = FilteredItemsCount;
 
             _updateButtonContainer.Visibility =
                 packageCount > 0 ?
@@ -745,7 +747,7 @@ namespace NuGet.PackageManagement.UI
                             finally
                             {
                                 LoadingStatus finalStatus = _loaderBrowse != null ? _loaderBrowse.State.LoadingStatus : LoadingStatus.Unknown;
-                                _listBrowse.UpdateLoadingIndicator(status: finalStatus);
+                                _listBrowse.UpdateLoadingIndicator(status: finalStatus, itemsCount: FilteredItemsCount);
                             }
                         });
                     }
@@ -815,7 +817,7 @@ namespace NuGet.PackageManagement.UI
             finally
             {
                 LoadingStatus finalStatus = _loaderBrowse != null ? _loaderBrowse.State.LoadingStatus : LoadingStatus.Unknown;
-                _listBrowse.UpdateLoadingIndicator(status: finalStatus);
+                _listBrowse.UpdateLoadingIndicator(status: finalStatus, itemsCount: FilteredItemsCount);
             }
         }
 

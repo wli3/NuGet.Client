@@ -11,6 +11,7 @@ using System.Net;
 using System.Net.Cache;
 using System.Runtime.Caching;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using Microsoft.VisualStudio.Threading;
@@ -262,6 +263,7 @@ namespace NuGet.PackageManagement.UI
                     OnPropertyChanged(nameof(IsUpdateAvailable));
                     OnPropertyChanged(nameof(IsUninstallable));
                     OnPropertyChanged(nameof(IsNotInstalled));
+                    OnPropertyChanged(nameof(HasPendingBackgroundWork));
                 }
             }
         }
@@ -465,6 +467,37 @@ namespace NuGet.PackageManagement.UI
 
         private Lazy<Task<NuGetVersion>> _backgroundLatestVersionLoader;
         private Lazy<Task<PackageDeprecationMetadata>> _backgroundDeprecationMetadataLoader;
+
+        #region Track completion of Background Loading
+        public bool HasPendingBackgroundWork
+        {
+            get
+            {
+                return _taskCount > 0;
+            }
+        }
+        private int _taskCount;
+
+        public int TaskCount
+        {
+            get { return _taskCount; }
+            private set
+            {
+                _taskCount = value;
+                OnPropertyChanged(nameof(HasPendingBackgroundWork));
+            }
+        }
+        private void IncrementTask()
+        {
+            Interlocked.Increment(ref _taskCount);
+            OnPropertyChanged(nameof(HasPendingBackgroundWork));
+        }
+        private void DecrementTask()
+        {
+            Interlocked.Decrement(ref _taskCount);
+            OnPropertyChanged(nameof(HasPendingBackgroundWork));
+        }
+        #endregion
 
         private (BitmapSource, IconBitmapStatus) GetInitialIconBitmapAndStatus()
         {
@@ -733,7 +766,9 @@ namespace NuGet.PackageManagement.UI
 
         private async System.Threading.Tasks.Task ReloadPackageVersionsAsync()
         {
+            IncrementTask();
             var result = await _backgroundLatestVersionLoader.Value;
+            DecrementTask();
 
             await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 

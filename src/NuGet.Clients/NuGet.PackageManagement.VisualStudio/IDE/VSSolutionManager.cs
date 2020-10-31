@@ -14,6 +14,7 @@ using EnvDTE;
 using EnvDTE80;
 using Microsoft;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Experimentation;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
@@ -185,6 +186,7 @@ namespace NuGet.PackageManagement.VisualStudio
             });
 
             TelemetryActivity.NuGetTelemetryService = new NuGetVSTelemetryService();
+            ServiceIndexResourceV3.NuGetExperimentationService = new NuGetVSExperimentationService(ExperimentationService.Default);
 
             _vsMonitorSelection = await _asyncServiceProvider.GetServiceAsync<SVsShellMonitorSelection, IVsMonitorSelection>();
 

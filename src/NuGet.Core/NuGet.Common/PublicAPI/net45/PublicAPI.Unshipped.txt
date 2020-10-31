@@ -1,4 +1,10 @@
+NuGet.Common.INuGetExperimentationService
+NuGet.Common.INuGetExperimentationService.IsFlightEnabled(string flight) -> bool
 NuGet.Common.NuGetLogCode.NU1010 = 1010 -> NuGet.Common.NuGetLogCode
 NuGet.Common.NuGetLogCode.NU1011 = 1011 -> NuGet.Common.NuGetLogCode
 NuGet.Common.NuGetLogCode.NU5501 = 5501 -> NuGet.Common.NuGetLogCode
 NuGet.Common.NuGetLogCode.NU1012 = 1012 -> NuGet.Common.NuGetLogCode
+NuGet.Common.NullExperimentationService
+NuGet.Common.NullExperimentationService.IsFlightEnabled(string flight) -> bool
+NuGet.Common.NullExperimentationService.NullExperimentationService() -> void
+static NuGet.Common.NullExperimentationService.Instance.get -> NuGet.Common.NullExperimentationService

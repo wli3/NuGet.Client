@@ -11,3 +11,5 @@ NuGet.Protocol.PackageVulnerabilityMetadata.Severity.get -> int
 const NuGet.Protocol.JsonProperties.AdvisoryUrl = "advisoryUrl" -> string
 const NuGet.Protocol.JsonProperties.Severity = "severity" -> string
 const NuGet.Protocol.JsonProperties.Vulnerabilities = "vulnerabilities" -> string
+static NuGet.Protocol.ServiceIndexResourceV3.NuGetExperimentationService.get -> NuGet.Common.INuGetExperimentationService
+static NuGet.Protocol.ServiceIndexResourceV3.NuGetExperimentationService.set -> void

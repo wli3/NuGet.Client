@@ -478,15 +478,6 @@ namespace NuGet.PackageManagement.UI
         }
         private int _taskCount;
 
-        public int TaskCount
-        {
-            get { return _taskCount; }
-            private set
-            {
-                _taskCount = value;
-                OnPropertyChanged(nameof(HasPendingBackgroundWork));
-            }
-        }
         private void IncrementTask()
         {
             Interlocked.Increment(ref _taskCount);
@@ -764,7 +755,7 @@ namespace NuGet.PackageManagement.UI
             }
         }
 
-        private async System.Threading.Tasks.Task ReloadPackageVersionsAsync()
+        public async Task ReloadPackageVersionsAsync()
         {
             IncrementTask();
             var result = await _backgroundLatestVersionLoader.Value;
@@ -776,7 +767,7 @@ namespace NuGet.PackageManagement.UI
             Status = GetPackageStatus(LatestVersion, InstalledVersion, AutoReferenced);
         }
 
-        private async System.Threading.Tasks.Task ReloadPackageDeprecationAsync()
+        private async Task ReloadPackageDeprecationAsync()
         {
             var result = await _backgroundDeprecationMetadataLoader.Value;
 
@@ -785,7 +776,7 @@ namespace NuGet.PackageManagement.UI
             IsPackageDeprecated = result != null;
         }
 
-        private async System.Threading.Tasks.Task ReloadProvidersAsync()
+        private async Task ReloadProvidersAsync()
         {
             var result = await ProvidersLoader.Value;
 

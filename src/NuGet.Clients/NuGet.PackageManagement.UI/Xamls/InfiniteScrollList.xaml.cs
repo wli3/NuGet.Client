@@ -19,6 +19,7 @@ using NuGet.Common;
 using NuGet.PackageManagement.VisualStudio;
 using NuGet.Protocol.Core.Types;
 using NuGet.VisualStudio;
+using NuGet.VisualStudio.Telemetry;
 using Mvs = Microsoft.VisualStudio.Shell;
 using Resx = NuGet.PackageManagement.UI;
 using Task = System.Threading.Tasks.Task;
@@ -81,11 +82,16 @@ namespace NuGet.PackageManagement.UI
 
             InitializeComponent();
 
+            if (!_joinableTaskFactory.Value.Context.IsOnMainThread)
+            {
+                throw new ApplicationException("How is this not on Main thread?");
+             }
+
             _listBrowse.ItemsLock = ReentrantSemaphore.Create(
                 initialCount: 1,
                 joinableTaskContext: _joinableTaskFactory.Value.Context,
                 mode: ReentrantSemaphore.ReentrancyMode.Stack);
-
+            
             _listInstalled.ItemsLock = ReentrantSemaphore.Create(
                 initialCount: 1,
                 joinableTaskContext: _joinableTaskFactory.Value.Context,
@@ -242,8 +248,16 @@ namespace NuGet.PackageManagement.UI
 
             var selectedPackageItem = SelectedPackageItem;
 
+            if (!_joinableTaskFactory.Value.Context.IsOnMainThread)
+            {
+                throw new ApplicationException("How is this not on Main thread?");
+            }
             await currentListBox.ItemsLock.ExecuteAsync(() =>
             {
+                if (!_joinableTaskFactory.Value.Context.IsOnMainThread)
+                {
+                    throw new ApplicationException("How is this not on Main thread?");
+                }
                 ClearPackageList(currentItems);
                 return Task.CompletedTask;
             });
@@ -416,7 +430,7 @@ namespace NuGet.PackageManagement.UI
                 default: break;
             }
 
-            _listInstalled.UpdateLoadingIndicator(status: LoadingStatus.Completed, itemsCount: FilteredItemsCount);
+            _listInstalled.UpdateLoadingIndicator(status: LoadingStatus.CompletedItems, itemsCount: FilteredItemsCount);
             UpdateCheckBoxStatus();
             LoadItemsCompleted?.Invoke(this, EventArgs.Empty);
         }
@@ -426,7 +440,7 @@ namespace NuGet.PackageManagement.UI
         {
             token.ThrowIfCancellationRequested();
 
-            var loadedItems = await LoadNextPageAsync(currentListBox, currentItems, currentLoader, token);
+            IEnumerable<PackageItemListViewModel> loadedItems = await LoadNextPageAsync(currentListBox, currentLoader, token);
             token.ThrowIfCancellationRequested();
 
             UpdatePackageList(currentListBox, currentItems, loadedItems, refresh: false);
@@ -450,6 +464,7 @@ namespace NuGet.PackageManagement.UI
 
             token.ThrowIfCancellationRequested();
 
+            //TODO: what scenario is this?
             if (!loadedItems.Any()
                 && currentLoader.State.LoadingStatus == LoadingStatus.Ready)
             {
@@ -460,10 +475,10 @@ namespace NuGet.PackageManagement.UI
         }
 
         private async Task<IEnumerable<PackageItemListViewModel>> LoadNextPageAsync(InfiniteScrollListBox currentListBox,
-            ObservableCollection<object> currentItems, IPackageItemLoader currentLoader, CancellationToken token)
+            IPackageItemLoader currentLoader, CancellationToken token)
         {
             var progress = new Progress<IItemLoaderState>(
-                s => HandleItemLoaderStateChange(currentListBox, currentItems, currentLoader, s));
+                s => HandleItemLoaderStateChange(currentListBox, currentLoader, s));
 
             // if searchResultTask is in progress then just wait for it to complete
             // without creating new load task
@@ -498,14 +513,28 @@ namespace NuGet.PackageManagement.UI
         private async Task WaitForCompletionAsync(InfiniteScrollListBox currentListBox,
             ObservableCollection<object> currentItems, IItemLoader<PackageItemListViewModel> currentLoader, CancellationToken token)
         {
-            var progress = new Progress<IItemLoaderState>(
-                s => HandleItemLoaderStateChange(currentListBox, currentItems, currentLoader, s));
+            IProgress<IItemLoaderState> progress = new Progress<IItemLoaderState>(
+                s => HandleItemLoaderStateChange(currentListBox, currentLoader, s));
 
             // run to completion
             while (currentLoader.State.LoadingStatus == LoadingStatus.Loading)
             {
                 token.ThrowIfCancellationRequested();
                 await currentLoader.UpdateStateAsync(progress, token);
+            }
+
+            if (currentListBox.ShowLoadingIndicatorForBackgroundWork)
+            {
+                // Keep the progress indication active until background work is reported as complete.
+                NuGetUIThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+                {
+                    await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
+                    foreach (PackageItemListViewModel package in currentLoader.GetCurrent())
+                    {
+                        await package.ReloadPackageVersionsAsync();
+                    }
+                    currentListBox.UpdateLoadingIndicator(LoadingStatus.NoMoreBackgroundWork, itemsCount: FilteredItemsCount);
+                }).PostOnFailure(nameof(InfiniteScrollList), nameof(WaitForCompletionAsync));
             }
         }
 
@@ -528,7 +557,7 @@ namespace NuGet.PackageManagement.UI
         /// <param name="loader">Current loader</param>
         /// <param name="state">Progress reported by the <c>Progress</c> callback</param>
         private void HandleItemLoaderStateChange(InfiniteScrollListBox currentListBox,
-            ObservableCollection<object> currentItems, IItemLoader<PackageItemListViewModel> loader, IItemLoaderState state)
+            IItemLoader<PackageItemListViewModel> loader, IItemLoaderState state)
         {
             _joinableTaskFactory.Value.Run(async () =>
             {
@@ -553,11 +582,20 @@ namespace NuGet.PackageManagement.UI
 
                 LoadingStatus resolvedStatus = state.LoadingStatus;
 
-                //When loading is complete, check whether any items are shown with the current UI filter.
-                if (state.LoadingStatus == LoadingStatus.NoMoreItems && FilteredItemsCount == 0)
+                if (state.LoadingStatus == LoadingStatus.NoMoreItems)
                 {
-                    resolvedStatus = LoadingStatus.NoItemsFound;
+                    // Are we tracking Background work?
+                    if (currentListBox.ShowLoadingIndicatorForBackgroundWork)
+                    {
+                        resolvedStatus = LoadingStatus.PendingBackgroundWork;
+                    }
+                    // Check whether any items are shown with the current UI filter.
+                    else if (FilteredItemsCount == 0)
+                    {
+                        resolvedStatus = LoadingStatus.NoItemsFound;
+                    }
                 }
+
                 currentListBox.UpdateLoadingIndicator(status: resolvedStatus, itemsCount: FilteredItemsCount);
             });
         }
@@ -621,7 +659,7 @@ namespace NuGet.PackageManagement.UI
         }
 
         /// <summary>
-        /// Clear <c>Items</c> list and removes the event handlers for each element
+        /// Clear <paramref name="itemsToClear"/> list and removes the event handlers for each element.
         /// </summary>
         private void ClearPackageList(ObservableCollection<object> itemsToClear)
         {
@@ -630,6 +668,9 @@ namespace NuGet.PackageManagement.UI
                 package.PropertyChanged -= Package_PropertyChanged;
             }
 
+            //TODO: await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
+            //TODO: System.NotSupportedException: 'This type of CollectionView does not support changes to its SourceCollection
+            //from a thread different from the Dispatcher thread.'
             itemsToClear.Clear();
             if (itemsToClear == ItemsBrowse)
             {
@@ -824,6 +865,12 @@ namespace NuGet.PackageManagement.UI
         private void _loadingStatusBarBrowse_DismissClick(object sender, RoutedEventArgs e)
         {
             _loadingStatusBarBrowse.Visibility = Visibility.Hidden;
+        }
+
+        public void SetError(ItemFilter filterToError, string message)
+        {
+            InfiniteScrollListBox listBox = filterToError == ItemFilter.All ? _listBrowse : _listInstalled;
+            listBox.SetError(message);
         }
     }
 }

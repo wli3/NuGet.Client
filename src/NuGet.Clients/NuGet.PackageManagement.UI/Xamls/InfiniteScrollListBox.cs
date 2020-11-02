@@ -40,6 +40,13 @@ namespace NuGet.PackageManagement.UI
             }
         }
 
+        /// <summary>
+        /// The <see cref="LoadingStatusIndicator"/> by default reflects the state of loaded Package Items (<see cref="PackageItemListViewModel"/>)
+        /// without waiting for Task completion of properties like <see cref="PackageItemListViewModel.Status"/>.
+        /// Setting as <c>true</c> means to continue showing the <see cref="LoadingStatusIndicator"/> until all lazy-loaded <see cref="PackageItemListViewModel"/> properties have completed.
+        /// </summary>
+        public bool ShowLoadingIndicatorForBackgroundWork { get; set; }
+
         public ObservableCollection<PackageItemListViewModel> ObservableCollectionDataContext
         {
             get
@@ -82,10 +89,10 @@ namespace NuGet.PackageManagement.UI
         /// <summary>
         /// Adds or removes the LoadingStatusIndicator from the ListBox's VisualTree with any specified state information.
         /// </summary>
-        /// <param name="status">Status for the indicator.
+        /// <param name="status">Status for the indicator.</param>
         /// <param name="loadingMessage">Text to show in the loading indicator when <c>show</c> is <c>true</c>.
-        /// <paramref name="itemsCount">Number of items to indicate as loaded.</paramref>
         /// If not provided, the previous text persists.</param>
+        /// <param name="itemsCount">Number of items that have been loaded.</param>
         public void UpdateLoadingIndicator(LoadingStatus status, string loadingMessage = null, int itemsCount = 0)
         {
             WrapPanel wrapPanel = (WrapPanel)Template.FindName("ListBoxWrapPanel", this);
@@ -94,12 +101,12 @@ namespace NuGet.PackageManagement.UI
 
             if (status != LoadingStatus.Unknown)
             {
-                bool operationComplete = LoadingStatus.Completed.HasFlag(status);
+                bool itemsComplete = LoadingStatus.CompletedItems.HasFlag(status);
 
-                //Completed can be shown or hidden depending on whether items is non-zero.
-                if (operationComplete)
+                // A completed stay may need Indicator to be visible to display "No packages found".
+                if (itemsComplete)
                 {
-                    var noItemsFound = itemsCount == 0; //Indicator needs to be visible to display NoItemsFound (No packages found).
+                    var noItemsFound = itemsCount == 0;
                     if (noItemsFound)
                     {
                         show = true;
@@ -107,17 +114,23 @@ namespace NuGet.PackageManagement.UI
                     }
                     else
                     {
-                        status = LoadingStatus.NoMoreItems;
+                        if (ShowLoadingIndicatorForBackgroundWork && LoadingStatus.PendingBackgroundWork.HasFlag(status))
+                        {
+                            status = LoadingStatus.PendingBackgroundWork;
+                        }
+                        else
+                        {
+                            status = LoadingStatus.NoMoreItems;
+                        }
                     }
                 }
 
-                if (status == LoadingStatus.Loading || status == LoadingStatus.Ready)
+                if (status == LoadingStatus.Loading || status == LoadingStatus.PendingBackgroundWork || status == LoadingStatus.Ready)
                 {
                     show = true;
                 }
             }
 
-            //Render the indicator.
             lock (_loadingStatusIndicator)
             {
                 if (loadingMessage != null)
@@ -126,6 +139,7 @@ namespace NuGet.PackageManagement.UI
                 }
                 _loadingStatusIndicator.Status = status;
 
+                // Render the indicator.
                 if (show)
                 {
                     if (!_showingLoadingStatusIndicator)
@@ -134,7 +148,7 @@ namespace NuGet.PackageManagement.UI
                         _showingLoadingStatusIndicator = true;
                     }
                 }
-                else //Remove the indicator.
+                else // Remove the indicator.
                 {
                     wrapPanel.Children.Remove(_loadingStatusIndicator);
                     _showingLoadingStatusIndicator = false;

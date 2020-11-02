@@ -19,8 +19,14 @@ namespace NuGet.PackageManagement.VisualStudio
         NoItemsFound = 8, // loading complete, no items found
         NoMoreItems = 16, // loading complete, no more items discovered beyond current page
         Ready = 32, // loading of current page is done, next page is available
+        PendingBackgroundWork = 64, //loading items complete; lazy-loaded properties pending
+        NoMoreBackgroundWork = 128, //lazy-loaded properties complete
+
+
+        //Loading = LoadingItems | LoadingBackground
+        //alternatively, change VM DataTrigger from Loading to LoadingItemsOrBackground, then just add a LoadingBackground??
 
         Failed = Cancelled | ErrorOccurred,
-        Completed = NoItemsFound | NoMoreItems
+        CompletedItems = NoItemsFound | NoMoreItems | NoMoreBackgroundWork
     }
 }

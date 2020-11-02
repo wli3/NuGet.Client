@@ -77,6 +77,14 @@
         </DataTrigger>
         <DataTrigger
           Binding="{Binding Path=Status}"
+          Value="PendingBackgroundWork">
+          <Setter
+            TargetName="_progressBar"
+            Property="Visibility"
+            Value="Visible" />
+        </DataTrigger>
+        <DataTrigger
+          Binding="{Binding Path=Status}"
           Value="Ready">
           <Setter
             TargetName="_progressBar"
@@ -368,6 +376,7 @@
         x:Name="_listInstalled"
         Style="{StaticResource ListBoxStyle}"
         LoadingStatusIndicatorStyle="{StaticResource loadingStatusIndicatorStyle}"
+        ShowLoadingIndicatorForBackgroundWork="True"
         AutomationProperties.Name="{x:Static nuget:Resources.Accessibility_Packages}"
         PreviewKeyUp="List_PreviewKeyUp"
         SelectionChanged="List_SelectionChanged"

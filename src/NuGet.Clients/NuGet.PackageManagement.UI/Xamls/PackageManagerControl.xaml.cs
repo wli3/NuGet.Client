@@ -902,6 +902,10 @@ namespace NuGet.PackageManagement.UI
                 // Invalidate cache.
                 Model.CachedUpdates = null;
             }
+            catch (Exception ex)
+            {
+                _packageList.SetError(filterToError: filterToRender, ex.Message);
+            }
         }
 
         private void RefreshInstalledAndUpdatesTabs()

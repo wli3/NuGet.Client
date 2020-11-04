@@ -11,7 +11,7 @@ namespace NuGet.PackageManagement.UI
 {
     internal class InfiniteScrollListBox : ListBox, INotifyPropertyChanged
     {
-        public ReentrantSemaphore ItemsLock { get; set; }
+        public readonly object Lock = new object();
         private readonly LoadingStatusIndicator _loadingStatusIndicator = new LoadingStatusIndicator();
 
         public Style LoadingStatusIndicatorStyle

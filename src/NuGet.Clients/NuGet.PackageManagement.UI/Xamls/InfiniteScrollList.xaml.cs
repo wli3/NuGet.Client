@@ -87,19 +87,6 @@ namespace NuGet.PackageManagement.UI
                 throw new ApplicationException("How is this not on Main thread?");
              }
 
-            _listBrowse.ItemsLock = ReentrantSemaphore.Create(
-                initialCount: 1,
-                joinableTaskContext: _joinableTaskFactory.Value.Context,
-                mode: ReentrantSemaphore.ReentrancyMode.Stack);
-            
-            _listInstalled.ItemsLock = ReentrantSemaphore.Create(
-                initialCount: 1,
-                joinableTaskContext: _joinableTaskFactory.Value.Context,
-                mode: ReentrantSemaphore.ReentrancyMode.Stack);
-
-            BindingOperations.EnableCollectionSynchronization(ItemsBrowse, _listBrowse.ItemsLock);
-            BindingOperations.EnableCollectionSynchronization(ItemsInstalled, _listInstalled.ItemsLock);
-
             DataContext = this;
 
             _listBrowse.LoadingStatusIndicator_PropertyChanged += LoadingStatusIndicator_PropertyChanged;
@@ -142,8 +129,33 @@ namespace NuGet.PackageManagement.UI
 
         public bool IsSolution { get; set; }
 
-        public ObservableCollection<object> ItemsBrowse { get; } = new ObservableCollection<object>();
-        public ObservableCollection<object> ItemsInstalled { get; } = new ObservableCollection<object>();
+        private ObservableCollection<object> _itemsBrowse;
+        public ObservableCollection<object> ItemsBrowse
+        {
+            get
+            {
+                if (_itemsBrowse == null)
+                {
+                    _itemsBrowse = new ObservableCollection<object>();
+                    BindingOperations.EnableCollectionSynchronization(_itemsBrowse, _listBrowse.Lock);
+                }
+                return _itemsBrowse;
+            }
+        }
+
+        private ObservableCollection<object> _itemsInstalled;
+        public ObservableCollection<object> ItemsInstalled
+        {
+            get
+            {
+                if (_itemsInstalled == null)
+                {
+                    _itemsInstalled = new ObservableCollection<object>();
+                    BindingOperations.EnableCollectionSynchronization(_itemsInstalled, _listInstalled.Lock);
+                }
+                return _itemsInstalled;
+            }
+        }
 
         private ICollectionView ItemsInstalledCollectionView
         {
@@ -252,13 +264,14 @@ namespace NuGet.PackageManagement.UI
             {
                 throw new ApplicationException("How is this not on Main thread?");
             }
-            await currentListBox.ItemsLock.ExecuteAsync(() =>
+            //await currentListBox.ItemsLock.ExecuteAsync(() =>
+            _joinableTaskFactory.Value.Run(() =>
             {
                 if (!_joinableTaskFactory.Value.Context.IsOnMainThread)
                 {
                     throw new ApplicationException("How is this not on Main thread?");
                 }
-                ClearPackageList(currentItems);
+                ClearPackageList(currentListBox, currentItems);
                 return Task.CompletedTask;
             });
 
@@ -635,14 +648,14 @@ namespace NuGet.PackageManagement.UI
         private void UpdatePackageList(InfiniteScrollListBox listBoxToUpdate, ObservableCollection<object> collectionToUpdate,
             IEnumerable<PackageItemListViewModel> packages, bool refresh)
         {
-            _joinableTaskFactory.Value.Run(async () =>
+            // Synchronize updating Items list
+            _joinableTaskFactory.Value.Run(() =>
             {
-                // Synchronize updating Items list
-                await listBoxToUpdate.ItemsLock.ExecuteAsync(() =>
-                {
+                //lock (listBoxToUpdate.Lock)
+                //{
                     if (refresh)
                     {
-                        ClearPackageList(collectionToUpdate);
+                        ClearPackageList(listBoxToUpdate, collectionToUpdate);
                     }
 
                     // add newly loaded items
@@ -652,30 +665,33 @@ namespace NuGet.PackageManagement.UI
                         collectionToUpdate.Add(package);
                         _selectedCount = package.Selected ? _selectedCount + 1 : _selectedCount;
                     }
+                //}
 
-                    return Task.CompletedTask;
-                });
+                return Task.CompletedTask;
             });
         }
 
         /// <summary>
         /// Clear <paramref name="itemsToClear"/> list and removes the event handlers for each element.
         /// </summary>
-        private void ClearPackageList(ObservableCollection<object> itemsToClear)
+        private void ClearPackageList(InfiniteScrollListBox listBox, ObservableCollection<object> itemsToClear)
         {
-            foreach (var package in itemsToClear.OfType<PackageItemListViewModel>())
-            {
-                package.PropertyChanged -= Package_PropertyChanged;
-            }
+            //lock (listBox.Lock)
+            //{
+                foreach (var package in itemsToClear.OfType<PackageItemListViewModel>())
+                {
+                    package.PropertyChanged -= Package_PropertyChanged;
+                }
 
-            //TODO: await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
-            //TODO: System.NotSupportedException: 'This type of CollectionView does not support changes to its SourceCollection
-            //from a thread different from the Dispatcher thread.'
-            itemsToClear.Clear();
-            if (itemsToClear == ItemsBrowse)
-            {
-                _loadingStatusBarBrowse.ItemsLoaded = 0;
-            }
+                //TODO: await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
+                //TODO: System.NotSupportedException: 'This type of CollectionView does not support changes to its SourceCollection
+                //from a thread different from the Dispatcher thread.'
+                itemsToClear.Clear();
+                if (itemsToClear == ItemsBrowse)
+                {
+                    _loadingStatusBarBrowse.ItemsLoaded = 0;
+                }
+            //}
         }
 
         public void UpdatePackageStatus(PackageCollectionItem[] installedPackages)

@@ -7,8 +7,7 @@
         <DataCollectors>
             <DataCollector friendlyName="blame" enabled="True">
                 <Configuration>
-                    <CollectDumpOnTestSessionHang TestTimeout="15min" HangDumpType="full" />
-                    <ResultsDirectory>%AGENT_TEMPDIRECTORY%</ResultsDirectory>
+                    <CollectDumpOnTestSessionHang TestTimeout="1min" HangDumpType="full" />
                 </Configuration>
             </DataCollector>
         </DataCollectors>

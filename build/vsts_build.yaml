@@ -315,7 +315,7 @@ jobs:
   - task: PublishBuildArtifacts@1
     displayName: "Publish Test Hang Dump"
     inputs:
-      PathtoPublish: "$(Agent.TempDirectory)"
+      PathtoPublish: "$(Build.Repository.LocalPath)/build/TestResults"
       ArtifactName: "$(Agent.JobName)"
       ArtifactType: "Container"
     condition: "or(failed(), canceled())"

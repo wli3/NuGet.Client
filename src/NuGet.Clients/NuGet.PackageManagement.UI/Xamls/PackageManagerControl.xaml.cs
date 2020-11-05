@@ -1154,35 +1154,35 @@ namespace NuGet.PackageManagement.UI
 
         private void Filter_SelectionChanged(object sender, FilterChangedEventArgs e)
         {
+            //Set UI's state once data is loaded.
+            SynchronizeTabSelectionFlag();
+
             if (_initialized)
             {
                 var timeSpan = GetTimeSinceLastRefreshAndRestart();
-                bool isUiFiltering = false;
+                bool isLoadingDataFromSource = false;
 
-                //Initialize the tab if its data isn't already loaded.
+                if (!_packageList.IsBrowseTab)
+                {
+                    //Installed Data can have UI apply filtering.
+                    _packageList.FilterInstalledDataItems(_topPanel.Filter, _loadCts.Token);
+                }
+
+                //First time loading data for this Tab?
                 if ((_topPanel.Filter == ItemFilter.All && _packageList.BrowseInitialized == false)
                     || (_topPanel.Filter != ItemFilter.All && _packageList.InstallInitialized == false))
                 {
-                    //Load from source.
-                    SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: false);
+                    //There may be UI filtering applied on top of this data.
+                    isLoadingDataFromSource = true;
 
-                    //Set UI's state once data is loaded.
-                    SynchronizeTabSelectionFlag();
-                }
-                else //Current tab is initialized and has data, so set state of UI.
-                {
-                    SynchronizeTabSelectionFlag();
-
-                    isUiFiltering = !_packageList.IsBrowseTab;
-                    if (isUiFiltering)
+                    Dispatcher.Invoke(() =>
                     {
-                        //UI can apply filtering.
-                        _packageList.FilterInstalledDataItems(_topPanel.Filter, _loadCts.Token);
-                    }
+                        //Load from source.
+                        SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: false);
+                    }, System.Windows.Threading.DispatcherPriority.Loaded);
                 }
 
-                //TODO: remove telemetry since UI filtering will be implied on InstalledData tabs?
-                EmitRefreshEvent(timeSpan, RefreshOperationSource.FilterSelectionChanged, RefreshOperationStatus.Success, isUiFiltering);
+                EmitRefreshEvent(timeSpan, RefreshOperationSource.FilterSelectionChanged, RefreshOperationStatus.Success, isUIFiltering: !isLoadingDataFromSource);
 
                 _detailModel.OnFilterChanged(e.PreviousFilter, _topPanel.Filter);
             }

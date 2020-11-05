@@ -7,7 +7,7 @@
         <DataCollectors>
             <DataCollector friendlyName="blame" enabled="True">
                 <Configuration>
-                    <CollectDumpOnTestSessionHang TestTimeout="1min" HangDumpType="full" />
+                    <CollectDumpOnTestSessionHang TestTimeout="10min" HangDumpType="full" />
                 </Configuration>
             </DataCollector>
         </DataCollectors>

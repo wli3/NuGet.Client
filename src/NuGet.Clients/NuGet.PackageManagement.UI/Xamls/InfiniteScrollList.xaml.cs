@@ -43,7 +43,6 @@ namespace NuGet.PackageManagement.UI
         /// </summary>
         internal event EventHandler LoadItemsCompleted;
 
-        private CancellationTokenSource _loadCts;
         private IPackageItemLoader _loaderBrowse;
         private INuGetUILogger _logger;
         private Task<SearchResult<IPackageSearchMetadata>> _initialSearchResultTask;
@@ -318,11 +317,7 @@ namespace NuGet.PackageManagement.UI
         private async Task LoadItemsAsync(InfiniteScrollListBox currentListBox,
             ObservableCollection<object> currentItems, IPackageItemLoader loader, PackageItemListViewModel selectedPackageItem, ItemFilter filterToRender, CancellationToken token)
         {
-            // If there is another async loading process - cancel it.
-            var loadCts = CancellationTokenSource.CreateLinkedTokenSource(token);
-            Interlocked.Exchange(ref _loadCts, loadCts)?.Cancel();
-
-            await RepopulatePackageListAsync(currentListBox, currentItems, selectedPackageItem, loader, filterToRender, loadCts);
+            await RepopulatePackageListAsync(currentListBox, currentItems, selectedPackageItem, loader, filterToRender, token);
 
             if (filterToRender == ItemFilter.All)
             {
@@ -336,13 +331,13 @@ namespace NuGet.PackageManagement.UI
 
         private async Task RepopulatePackageListAsync(InfiniteScrollListBox currentListBox,
             ObservableCollection<object> currentItems, PackageItemListViewModel selectedPackageItem, IPackageItemLoader currentLoader,
-            ItemFilter filterToRender, CancellationTokenSource loadCts)
+            ItemFilter filterToRender, CancellationToken token)
         {
             await TaskScheduler.Default;
 
             try
             {
-                await LoadItemsCoreAsync(currentListBox, currentItems, currentLoader, filterToRender, loadCts.Token);
+                await LoadItemsCoreAsync(currentListBox, currentItems, currentLoader, filterToRender, token);
 
                 await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
 
@@ -351,10 +346,8 @@ namespace NuGet.PackageManagement.UI
                     UpdateSelectedItem(selectedPackageItem);
                 }
             }
-            catch (OperationCanceledException) when (!loadCts.IsCancellationRequested)
+            catch (OperationCanceledException)
             {
-                loadCts.Cancel();
-                loadCts.Dispose();
                 currentLoader.Reset();
 
                 await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
@@ -372,10 +365,8 @@ namespace NuGet.PackageManagement.UI
                     _loadingStatusBarBrowse.Visibility = Visibility.Visible;
                 }
             }
-            catch (Exception ex) when (!loadCts.IsCancellationRequested)
+            catch (Exception ex)
             {
-                loadCts.Cancel();
-                loadCts.Dispose();
                 currentLoader.Reset();
 
                 // Write stack to activity log

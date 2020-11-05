@@ -108,5 +108,7 @@ System.Security.AccessControl.dll
 System.Security.Principal.Windows.dll
 System.Threading.Tasks.Extensions.dll
 System.Web.Http.dll
+System.Text.Encodings.Web.dll
+System.Text.Json.dll
 VSLangProj157.dll
 Microsoft.DataAI.NuGetRecommender.Contracts.dll

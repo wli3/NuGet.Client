@@ -43,14 +43,12 @@ namespace NuGet.PackageManagement.UI
     {
         internal event EventHandler _actionCompleted;
         internal DetailControlModel _detailModel;
-        internal CancellationTokenSource _loadCts;
         private bool _initialized;
         private IVsWindowSearchHost _windowSearchHost;
         private IVsWindowSearchHostFactory _windowSearchHostFactory;
         private INuGetUILogger _uiLogger;
         private readonly Guid _sessionGuid = Guid.NewGuid();
         private Stopwatch _sinceLastRefresh;
-        private CancellationTokenSource _refreshCts;
         private bool _forceRecommender;
         // used to prevent starting new search when we update the package sources
         // list in response to PackageSourcesChanged event.
@@ -788,13 +786,6 @@ namespace NuGet.PackageManagement.UI
             {
                 await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-                // Set a new cancellation token source which will be used to cancel this task in case
-                // new loading task starts or manager ui is closed while loading packages.
-                var loadCts = new CancellationTokenSource();
-                var oldCts = Interlocked.Exchange(ref _loadCts, loadCts);
-                oldCts?.Cancel();
-                oldCts?.Dispose();
-
                 await SearchPackagesAndRefreshUpdateCountAsync(
                     searchText: _windowSearchHost.SearchQuery.SearchString,
                     useCachedPackageMetadata: useCacheForUpdates,
@@ -876,10 +867,6 @@ namespace NuGet.PackageManagement.UI
                     ? Resx.Resources.Text_Loading
                     : string.Format(CultureInfo.CurrentCulture, Resx.Resources.Text_Searching, searchText);
 
-                // Set a new cancellation token source which will be used to cancel this task in case
-                // new loading task starts or manager ui is closed while loading packages.
-                _loadCts = new CancellationTokenSource();
-
                 // start SearchAsync task for initial loading of packages
                 var searchResultTask = loader.SearchAsync(continuationToken: null, cancellationToken: _loadCts.Token);
                 // this will wait for searchResultTask to complete instead of creating a new task
@@ -910,43 +897,43 @@ namespace NuGet.PackageManagement.UI
 
         private void RefreshInstalledAndUpdatesTabs()
         {
-            // clear existing caches
-            Model.CachedUpdates = null;
+            //// clear existing caches
+            //Model.CachedUpdates = null;
 
-            NuGetUIThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-            {
-                await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            //NuGetUIThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            //{
+            //    await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-                _topPanel.UpdateDeprecationStatusOnInstalledTab(installedDeprecatedPackagesCount: 0);
-                _topPanel.UpdateCountOnUpdatesTab(count: 0);
-                var loadContext = new PackageLoadContext(ActiveSources, Model.IsSolution, Model.Context);
-                var packageFeeds = await CreatePackageFeedAsync(loadContext, ItemFilter.UpdatesAvailable, _uiLogger, recommendPackages: false);
-                var loader = new PackageItemLoader(
-                    loadContext, packageFeeds.mainFeed, includePrerelease: IncludePrerelease, recommenderPackageFeed: packageFeeds.recommenderFeed);
-                var metadataProvider = CreatePackageMetadataProvider(loadContext);
+            //    _topPanel.UpdateDeprecationStatusOnInstalledTab(installedDeprecatedPackagesCount: 0);
+            //    _topPanel.UpdateCountOnUpdatesTab(count: 0);
+            //    var loadContext = new PackageLoadContext(ActiveSources, Model.IsSolution, Model.Context);
+            //    var packageFeeds = await CreatePackageFeedAsync(loadContext, ItemFilter.UpdatesAvailable, _uiLogger, recommendPackages: false);
+            //    var loader = new PackageItemLoader(
+            //        loadContext, packageFeeds.mainFeed, includePrerelease: IncludePrerelease, recommenderPackageFeed: packageFeeds.recommenderFeed);
+            //    var metadataProvider = CreatePackageMetadataProvider(loadContext);
 
-                // cancel previous refresh tabs task, if any
-                // and start a new one.
-                var refreshCts = new CancellationTokenSource();
-                Interlocked.Exchange(ref _refreshCts, refreshCts)?.Cancel();
+            //    // cancel previous refresh tabs task, if any
+            //    // and start a new one.
+            //    var refreshCts = new CancellationTokenSource();
+            //    Interlocked.Exchange(ref _refreshCts, refreshCts)?.Cancel();
 
-                // Update installed tab warning icon
-                var installedDeprecatedPackagesCount = await GetInstalledDeprecatedPackagesCountAsync(
-                loadContext, metadataProvider, refreshCts.Token);
+            //    // Update installed tab warning icon
+            //    var installedDeprecatedPackagesCount = await GetInstalledDeprecatedPackagesCountAsync(
+            //    loadContext, metadataProvider, refreshCts.Token);
 
-                var hasInstalledDeprecatedPackages = installedDeprecatedPackagesCount > 0;
-                _topPanel.UpdateDeprecationStatusOnInstalledTab(installedDeprecatedPackagesCount);
+            //    var hasInstalledDeprecatedPackages = installedDeprecatedPackagesCount > 0;
+            //    _topPanel.UpdateDeprecationStatusOnInstalledTab(installedDeprecatedPackagesCount);
 
-                // Update updates tab count
-                Model.CachedUpdates = new PackageSearchMetadataCache
-                {
-                    Packages = await loader.GetAllPackagesAsync(refreshCts.Token),
-                    IncludePrerelease = IncludePrerelease
-                };
+            //    // Update updates tab count
+            //    Model.CachedUpdates = new PackageSearchMetadataCache
+            //    {
+            //        Packages = await loader.GetAllPackagesAsync(refreshCts.Token),
+            //        IncludePrerelease = IncludePrerelease
+            //    };
 
-                _topPanel.UpdateCountOnUpdatesTab(Model.CachedUpdates.Packages.Count);
-            })
-            .PostOnFailure(nameof(PackageManagerControl), nameof(RefreshInstalledAndUpdatesTabs));
+            //    _topPanel.UpdateCountOnUpdatesTab(Model.CachedUpdates.Packages.Count);
+            //})
+            //.PostOnFailure(nameof(PackageManagerControl), nameof(RefreshInstalledAndUpdatesTabs));
         }
 
         private static async Task<int> GetInstalledDeprecatedPackagesCountAsync(PackageLoadContext loadContext, IPackageMetadataProvider metadataProvider, CancellationToken token)
@@ -1104,7 +1091,7 @@ namespace NuGet.PackageManagement.UI
                 return packageFeeds;
             }
 
-            //TODO: umm, what?
+            //TODO: Can this be removed?
             // Search all / updates available cannot work without a source repo
             if (context.SourceRepositories == null)
             {

@@ -82,11 +82,6 @@ namespace NuGet.PackageManagement.UI
 
             InitializeComponent();
 
-            if (!_joinableTaskFactory.Value.Context.IsOnMainThread)
-            {
-                throw new ApplicationException("How is this not on Main thread?");
-             }
-
             DataContext = this;
 
             _listBrowse.LoadingStatusIndicator_PropertyChanged += LoadingStatusIndicator_PropertyChanged;
@@ -260,17 +255,8 @@ namespace NuGet.PackageManagement.UI
 
             var selectedPackageItem = SelectedPackageItem;
 
-            if (!_joinableTaskFactory.Value.Context.IsOnMainThread)
-            {
-                throw new ApplicationException("How is this not on Main thread?");
-            }
-            //await currentListBox.ItemsLock.ExecuteAsync(() =>
             _joinableTaskFactory.Value.Run(() =>
             {
-                if (!_joinableTaskFactory.Value.Context.IsOnMainThread)
-                {
-                    throw new ApplicationException("How is this not on Main thread?");
-                }
                 ClearPackageList(currentListBox, currentItems);
                 return Task.CompletedTask;
             });
@@ -676,22 +662,16 @@ namespace NuGet.PackageManagement.UI
         /// </summary>
         private void ClearPackageList(InfiniteScrollListBox listBox, ObservableCollection<object> itemsToClear)
         {
-            //lock (listBox.Lock)
-            //{
-                foreach (var package in itemsToClear.OfType<PackageItemListViewModel>())
-                {
-                    package.PropertyChanged -= Package_PropertyChanged;
-                }
+            foreach (var package in itemsToClear.OfType<PackageItemListViewModel>())
+            {
+                package.PropertyChanged -= Package_PropertyChanged;
+            }
 
-                //TODO: await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
-                //TODO: System.NotSupportedException: 'This type of CollectionView does not support changes to its SourceCollection
-                //from a thread different from the Dispatcher thread.'
-                itemsToClear.Clear();
-                if (itemsToClear == ItemsBrowse)
-                {
-                    _loadingStatusBarBrowse.ItemsLoaded = 0;
-                }
-            //}
+            itemsToClear.Clear();
+            if (itemsToClear == ItemsBrowse)
+            {
+                _loadingStatusBarBrowse.ItemsLoaded = 0;
+            }
         }
 
         public void UpdatePackageStatus(PackageCollectionItem[] installedPackages)

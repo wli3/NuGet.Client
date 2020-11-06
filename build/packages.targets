@@ -1,6 +1,6 @@
 <Project>
     <PropertyGroup>
-        <MicrosoftBuildPackageVersion Condition="'$(MicrosoftBuildPackageVersion)' == ''">16.8.0-preview-20475-05</MicrosoftBuildPackageVersion>
+        <MicrosoftBuildPackageVersion Condition="'$(MicrosoftBuildPackageVersion)' == ''">16.8.0-preview-20515-06</MicrosoftBuildPackageVersion>
         <NewtonsoftJsonPackageVersion Condition="$(NewtonsoftJsonPackageVersion) == ''">9.0.1</NewtonsoftJsonPackageVersion>
         <SystemPackagesVersion>4.3.0</SystemPackagesVersion>
         <VSComponentsVersion>16.6.255</VSComponentsVersion>

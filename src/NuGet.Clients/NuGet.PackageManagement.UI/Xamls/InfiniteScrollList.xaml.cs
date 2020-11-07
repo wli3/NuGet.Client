@@ -628,7 +628,7 @@ namespace NuGet.PackageManagement.UI
             // Synchronize updating Items list
             _joinableTaskFactory.Value.Run(() =>
             {
-                
+                var tmp = collectionToUpdate;
                 if (refresh)
                 {
                     ClearPackageList(listBoxToUpdate, ref collectionToUpdate);

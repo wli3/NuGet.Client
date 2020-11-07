@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Microsoft;
 using Microsoft.VisualStudio.Experimentation;
 using Microsoft.VisualStudio.Shell;
@@ -62,6 +63,8 @@ namespace NuGet.PackageManagement.UI
         private bool _missingPackageStatus;
         private bool _loadedAndInitialized = false;
         private bool _recommendBrowsePackages = false;
+        private CancellationTokenSource _loadBrowseCts = new CancellationTokenSource();
+        private CancellationTokenSource _loadInstalledCts = new CancellationTokenSource();
 
         private (string modelVersion, string vsixVersion)? _recommenderVersion;
 
@@ -73,7 +76,7 @@ namespace NuGet.PackageManagement.UI
 
         private void PackageList_Loaded(object sender, RoutedEventArgs e)
         {
-            SynchronizeTabSelectionFlag();
+            SynchronizePackageListTabSelection();
         }
 
         public static async ValueTask<PackageManagerControl> CreateAsync(PackageManagerModel model, INuGetUILogger uiLogger)
@@ -784,13 +787,27 @@ namespace NuGet.PackageManagement.UI
         {
             NuGetUIThreadHelper.JoinableTaskFactory.RunAsync(async () =>
             {
+                ItemFilter filterToRender = ActiveFilter;
+                CancellationTokenSource loadCts;
+                if (filterToRender == ItemFilter.All)
+                {
+                    loadCts = ResetCancellationTokenSource(ref _loadBrowseCts);
+                }
+                else
+                {
+                    loadCts = ResetCancellationTokenSource(ref _loadInstalledCts);
+                }
+
                 await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
                 await SearchPackagesAndRefreshUpdateCountAsync(
+                    filterToRender,
                     searchText: _windowSearchHost.SearchQuery.SearchString,
                     useCachedPackageMetadata: useCacheForUpdates,
                     pSearchCallback: null,
-                    searchTask: null);
+                    searchTask: null,
+                    token: loadCts.Token
+                    );
             })
             .PostOnFailure(nameof(PackageManagerControl), nameof(SearchPackagesAndRefreshUpdateCount));
         }
@@ -840,11 +857,10 @@ namespace NuGet.PackageManagement.UI
         /// <summary>
         /// This method is called from several event handlers. So, consolidating the use of JTF.Run in this method
         /// </summary>
-        internal async Task SearchPackagesAndRefreshUpdateCountAsync(string searchText, bool useCachedPackageMetadata, IVsSearchCallback pSearchCallback, IVsSearchTask searchTask)
+        internal async Task SearchPackagesAndRefreshUpdateCountAsync(ItemFilter filterToRender, string searchText, bool useCachedPackageMetadata, IVsSearchCallback pSearchCallback,
+            IVsSearchTask searchTask, CancellationToken token)
         {
-            await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-            ItemFilter filterToRender = _topPanel.Filter;
+            await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(token);
 
             var loadContext = new PackageLoadContext(ActiveSources, Model.IsSolution, Model.Context);
 
@@ -863,18 +879,20 @@ namespace NuGet.PackageManagement.UI
             {
                 var loader = new PackageItemLoader(
                     loadContext, packageFeeds.mainFeed, searchText, IncludePrerelease, packageFeeds.recommenderFeed);
+
                 var loadingMessage = string.IsNullOrWhiteSpace(searchText)
                     ? Resx.Resources.Text_Loading
                     : string.Format(CultureInfo.CurrentCulture, Resx.Resources.Text_Searching, searchText);
 
                 // start SearchAsync task for initial loading of packages
-                var searchResultTask = loader.SearchAsync(continuationToken: null, cancellationToken: _loadCts.Token);
+                Task<SearchResult<IPackageSearchMetadata>> searchResultTask = loader.SearchAsync(continuationToken: null, cancellationToken: token);
+
                 // this will wait for searchResultTask to complete instead of creating a new task
-                await _packageList.LoadItemsAsync(loader, loadingMessage, _uiLogger, searchResultTask, filterToRender, _loadCts.Token);
+                await _packageList.LoadItemsAsync(loader, loadingMessage, logger: _uiLogger, searchResultTask, filterToRender, token);
 
                 if (pSearchCallback != null && searchTask != null)
                 {
-                    var searchResult = await searchResultTask;
+                    SearchResult<IPackageSearchMetadata> searchResult = await searchResultTask;
                     pSearchCallback.ReportComplete(searchTask, (uint)searchResult.RawItemsCount);
                 }
 
@@ -1141,8 +1159,7 @@ namespace NuGet.PackageManagement.UI
 
         private void Filter_SelectionChanged(object sender, FilterChangedEventArgs e)
         {
-            //Set UI's state once data is loaded.
-            SynchronizeTabSelectionFlag();
+            SynchronizePackageListTabSelection();
 
             if (_initialized)
             {
@@ -1151,8 +1168,8 @@ namespace NuGet.PackageManagement.UI
 
                 if (!_packageList.IsBrowseTab)
                 {
-                    //Installed Data can have UI apply filtering.
-                    _packageList.FilterInstalledDataItems(_topPanel.Filter, _loadCts.Token);
+                    //Installed Data can have UI filtering applied.
+                    _packageList.FilterInstalledDataItems(_topPanel.Filter);
                 }
 
                 //First time loading data for this Tab?
@@ -1166,7 +1183,7 @@ namespace NuGet.PackageManagement.UI
                     {
                         //Load from source.
                         SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: false);
-                    }, System.Windows.Threading.DispatcherPriority.Loaded);
+                    }, DispatcherPriority.Loaded);
                 }
 
                 EmitRefreshEvent(timeSpan, RefreshOperationSource.FilterSelectionChanged, RefreshOperationStatus.Success, isUIFiltering: !isLoadingDataFromSource);
@@ -1175,7 +1192,7 @@ namespace NuGet.PackageManagement.UI
             }
         }
 
-        private void SynchronizeTabSelectionFlag()
+        private void SynchronizePackageListTabSelection()
         {
             _packageList.IsBrowseTab = _topPanel.Filter == ItemFilter.All;
             _packageList.CheckBoxesEnabled = _topPanel.Filter == ItemFilter.UpdatesAvailable;
@@ -1355,13 +1372,11 @@ namespace NuGet.PackageManagement.UI
 
             Model.Dispose();
 
-            // make sure to cancel currently running load or refresh tasks
-            _loadCts?.Cancel();
-            _refreshCts?.Cancel();
+            _loadBrowseCts?.Cancel();
+            _loadBrowseCts?.Dispose();
 
-            // make sure to dispose cancellation token source
-            _loadCts?.Dispose();
-            _refreshCts?.Dispose();
+            _loadInstalledCts?.Cancel();
+            _loadInstalledCts?.Dispose();
 
             _detailModel.CleanUp();
             _packageList.SelectionChanged -= PackageList_SelectionChanged;
@@ -1544,6 +1559,64 @@ namespace NuGet.PackageManagement.UI
                 await Model.Context.UIActionEngine.UpgradeNuGetProjectAsync(Model.UIController, project: null);
             })
             .PostOnFailure(nameof(PackageManagerControl), nameof(UpgradeButton_Click));
+        }
+
+        //private CancellationTokenSource LoadCts
+        //{
+        //    get
+        //    {
+        //        if (IsBrowseTab)
+        //        {
+        //            if (_loadBrowseCts == null)
+        //            {
+        //                _loadBrowseCts = new CancellationTokenSource();
+        //            }
+        //            return _loadBrowseCts;
+        //        }
+        //        else
+        //        {
+        //            if (_loadInstalledCts == null)
+        //            {
+        //                _loadInstalledCts = new CancellationTokenSource();
+        //            }
+        //            return _loadInstalledCts;
+        //        }
+        //    }
+        //}
+
+        //private CancellationTokenSource GetTabCancellationTokenSource(ItemFilter tab)
+        //{
+        //    if (tab == ItemFilter.All)
+        //    {
+        //        return _loadBrowseCts;
+        //    }
+        //    else
+        //    {
+        //        return _loadInstalledCts;
+        //    }
+        //}
+
+
+        internal CancellationTokenSource ResetCancellationTokenSource(ItemFilter filterToRender)
+        {
+            if (filterToRender == ItemFilter.All)
+            {
+                return ResetCancellationTokenSource(ref _loadBrowseCts);
+            }
+            else
+            {
+                return ResetCancellationTokenSource(ref _loadInstalledCts);
+            }
+        }
+        private CancellationTokenSource ResetCancellationTokenSource(ref CancellationTokenSource cts)
+        {
+            var newCts = new CancellationTokenSource();
+
+            CancellationTokenSource oldCts = Interlocked.Exchange(ref cts, newCts);
+            oldCts?.Cancel();
+            oldCts?.Dispose();
+
+            return newCts;
         }
     }
 }

@@ -30,14 +30,19 @@ namespace NuGet.PackageManagement.UI
             {
                 await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
+                ItemFilter filterToRender = _packageManagerControl.ActiveFilter;
+
                 // Set a new cancellation token source which will be used to cancel this task in case
                 // new loading task starts or manager ui is closed while loading packages.
-                var loadCts = new CancellationTokenSource();
-                var oldCts = Interlocked.Exchange(ref _packageManagerControl._loadCts, loadCts);
-                oldCts?.Cancel();
-                oldCts?.Dispose();
+                CancellationTokenSource cts = _packageManagerControl.ResetCancellationTokenSource(filterToRender);
 
-                await _packageManagerControl.SearchPackagesAndRefreshUpdateCountAsync(searchText: _searchQuery.SearchString, useCachedPackageMetadata: true, pSearchCallback: _searchCallback, searchTask: this);
+                await _packageManagerControl.SearchPackagesAndRefreshUpdateCountAsync(
+                    filterToRender,
+                    searchText: _searchQuery.SearchString,
+                    useCachedPackageMetadata: true,
+                    pSearchCallback: _searchCallback,
+                    searchTask: this,
+                    token: cts.Token);
                 SetStatus(VsSearchTaskStatus.Completed);
             });
         }

@@ -256,7 +256,7 @@ namespace NuGet.PackageManagement.UI
 
             _joinableTaskFactory.Value.Run(() =>
             {
-                ClearPackageList(currentListBox, currentItems);
+                ClearPackageList(currentListBox, ref currentItems);
                 return Task.CompletedTask;
             });
 
@@ -391,7 +391,7 @@ namespace NuGet.PackageManagement.UI
             LoadItemsCompleted?.Invoke(this, EventArgs.Empty);
         }
 
-        internal void FilterInstalledDataItems(ItemFilter itemFilter, CancellationToken token)
+        internal void FilterInstalledDataItems(ItemFilter itemFilter)
         {
             switch (itemFilter)
             {
@@ -519,7 +519,7 @@ namespace NuGet.PackageManagement.UI
                 NuGetUIThreadHelper.JoinableTaskFactory.RunAsync(async () =>
                 {
                     await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
-                    foreach (PackageItemListViewModel package in currentLoader.GetCurrent())
+                    foreach (PackageItemListViewModel package in currentItems) //currentLoader.GetCurrent()
                     {
                         await package.ReloadPackageVersionsAsync();
                     }
@@ -622,27 +622,25 @@ namespace NuGet.PackageManagement.UI
         /// </summary>
         /// <param name="packages">Packages collection to add</param>
         /// <param name="refresh">Clears list if set to <c>true</c></param>
-        private void UpdatePackageList(InfiniteScrollListBox listBoxToUpdate, ObservableCollection<object> collectionToUpdate,
+        private void UpdatePackageList(InfiniteScrollListBox listBoxToUpdate, ref ObservableCollection<object> collectionToUpdate,
             IEnumerable<PackageItemListViewModel> packages, bool refresh)
         {
             // Synchronize updating Items list
             _joinableTaskFactory.Value.Run(() =>
             {
-                //lock (listBoxToUpdate.Lock)
-                //{
-                    if (refresh)
-                    {
-                        ClearPackageList(listBoxToUpdate, collectionToUpdate);
-                    }
+                
+                if (refresh)
+                {
+                    ClearPackageList(listBoxToUpdate, ref collectionToUpdate);
+                }
 
-                    // add newly loaded items
-                    foreach (var package in packages)
-                    {
-                        package.PropertyChanged += Package_PropertyChanged;
-                        collectionToUpdate.Add(package);
-                        _selectedCount = package.Selected ? _selectedCount + 1 : _selectedCount;
-                    }
-                //}
+                // add newly loaded items
+                foreach (var package in packages)
+                {
+                    package.PropertyChanged += Package_PropertyChanged;
+                    collectionToUpdate.Add(package);
+                    _selectedCount = package.Selected ? _selectedCount + 1 : _selectedCount;
+                }
 
                 return Task.CompletedTask;
             });
@@ -651,18 +649,22 @@ namespace NuGet.PackageManagement.UI
         /// <summary>
         /// Clear <paramref name="itemsToClear"/> list and removes the event handlers for each element.
         /// </summary>
-        private void ClearPackageList(InfiniteScrollListBox listBox, ObservableCollection<object> itemsToClear)
+        private void ClearPackageList(InfiniteScrollListBox listBox, ref ObservableCollection<object> itemsToClear)
         {
             foreach (var package in itemsToClear.OfType<PackageItemListViewModel>())
             {
                 package.PropertyChanged -= Package_PropertyChanged;
             }
 
-            itemsToClear.Clear();
-            if (itemsToClear == ItemsBrowse)
+            //CollectionViewSource must be updated through the Dispatcher.
+            Dispatcher.Invoke(() =>
             {
-                _loadingStatusBarBrowse.ItemsLoaded = 0;
-            }
+                itemsToClear.Clear();
+                if (itemsToClear == ItemsBrowse)
+                {
+                    _loadingStatusBarBrowse.ItemsLoaded = 0;
+                }
+            });
         }
 
         public void UpdatePackageStatus(PackageCollectionItem[] installedPackages)

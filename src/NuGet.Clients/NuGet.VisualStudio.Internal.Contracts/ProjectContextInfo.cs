@@ -1,8 +1,6 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-#nullable enable
-
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -52,10 +50,6 @@ namespace NuGet.VisualStudio.Internal.Contracts
             else if (nugetProject is MSBuildNuGetProject)
             {
                 projectKind = NuGetProjectKind.PackagesConfig;
-            }
-            else if (nugetProject is ProjectKNuGetProjectBase)
-            {
-                projectKind = NuGetProjectKind.ProjectK;
             }
 
             return projectKind;

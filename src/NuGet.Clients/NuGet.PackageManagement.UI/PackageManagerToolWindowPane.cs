@@ -74,22 +74,29 @@ namespace NuGet.PackageManagement.UI
         public int OnClose(ref uint pgrfSaveOptions)
         {
             PackageManagerControl content = _content;
-
-            if (content != null)
+            try
             {
-                NuGetUIThreadHelper.JoinableTaskFactory.Run(async () =>
+                if (content != null)
                 {
-                    await content.SaveSettingsAsync(CancellationToken.None);
-                });
+                    NuGetUIThreadHelper.JoinableTaskFactory.Run(async () =>
+                    {
+                        await content.SaveSettingsAsync(CancellationToken.None);
+                    });
 
-                content.Model.Context.UserSettingsManager.PersistSettings();
+                    content.Model.Context.UserSettingsManager.PersistSettings();
+                }
             }
+            catch (StreamJsonRpc.RemoteInvocationException)
+            {
+            }
+            finally
+            {
+                Closed?.Invoke(this, EventArgs.Empty);
 
-            Closed?.Invoke(this, EventArgs.Empty);
+                pgrfSaveOptions = (uint)__FRAMECLOSE.FRAMECLOSE_NoSave;
 
-            pgrfSaveOptions = (uint)__FRAMECLOSE.FRAMECLOSE_NoSave;
-
-            Dispose();
+                Dispose();
+            }
 
             return VSConstants.S_OK;
         }

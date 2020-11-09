@@ -26,6 +26,8 @@ namespace NuGet.PackageManagement
 
         event EventHandler<NuGetProjectEventArgs> NuGetProjectRenamed;
 
+        event EventHandler<NuGetProjectEventArgs> BeforeNuGetProjectUnloaded;
+
         event EventHandler<NuGetProjectEventArgs> NuGetProjectUpdated;
 
         event EventHandler<NuGetProjectEventArgs> AfterNuGetProjectRenamed;

@@ -99,6 +99,8 @@ namespace NuGet.PackageManagement.VisualStudio
 
         public event EventHandler<NuGetProjectEventArgs> NuGetProjectRenamed;
 
+        public event EventHandler<NuGetProjectEventArgs> BeforeNuGetProjectUnloaded;
+
         public event EventHandler<NuGetProjectEventArgs> NuGetProjectUpdated;
 
         public event EventHandler<NuGetProjectEventArgs> AfterNuGetProjectRenamed;
@@ -202,6 +204,7 @@ namespace NuGet.PackageManagement.VisualStudio
             _solutionEvents.ProjectAdded += OnEnvDTEProjectAdded;
             _solutionEvents.ProjectRemoved += OnEnvDTEProjectRemoved;
             _solutionEvents.ProjectRenamed += OnEnvDTEProjectRenamed;
+            _solutionEvents.BeforeUnloadProject += OnEnvDTEProjectUnloaded;
 
             var vSStd97CmdIDGUID = VSConstants.GUID_VSStandardCommandSet97.ToString("B");
             var solutionSaveID = (int)VSConstants.VSStd97CmdID.SaveSolution;
@@ -597,6 +600,19 @@ namespace NuGet.PackageManagement.VisualStudio
             RemoveVsProjectAdapterFromCache(envDTEProject.FullName);
 
             NuGetProjectRemoved?.Invoke(this, new NuGetProjectEventArgs(nuGetProject));
+        }
+
+        private void OnEnvDTEProjectUnloaded(EnvDTE.Project envDTEProject)
+        {
+            // This is a solution event. Should be on the UI thread
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            NuGetProject nuGetProject;
+            _projectSystemCache.TryGetNuGetProject(envDTEProject.Name, out nuGetProject);
+
+            RemoveVsProjectAdapterFromCache(envDTEProject.FullName);
+
+            BeforeNuGetProjectUnloaded?.Invoke(this, new NuGetProjectEventArgs(nuGetProject));
         }
 
         private void OnEnvDTEProjectAdded(Project envDTEProject)

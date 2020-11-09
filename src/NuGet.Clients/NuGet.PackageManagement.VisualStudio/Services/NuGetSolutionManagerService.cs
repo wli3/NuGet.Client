@@ -32,6 +32,7 @@ namespace NuGet.PackageManagement.VisualStudio
         public event EventHandler<IProjectContextInfo>? ProjectAdded;
         public event EventHandler<IProjectContextInfo>? ProjectRemoved;
         public event EventHandler<IProjectContextInfo>? ProjectRenamed;
+        public event EventHandler<IProjectContextInfo>? ProjectUnloaded;
         public event EventHandler<IProjectContextInfo>? ProjectUpdated;
 
         private NuGetSolutionManagerService(
@@ -106,6 +107,7 @@ namespace NuGet.PackageManagement.VisualStudio
             SolutionManager!.NuGetProjectAdded += OnProjectAdded;
             SolutionManager!.NuGetProjectRemoved += OnProjectRemoved;
             SolutionManager!.NuGetProjectRenamed += OnProjectRenamed;
+            SolutionManager!.BeforeNuGetProjectUnloaded += OnProjectUnloaded;
             SolutionManager!.NuGetProjectUpdated += OnProjectUpdated;
         }
 
@@ -139,6 +141,11 @@ namespace NuGet.PackageManagement.VisualStudio
             OnProjectEvent(ProjectUpdated, nameof(OnProjectUpdated), sender, e);
         }
 
+        private void OnProjectUnloaded(object sender, NuGetProjectEventArgs e)
+        {
+            OnProjectEvent(ProjectUnloaded, nameof(OnProjectUnloaded), sender, e);
+        }
+
         private void OnProjectEvent(
             EventHandler<IProjectContextInfo>? eventHandler,
             string memberName,
@@ -168,6 +175,7 @@ namespace NuGet.PackageManagement.VisualStudio
             SolutionManager!.NuGetProjectAdded -= OnProjectAdded;
             SolutionManager!.NuGetProjectRemoved -= OnProjectRemoved;
             SolutionManager!.NuGetProjectRenamed -= OnProjectRenamed;
+            SolutionManager!.BeforeNuGetProjectUnloaded -= OnProjectUnloaded;
             SolutionManager!.NuGetProjectUpdated -= OnProjectUpdated;
         }
     }

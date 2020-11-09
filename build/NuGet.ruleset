@@ -124,6 +124,5 @@
     <Rule Id="VSTHRD103" Action="Hidden" />
     <Rule Id="VSTHRD105" Action="Hidden" />
     <Rule Id="VSTHRD200" Action="Hidden" />
-    <Rule Id="VSTHRD002" Action="Hidden" />
   </Rules>
 </RuleSet>

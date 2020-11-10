@@ -401,16 +401,11 @@ namespace NuGet.Build.Tasks.Pack
             foreach (var framework in assetsFile.PackageSpec.TargetFrameworks)
             {
                 var frameworkShortFolderName = framework.FrameworkName.GetShortFolderName();
+                tfmSpecificRefs.Add(frameworkShortFolderName, new HashSet<string>(ComparisonUtility.FrameworkReferenceNameComparer));
                 foreach (var frameworkRef in framework.FrameworkReferences.Where(e => e.PrivateAssets != FrameworkDependencyFlags.All))
                 {
-                    if (tfmSpecificRefs.TryGetValue(frameworkShortFolderName, out var frameworkRefNames))
-                    {
-                        frameworkRefNames.Add(frameworkRef.Name);
-                    }
-                    else
-                    {
-                        tfmSpecificRefs.Add(frameworkShortFolderName, new HashSet<string>(ComparisonUtility.FrameworkReferenceNameComparer) { frameworkRef.Name });
-                    }
+                    var frameworkRefNames = tfmSpecificRefs[frameworkShortFolderName];
+                    frameworkRefNames.Add(frameworkRef.Name);
                 }
             }
 

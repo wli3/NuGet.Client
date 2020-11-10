@@ -4569,6 +4569,9 @@ namespace ClassLibrary
                     var expectedFrameworks = expectedTargetFramework.Split(';');
 
                     var frameworkItems = nupkgReader.NuspecReader.GetFrameworkRefGroups();
+
+                    Assert.Equal(targetFrameworks.Split(';').Select(fw => NuGetFramework.Parse(fw)).ToHashSet(), frameworkItems.Select(t => t.TargetFramework).ToHashSet());
+
                     foreach (var framework in expectedFrameworks)
                     {
                         var nugetFramework = NuGetFramework.Parse(framework);

@@ -83,6 +83,12 @@ namespace NuGet.PackageManagement.UI
 
             DataContext = this;
 
+            var lcv = ItemsInstalledCollectionView as ListCollectionView;
+            lcv.IsLiveFiltering = true;
+            lcv.LiveFilteringProperties.Add(nameof(PackageItemListViewModel.IsUpdateAvailable));
+            lcv.LiveFilteringProperties.Add(nameof(PackageItemListViewModel.Status));
+            lcv.LiveFilteringProperties.Add(nameof(PackageItemListViewModel.HasPendingBackgroundWork));
+
             _listBrowse.LoadingStatusIndicator_PropertyChanged += LoadingStatusIndicator_PropertyChanged;
             _listInstalled.LoadingStatusIndicator_PropertyChanged += LoadingStatusIndicator_PropertyChanged;
         }

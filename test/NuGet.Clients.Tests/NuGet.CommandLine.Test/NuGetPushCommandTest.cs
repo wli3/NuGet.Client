@@ -1302,7 +1302,6 @@ namespace NuGet.CommandLine.Test
         [Fact]
         public void PushCommand_PushToServerV3()
         {
-            Util.ClearWebCache();
             var nugetexe = Util.GetNuGetExePath();
 
             using (var packagesDirectory = TestDirectory.Create())
@@ -1310,6 +1309,14 @@ namespace NuGet.CommandLine.Test
                 // Arrange
                 var packageFileName = Util.CreateTestPackage("testPackage1", "1.1.0", packagesDirectory);
                 string outputFileName = Path.Combine(packagesDirectory, "t1.nupkg");
+
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(packagesDirectory.Path, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                   { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
 
                 // Server setup
                 var indexJson = Util.CreateIndexJson();
@@ -1366,7 +1373,8 @@ namespace NuGet.CommandLine.Test
                                         nugetexe,
                                         Directory.GetCurrentDirectory(),
                                         string.Join(" ", args),
-                                        true);
+                                        true,
+                                        environmentVariables: envVars);
                         serverV2.Stop();
                         serverV3.Stop();
 
@@ -1383,7 +1391,6 @@ namespace NuGet.CommandLine.Test
         [Fact]
         public void PushCommand_PushToServerV3_NoPushEndpoint()
         {
-            Util.ClearWebCache();
             var nugetexe = Util.GetNuGetExePath();
             using (var packagesDirectory = TestDirectory.Create())
 
@@ -1391,6 +1398,14 @@ namespace NuGet.CommandLine.Test
                 // Arrange
                 var packageFileName = Util.CreateTestPackage("testPackage1", "1.1.0", packagesDirectory);
                 string outputFileName = Path.Combine(packagesDirectory, "t1.nupkg");
+
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(packagesDirectory.Path, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                   { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
 
                 // Server setup
                 var indexJson = Util.CreateIndexJson();
@@ -1421,7 +1436,8 @@ namespace NuGet.CommandLine.Test
                                     nugetexe,
                                     Directory.GetCurrentDirectory(),
                                     $"push {packageFileName} -Source {serverV3.Uri}index.json",
-                                    true);
+                                    true,
+                                    environmentVariables: envVars);
 
                     serverV3.Stop();
 
@@ -1442,7 +1458,6 @@ namespace NuGet.CommandLine.Test
         [Fact]
         public void PushCommand_PushToServerV3_Unavailable()
         {
-            Util.ClearWebCache();
             var nugetexe = Util.GetNuGetExePath();
 
             using (var packagesDirectory = TestDirectory.Create())
@@ -1450,6 +1465,14 @@ namespace NuGet.CommandLine.Test
                 // Arrange
                 var packageFileName = Util.CreateTestPackage("testPackage1", "1.1.0", packagesDirectory);
                 string outputFileName = Path.Combine(packagesDirectory, "t1.nupkg");
+
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(packagesDirectory.Path, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                   { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
 
                 // Server setup
                 var indexJson = Util.CreateIndexJson();
@@ -1488,7 +1511,8 @@ namespace NuGet.CommandLine.Test
                                     nugetexe,
                                     Directory.GetCurrentDirectory(),
                                     string.Join(" ", args),
-                                    true);
+                                    true,
+                                    environmentVariables: envVars);
 
                     serverV3.Stop();
 
@@ -1508,12 +1532,19 @@ namespace NuGet.CommandLine.Test
         {
             // Arrange
             var testApiKey = Guid.NewGuid().ToString();
-            Util.ClearWebCache();
 
             using (var packageDirectory = TestDirectory.Create())
             {
                 var packageFileName = Util.CreateTestPackage("testPackage1", "1.1.0", packageDirectory);
                 string outputFileName = Path.Combine(packageDirectory, "t1.nupkg");
+
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(packageDirectory.Path, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                   { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
 
                 using (var server = new MockServer())
                 {
@@ -1537,7 +1568,8 @@ namespace NuGet.CommandLine.Test
                         NuGetExePath,
                         Directory.GetCurrentDirectory(),
                         $"push {packageFileName} {testApiKey} -Source {server.Uri}nuget -NonInteractive",
-                        waitForExit: true);
+                        waitForExit: true,
+                        environmentVariables: envVars);
 
                     server.Stop();
 
@@ -1554,12 +1586,19 @@ namespace NuGet.CommandLine.Test
         {
             // Arrange
             var testApiKey = Guid.NewGuid().ToString();
-            Util.ClearWebCache();
 
             using (var packagesDirectory = TestDirectory.Create())
             {
                 var packageFileName = Util.CreateTestPackage("testPackage1", "1.1.0", packagesDirectory);
                 var outputFileName = Path.Combine(packagesDirectory, "t1.nupkg");
+
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(packagesDirectory.Path, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                   { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
 
                 using (var serverV3 = new MockServer())
                 {
@@ -1612,7 +1651,8 @@ namespace NuGet.CommandLine.Test
                         NuGetExePath,
                         Directory.GetCurrentDirectory(),
                         string.Join(" ", args),
-                        waitForExit: true);
+                        waitForExit: true,
+                        environmentVariables: envVars);
 
                     serverV3.Stop();
 
@@ -1630,13 +1670,20 @@ namespace NuGet.CommandLine.Test
         public void PushCommand_PushToServerV3_ApiKeyFromConfig(string configKeyFormatString)
         {
             var testApiKey = Guid.NewGuid().ToString();
-            Util.ClearWebCache();
 
             using (var randomTestFolder = TestDirectory.Create())
             {
                 // Arrange
                 var packageFileName = Util.CreateTestPackage("testPackage1", "1.1.0", randomTestFolder);
                 string outputFileName = Path.Combine(randomTestFolder, "t1.nupkg");
+
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(randomTestFolder.Path, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                   { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
 
                 using (var serverV3 = new MockServer())
                 {
@@ -1703,7 +1750,8 @@ namespace NuGet.CommandLine.Test
                         NuGetExePath,
                         Directory.GetCurrentDirectory(),
                         string.Join(" ", args),
-                        waitForExit: true);
+                        waitForExit: true,
+                        environmentVariables: envVars);
 
                     serverV3.Stop();
 
@@ -1718,7 +1766,6 @@ namespace NuGet.CommandLine.Test
         [Fact]
         public void PushCommand_FailWhenNoSourceSpecified()
         {
-            Util.ClearWebCache();
             var nugetexe = Util.GetNuGetExePath();
             using (var randomDirectory = TestDirectory.Create())
 
@@ -1726,6 +1773,14 @@ namespace NuGet.CommandLine.Test
                 // Arrange
                 var packageFileName = Util.CreateTestPackage("testPackage1", "1.1.0", randomDirectory);
                 string outputFileName = Path.Combine(randomDirectory, "t1.nupkg");
+
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(randomDirectory.Path, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                   { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
 
                 // Act
                 string[] args = new string[]
@@ -1740,7 +1795,8 @@ namespace NuGet.CommandLine.Test
                                 nugetexe,
                                 Directory.GetCurrentDirectory(),
                                 string.Join(" ", args),
-                                true);
+                                true,
+                                environmentVariables: envVars);
 
                 // Assert
                 Assert.True(1 == result.Item1, result.Item2 + " " + result.Item3);
@@ -1964,13 +2020,20 @@ namespace NuGet.CommandLine.Test
         [InlineData("https://invalid-2a0358f1-88f2-48c0-b68a-bb150cac00bd.org/v3/index.json")]
         public void PushCommand_InvalidInput_V3_NonExistent(string invalidInput)
         {
-            Util.ClearWebCache();
             var nugetexe = Util.GetNuGetExePath();
             using (var packagesDirectory = TestDirectory.Create())
 
             {
                 // Arrange
                 var packageFileName = Util.CreateTestPackage("testPackage1", "1.1.0", packagesDirectory);
+
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(packagesDirectory.Path, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                   { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
 
                 // Act
                 var args = new string[]
@@ -1985,7 +2048,8 @@ namespace NuGet.CommandLine.Test
                                 nugetexe,
                                 Directory.GetCurrentDirectory(),
                                 string.Join(" ", args),
-                                true);
+                                true,
+                                environmentVariables: envVars);
 
                 // Assert
                 if (RuntimeEnvironmentHelper.IsMono)
@@ -2010,13 +2074,20 @@ namespace NuGet.CommandLine.Test
         [InlineData("https://api.nuget.org/v4/index.json")]
         public void PushCommand_InvalidInput_V3_NotFound(string invalidInput)
         {
-            Util.ClearWebCache();
             var nugetexe = Util.GetNuGetExePath();
             using (var packagesDirectory = TestDirectory.Create())
 
             {
                 // Arrange
                 var packageFileName = Util.CreateTestPackage("testPackage1", "1.1.0", packagesDirectory);
+
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(packagesDirectory.Path, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                   { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
 
                 // Act
                 var args = new string[]
@@ -2031,7 +2102,8 @@ namespace NuGet.CommandLine.Test
                                 nugetexe,
                                 Directory.GetCurrentDirectory(),
                                 string.Join(" ", args),
-                                true);
+                                true,
+                                environmentVariables: envVars);
 
                 // Assert
                 Assert.True(

@@ -24,13 +24,20 @@ namespace NuGet.CommandLine.Test
         public void NetworkCallCount_RestoreLargePackagesConfigWithMultipleSourcesWithAllMissingPackages()
         {
             // Arrange
-            Util.ClearWebCache();
             var testCount = 100;
 
             using (var server2 = new MockServer())
             using (var server1 = new MockServer())
             using (var workingPath = TestDirectory.Create())
             {
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(workingPath, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                    { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
+
                 var repositoryPath1 = Path.Combine(workingPath, "repo");
                 var repositoryPath2 = Path.Combine(workingPath, "repo2");
                 var repositoryPath3 = Path.Combine(workingPath, "repo3");
@@ -109,7 +116,8 @@ namespace NuGet.CommandLine.Test
                     workingPath,
                     string.Join(" ", args),
                     waitForExit: true,
-                    timeOutInMilliseconds: (int)TimeSpan.FromMinutes(3).TotalMilliseconds);
+                    timeOutInMilliseconds: (int)TimeSpan.FromMinutes(3).TotalMilliseconds,
+                    environmentVariables: envVars);
 
                 var packagesFolder = new LocalPackageRepository(packagesFolderPath);
                 var allPackages = packagesFolder.GetPackages().ToList();
@@ -131,13 +139,20 @@ namespace NuGet.CommandLine.Test
         public void NetworkCallCount_RestoreLargePackagesConfigWithMultipleSourcesWithPartialMissingPackages()
         {
             // Arrange
-            Util.ClearWebCache();
             var testCount = 100;
 
             using (var server2 = new MockServer())
             using (var server = new MockServer())
             using (var workingPath = TestDirectory.Create())
             {
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(workingPath, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                    { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
+
                 var repositoryPath = Path.Combine(workingPath, "repo");
                 var repositoryPath2 = Path.Combine(workingPath, "repo2");
                 var repositoryPath3 = Path.Combine(workingPath, "repo3");
@@ -242,7 +257,8 @@ namespace NuGet.CommandLine.Test
                     workingPath,
                     string.Join(" ", args),
                     waitForExit: true,
-                    timeOutInMilliseconds: (int)TimeSpan.FromMinutes(3).TotalMilliseconds);
+                    timeOutInMilliseconds: (int)TimeSpan.FromMinutes(3).TotalMilliseconds,
+                    environmentVariables: envVars);
 
                 var packagesFolder = new LocalPackageRepository(packagesFolderPath);
                 var allPackages = packagesFolder.GetPackages().ToList();
@@ -266,13 +282,20 @@ namespace NuGet.CommandLine.Test
         public void NetworkCallCount_RestoreLargePackagesConfigWithMultipleSourcesMainlyV3()
         {
             // Arrange
-            Util.ClearWebCache();
             var testCount = 100;
 
             using (var server2 = new MockServer())
             using (var server = new MockServer())
             using (var workingPath = TestDirectory.Create())
             {
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(workingPath, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                    { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
+
                 var repositoryPath = Path.Combine(workingPath, "repo");
                 var repositoryPath2 = Path.Combine(workingPath, "repo2");
                 var repositoryPath3 = Path.Combine(workingPath, "repo3");
@@ -370,7 +393,8 @@ namespace NuGet.CommandLine.Test
                     workingPath,
                     string.Join(" ", args),
                     waitForExit: true,
-                    timeOutInMilliseconds: (int)TimeSpan.FromMinutes(3).TotalMilliseconds);
+                    timeOutInMilliseconds: (int)TimeSpan.FromMinutes(3).TotalMilliseconds,
+                    environmentVariables: envVars);
 
                 var packagesFolder = new LocalPackageRepository(packagesFolderPath);
                 var allPackages = packagesFolder.GetPackages().ToList();
@@ -392,13 +416,20 @@ namespace NuGet.CommandLine.Test
         public void NetworkCallCount_RestoreLargePackagesConfigWithMultipleSourcesMainlyV2()
         {
             // Arrange
-            Util.ClearWebCache();
             var testCount = 100;
 
             using (var server2 = new MockServer())
             using (var server = new MockServer())
             using (var workingPath = TestDirectory.Create())
             {
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(workingPath, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                    { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
+
                 var repositoryPath = Path.Combine(workingPath, "repo");
                 var repositoryPath2 = Path.Combine(workingPath, "repo2");
                 var repositoryPath3 = Path.Combine(workingPath, "repo3");
@@ -495,7 +526,8 @@ namespace NuGet.CommandLine.Test
                     workingPath,
                     string.Join(" ", args),
                     waitForExit: true,
-                    timeOutInMilliseconds: (int)TimeSpan.FromMinutes(3).TotalMilliseconds);
+                    timeOutInMilliseconds: (int)TimeSpan.FromMinutes(3).TotalMilliseconds,
+                    environmentVariables: envVars);
 
                 var packagesFolder = new LocalPackageRepository(packagesFolderPath);
                 var allPackages = packagesFolder.GetPackages().ToList();
@@ -517,11 +549,18 @@ namespace NuGet.CommandLine.Test
         public void NetworkCallCount_CancelPackageDownloadForV3()
         {
             // Arrange
-            Util.ClearWebCache();
             using (var server2 = new MockServer())
             using (var server = new MockServer())
             using (var workingPath = CreateMixedConfigAndJson())
             {
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(workingPath, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                    { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
+
                 var repositoryPath = Path.Combine(workingPath, "repo");
 
                 var slnPath = Path.Combine(workingPath, "test.sln");
@@ -590,7 +629,8 @@ namespace NuGet.CommandLine.Test
                     nugetexe,
                     workingPath,
                     string.Join(" ", args),
-                    waitForExit: true);
+                    waitForExit: true,
+                    environmentVariables: envVars);
 
                 task.Wait();
 
@@ -614,11 +654,18 @@ namespace NuGet.CommandLine.Test
         public void NetworkCallCount_CancelPackageDownloadForV2()
         {
             // Arrange
-            Util.ClearWebCache();
             using (var server2 = new MockServer())
             using (var server = new MockServer())
             using (var workingPath = CreateMixedConfigAndJson())
             {
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(workingPath, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                    { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
+
                 var repositoryPath = Path.Combine(workingPath, "repo");
 
                 var slnPath = Path.Combine(workingPath, "test.sln");
@@ -682,7 +729,8 @@ namespace NuGet.CommandLine.Test
                     workingPath,
                     string.Join(" ", args),
                     waitForExit: true,
-                    timeOutInMilliseconds: int.MaxValue);
+                    timeOutInMilliseconds: int.MaxValue,
+                    environmentVariables: envVars);
 
                 task.Wait();
 
@@ -706,11 +754,18 @@ namespace NuGet.CommandLine.Test
         public void NetworkCallCount_RestoreSolutionMultipleSourcesV2V3AndLocal()
         {
             // Arrange
-            Util.ClearWebCache();
             using (var server2 = new MockServer())
             using (var server = new MockServer())
             using (var workingPath = CreateMixedConfigAndJson())
             {
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(workingPath, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                    { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
+
                 var repositoryPath = Path.Combine(workingPath, "repo");
                 var slnPath = Path.Combine(workingPath, "test.sln");
                 var nugetexe = Util.GetNuGetExePath();
@@ -758,7 +813,8 @@ namespace NuGet.CommandLine.Test
                     nugetexe,
                     workingPath,
                     string.Join(" ", args),
-                    waitForExit: true);
+                    waitForExit: true,
+                    environmentVariables: envVars);
 
                 // Assert
                 Assert.True(0 == r.Item1, r.Item2 + " " + r.Item3);
@@ -842,10 +898,17 @@ namespace NuGet.CommandLine.Test
         public void NetworkCallCount_InstallVersionFromV3()
         {
             // Arrange
-            Util.ClearWebCache();
             using (var server = new MockServer())
             using (var workingPath = CreateMixedConfigAndJson())
             {
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(workingPath, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                    { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
+
                 var repositoryPath = Path.Combine(workingPath, "repo");
                 var slnPath = Path.Combine(workingPath, "test.sln");
                 var nugetexe = Util.GetNuGetExePath();
@@ -889,7 +952,8 @@ namespace NuGet.CommandLine.Test
                     nugetexe,
                     workingPath,
                     string.Join(" ", args),
-                    waitForExit: true);
+                    waitForExit: true,
+                    environmentVariables: envVars);
 
                 // Assert
                 Assert.True(0 == r.Item1, r.Item2 + " " + r.Item3);
@@ -967,10 +1031,17 @@ namespace NuGet.CommandLine.Test
         public void NetworkCallCount_InstallLatestFromV3()
         {
             // Arrange
-            Util.ClearWebCache();
             using (var server = new MockServer())
             using (var workingPath = CreateMixedConfigAndJson())
             {
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(workingPath, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                    { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
+
                 var repositoryPath = Path.Combine(workingPath, "repo");
                 var slnPath = Path.Combine(workingPath, "test.sln");
                 var nugetexe = Util.GetNuGetExePath();
@@ -1011,7 +1082,8 @@ namespace NuGet.CommandLine.Test
                     nugetexe,
                     workingPath,
                     string.Join(" ", args),
-                    waitForExit: true);
+                    waitForExit: true,
+                    environmentVariables: envVars);
 
                 // Assert
                 Assert.True(0 == r.Item1, r.Item2 + " " + r.Item3);
@@ -1029,11 +1101,18 @@ namespace NuGet.CommandLine.Test
         public void NetworkCallCount_RestoreSolutionMultipleSourcesV2V3()
         {
             // Arrange
-            Util.ClearWebCache();
             using (var server2 = new MockServer())
             using (var server = new MockServer())
             using (var workingPath = CreateMixedConfigAndJson())
             {
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(workingPath, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                    { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
+
                 var repositoryPath = Path.Combine(workingPath, "repo");
                 var slnPath = Path.Combine(workingPath, "test.sln");
                 var nugetexe = Util.GetNuGetExePath();
@@ -1075,7 +1154,8 @@ namespace NuGet.CommandLine.Test
                     nugetexe,
                     workingPath,
                     string.Join(" ", args),
-                    waitForExit: true);
+                    waitForExit: true,
+                    environmentVariables: envVars);
 
                 // Assert
                 Assert.True(0 == r.Item1, r.Item2 + " " + r.Item3);
@@ -1154,11 +1234,18 @@ namespace NuGet.CommandLine.Test
         public void NetworkCallCount_RestoreSolutionMultipleSourcesTwoV3()
         {
             // Arrange
-            Util.ClearWebCache();
             using (var server2 = new MockServer())
             using (var server = new MockServer())
             using (var workingPath = CreateMixedConfigAndJson())
             {
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(workingPath, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                    { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
+
                 var repositoryPath = Path.Combine(workingPath, "repo");
                 var slnPath = Path.Combine(workingPath, "test.sln");
                 var nugetexe = Util.GetNuGetExePath();
@@ -1206,7 +1293,8 @@ namespace NuGet.CommandLine.Test
                     nugetexe,
                     workingPath,
                     string.Join(" ", args),
-                    waitForExit: true);
+                    waitForExit: true,
+                    environmentVariables: envVars);
 
                 // Assert
                 Assert.True(0 == r.Item1, r.Item2 + " " + r.Item3);
@@ -1227,10 +1315,17 @@ namespace NuGet.CommandLine.Test
         public void NetworkCallCount_RestoreSolutionV3WithoutFlatContainer()
         {
             // Arrange
-            Util.ClearWebCache();
             using (var server = new MockServer())
             using (var workingPath = CreateMixedConfigAndJson())
             {
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(workingPath, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                    { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
+
                 var repositoryPath = Path.Combine(workingPath, "repo");
                 var slnPath = Path.Combine(workingPath, "test.sln");
                 var nugetexe = Util.GetNuGetExePath();
@@ -1264,7 +1359,8 @@ namespace NuGet.CommandLine.Test
                     nugetexe,
                     workingPath,
                     string.Join(" ", args),
-                    waitForExit: true);
+                    waitForExit: true,
+                    environmentVariables: envVars);
 
                 // Assert
                 Assert.True(0 == r.Item1, r.Item2 + " " + r.Item3);
@@ -1284,10 +1380,17 @@ namespace NuGet.CommandLine.Test
         public void NetworkCallCount_RestoreSolutionWithPackagesConfigAndProjectJsonV3()
         {
             // Arrange
-            Util.ClearWebCache();
             using (var server = new MockServer())
             using (var workingPath = CreateMixedConfigAndJson())
             {
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(workingPath, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                    { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
+
                 var repositoryPath = Path.Combine(workingPath, "repo");
                 var slnPath = Path.Combine(workingPath, "test.sln");
                 var nugetexe = Util.GetNuGetExePath();
@@ -1322,7 +1425,8 @@ namespace NuGet.CommandLine.Test
                     nugetexe,
                     workingPath,
                     string.Join(" ", args),
-                    waitForExit: true);
+                    waitForExit: true,
+                    environmentVariables: envVars);
 
                 // Assert
                 Assert.True(0 == r.Item1, r.Item2 + " " + r.Item3);

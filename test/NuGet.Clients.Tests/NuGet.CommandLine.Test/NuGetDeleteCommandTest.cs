@@ -304,13 +304,20 @@ namespace NuGet.CommandLine.Test
         public void DeleteCommand_WithApiKeyFromConfig(string configKeyFormatString)
         {
             // Arrange
-            Util.ClearWebCache();
             var testApiKey = Guid.NewGuid().ToString();
 
             using (var testFolder = TestDirectory.Create())
             {
                 using (var server = new MockServer())
                 {
+                    // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                    var httpCache = Path.Combine(testFolder.Path, "v3-cache");
+                    Directory.CreateDirectory(httpCache);
+                    var envVars = new Dictionary<string, string>()
+                    {
+                        { "NUGET_HTTP_CACHE_PATH", httpCache }
+                    };
+
                     // Server setup
                     var indexJson = Util.CreateIndexJson();
 
@@ -372,7 +379,8 @@ namespace NuGet.CommandLine.Test
                         NuGetExePath,
                         Directory.GetCurrentDirectory(),
                         string.Join(" ", args),
-                        waitForExit: true);
+                        waitForExit: true,
+                        environmentVariables: envVars);
 
                     server.Stop();
 

@@ -475,7 +475,6 @@ namespace NuGet.CommandLine.Test
         [Fact]
         public void ListCommand_Prerelease()
         {
-            Util.ClearWebCache();
             var nugetexe = Util.GetNuGetExePath();
 
             using (var packageDirectory = TestDirectory.Create())
@@ -486,6 +485,14 @@ namespace NuGet.CommandLine.Test
                 var packageFileName2 = Util.CreateTestPackage("testPackage2", "2.1", packageDirectory);
                 var package1 = new ZipPackage(packageFileName1);
                 var package2 = new ZipPackage(packageFileName2);
+
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(randomTestFolder.Path, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                    {
+                        { "NUGET_HTTP_CACHE_PATH", httpCache }
+                    };
 
                 using (var server = new MockServer())
                 {
@@ -511,7 +518,8 @@ namespace NuGet.CommandLine.Test
                         nugetexe,
                         randomTestFolder,
                         args,
-                        waitForExit: true);
+                        waitForExit: true,
+                        environmentVariables: envVars);
                     server.Stop();
 
                     // Assert
@@ -533,7 +541,6 @@ namespace NuGet.CommandLine.Test
         [Fact]
         public void ListCommand_AllVersionsPrerelease()
         {
-            Util.ClearWebCache();
             var nugetexe = Util.GetNuGetExePath();
 
             using (var packageDirectory = TestDirectory.Create())
@@ -544,6 +551,14 @@ namespace NuGet.CommandLine.Test
                 var packageFileName2 = Util.CreateTestPackage("testPackage2", "2.1", packageDirectory);
                 var package1 = new ZipPackage(packageFileName1);
                 var package2 = new ZipPackage(packageFileName2);
+
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(randomTestFolder.Path, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                   { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
 
                 using (var server = new MockServer())
                 {
@@ -590,8 +605,6 @@ namespace NuGet.CommandLine.Test
         [Fact]
         public void ListCommand_SimpleV3()
         {
-            Util.ClearWebCache();
-
             var nugetexe = Util.GetNuGetExePath();
 
             using (var packageDirectory = TestDirectory.Create())
@@ -601,6 +614,14 @@ namespace NuGet.CommandLine.Test
                 var packageFileName2 = Util.CreateTestPackage("testPackage2", "2.1", packageDirectory);
                 var package1 = new ZipPackage(packageFileName1);
                 var package2 = new ZipPackage(packageFileName2);
+
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(packageDirectory.Path, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                   { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
 
                 // Server setup
                 var indexJson = Util.CreateIndexJson();
@@ -666,7 +687,8 @@ namespace NuGet.CommandLine.Test
                             nugetexe,
                             Directory.GetCurrentDirectory(),
                             args,
-                            waitForExit: true);
+                            waitForExit: true,
+                            environmentVariables: envVars);
 
                         serverV2.Stop();
                         serverV3.Stop();
@@ -690,11 +712,19 @@ namespace NuGet.CommandLine.Test
         [Fact]
         public void ListCommand_SimpleV3_NoListEndpoint()
         {
-            Util.ClearWebCache();
             var nugetexe = Util.GetNuGetExePath();
             using (var packageDirectory = TestDirectory.Create())
             {
                 // Arrange
+
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(packageDirectory.Path, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                   { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
+
                 // Server setup
                 var indexJson = Util.CreateIndexJson();
                 using (var serverV3 = new MockServer())
@@ -724,7 +754,8 @@ namespace NuGet.CommandLine.Test
                         nugetexe,
                         Directory.GetCurrentDirectory(),
                         args,
-                        waitForExit: true);
+                        waitForExit: true,
+                        environmentVariables: envVars);
 
                     serverV3.Stop();
 
@@ -747,13 +778,19 @@ namespace NuGet.CommandLine.Test
         [Fact]
         public void ListCommand_UnavailableV3()
         {
-            Util.ClearWebCache();
-
             var nugetexe = Util.GetNuGetExePath();
             using (var packageDirectory = TestDirectory.Create())
 
             {
                 // Arrange
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(packageDirectory.Path, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                   { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
+
                 // Server setup
                 using (var serverV3 = new MockServer())
                 {
@@ -782,7 +819,8 @@ namespace NuGet.CommandLine.Test
                         nugetexe,
                         Directory.GetCurrentDirectory(),
                         args,
-                        waitForExit: true);
+                        waitForExit: true,
+                        environmentVariables: envVars);
 
                     serverV3.Stop();
 
@@ -801,31 +839,42 @@ namespace NuGet.CommandLine.Test
         [InlineData("invalid")]
         public void ListCommand_InvalidInput_NonSource(string invalidInput)
         {
-            Util.ClearWebCache();
-
             // Arrange
             var nugetexe = Util.GetNuGetExePath();
 
             // Act
-            var args = "list test -Source " + invalidInput;
-            var result = CommandRunner.Run(
-                nugetexe,
-                Directory.GetCurrentDirectory(),
-                args,
-                waitForExit: true);
+            using (var workingPath = TestDirectory.Create())
+            {
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(workingPath.Path, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                   { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
 
-            // Assert
-            Assert.True(
+                var args = "list test -Source " + invalidInput;
+
+                var result = CommandRunner.Run(
+                    nugetexe,
+                    Directory.GetCurrentDirectory(),
+                    args,
+                    waitForExit: true,
+                    environmentVariables: envVars);
+
+                // Assert
+                Assert.True(
                 result.Item1 != 0,
                 "The run did not fail as desired. Simply got this output:" + result.Item2);
 
-            Assert.True(
-                result.Item3.Contains(
-                    string.Format(
-                        "The specified source '{0}' is invalid. Please provide a valid source.",
-                        invalidInput)),
-                "Expected error message not found in " + result.Item3
-                );
+                Assert.True(
+                    result.Item3.Contains(
+                        string.Format(
+                            "The specified source '{0}' is invalid. Please provide a valid source.",
+                            invalidInput)),
+                            "Expected error message not found in " + result.Item3
+                            );
+            }
         }
 
         [Theory]
@@ -834,23 +883,34 @@ namespace NuGet.CommandLine.Test
         public void ListCommand_InvalidInput_V2_NonExistent(string invalidInput)
         {
             // Arrange
-            Util.ClearWebCache();
             var nugetexe = Util.GetNuGetExePath();
 
             // Act
-            var args = "list test -Source " + invalidInput;
-            var result = CommandRunner.Run(
-                nugetexe,
-                Directory.GetCurrentDirectory(),
-                args,
-                waitForExit: true);
+            using (var workingPath = TestDirectory.Create())
+            {
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(workingPath.Path, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                   { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
 
-            // Assert
-            Assert.True(
+                var args = "list test -Source " + invalidInput;
+                var result = CommandRunner.Run(
+                    nugetexe,
+                    Directory.GetCurrentDirectory(),
+                    args,
+                    waitForExit: true,
+                    environmentVariables: envVars);
+
+                // Assert
+                Assert.True(
                 result.Item1 != 0,
                 "The run did not fail as desired. Simply got this output:" + result.Item2);
 
-            Assert.Contains($"Unable to load the service index for source {invalidInput}.", result.Item3);
+                Assert.Contains($"Unable to load the service index for source {invalidInput}.", result.Item3);
+            }
         }
 
         [Theory]
@@ -885,26 +945,37 @@ namespace NuGet.CommandLine.Test
         public void ListCommand_InvalidInput_V3_NonExistent(string invalidInput)
         {
             // Arrange
-            Util.ClearWebCache();
             var nugetexe = Util.GetNuGetExePath();
 
             // Act
-            var args = "list test -Source " + invalidInput;
-            var result = CommandRunner.Run(
-                nugetexe,
-                Directory.GetCurrentDirectory(),
-                args,
-                waitForExit: true);
+            using (var workingPath = TestDirectory.Create())
+            {
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(workingPath.Path, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                   { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
 
-            // Assert
-            Assert.True(
+                var args = "list test -Source " + invalidInput;
+                var result = CommandRunner.Run(
+                    nugetexe,
+                    Directory.GetCurrentDirectory(),
+                    args,
+                    waitForExit: true,
+                    environmentVariables: envVars);
+
+                // Assert
+                Assert.True(
                 result.Item1 != 0,
                 "The run did not fail as desired. Simply got this output:" + result.Item2);
 
-            Assert.True(
-                result.Item3.Contains($"Unable to load the service index for source {invalidInput}."),
-                "Expected error message not found in " + result.Item3
-                );
+                Assert.True(
+                    result.Item3.Contains($"Unable to load the service index for source {invalidInput}."),
+                    "Expected error message not found in " + result.Item3
+                    );
+            }
         }
 
         [Theory]
@@ -912,32 +983,42 @@ namespace NuGet.CommandLine.Test
         public void ListCommand_InvalidInput_V3_NotFound(string invalidInput)
         {
             // Arrange
-            Util.ClearWebCache();
             var nugetexe = Util.GetNuGetExePath();
 
             // Act
-            var args = "list test -Source " + invalidInput;
-            var result = CommandRunner.Run(
-                nugetexe,
-                Directory.GetCurrentDirectory(),
-                args,
-                waitForExit: true);
+            using (var workingPath = TestDirectory.Create())
+            {
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(workingPath.Path, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                   { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
 
-            // Assert
-            Assert.True(
-                result.Item1 != 0,
-                "The run did not fail as desired. Simply got this output:" + result.Item2);
+                var args = "list test -Source " + invalidInput;
+                var result = CommandRunner.Run(
+                    nugetexe,
+                    Directory.GetCurrentDirectory(),
+                    args,
+                    waitForExit: true,
+                    environmentVariables: envVars);
 
-            Assert.True(
-                result.Item3.Contains("400 (Bad Request)"),
-                "Expected error message not found in " + result.Item3
-                );
+                // Assert
+                Assert.True(
+                    result.Item1 != 0,
+                    "The run did not fail as desired. Simply got this output:" + result.Item2);
+
+                Assert.True(
+                    result.Item3.Contains("400 (Bad Request)"),
+                    "Expected error message not found in " + result.Item3
+                    );
+            }
         }
 
         [Fact]
         public void ListCommand_WithAuthenticatedSource_AppliesCredentialsFromSettings()
         {
-            Util.ClearWebCache();
             var expectedAuthHeader = "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes("user:password"));
             var listEndpoint = Guid.NewGuid().ToString() + "/api/v2";
             bool serverReceiveProperAuthorizationHeader = false;
@@ -947,6 +1028,14 @@ namespace NuGet.CommandLine.Test
                 // Arrange
                 var packageFileName1 = Util.CreateTestPackage("testPackage1", "1.1.0", randomTestFolder);
                 var package1 = new ZipPackage(packageFileName1);
+
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(randomTestFolder.Path, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                   { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
 
                 // Server setup
                 using (var serverV3 = new MockServer())
@@ -1026,7 +1115,8 @@ namespace NuGet.CommandLine.Test
                         Util.GetNuGetExePath(),
                         Directory.GetCurrentDirectory(),
                         $"list test -source {serverV3.Uri}index.json -configfile {configFileName} -verbosity detailed -noninteractive",
-                        waitForExit: true);
+                        waitForExit: true,
+                        environmentVariables: envVars);
                     serverV3.Stop();
                     // Assert
                     Assert.True(0 == result.Item1, $"{result.Item2} {result.Item3}");
@@ -1041,7 +1131,6 @@ namespace NuGet.CommandLine.Test
         [Fact]
         public void ListCommand_WithAuthenticatedSourceV2_AppliesCredentialsFromSettings()
         {
-            Util.ClearWebCache();
             var expectedAuthHeader = "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes("user:password"));
             var listEndpoint = "api/v2";
             bool serverReceiveProperAuthorizationHeader = false;
@@ -1050,6 +1139,14 @@ namespace NuGet.CommandLine.Test
                 // Arrange
                 var packageFileName1 = Util.CreateTestPackage("testPackage1", "1.1.0", randomTestFolder);
                 var package1 = new ZipPackage(packageFileName1);
+
+                // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
+                var httpCache = Path.Combine(randomTestFolder.Path, "v3-cache");
+                Directory.CreateDirectory(httpCache);
+                var envVars = new Dictionary<string, string>()
+                {
+                   { "NUGET_HTTP_CACHE_PATH", httpCache }
+                };
 
                 // Server setup
                 using (var serverV3 = new MockServer())
@@ -1129,7 +1226,8 @@ namespace NuGet.CommandLine.Test
                         Util.GetNuGetExePath(),
                         Directory.GetCurrentDirectory(),
                         $"list test -source {serverV3.Uri}api/v2 -configfile {configFileName} -verbosity detailed -noninteractive",
-                        waitForExit: true);
+                        waitForExit: true,
+                        environmentVariables: envVars);
                     serverV3.Stop();
 
                     // Assert

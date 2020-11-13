@@ -40,7 +40,8 @@ namespace NuGet.CommandLine
 
             if (!File.Exists(msbuildPath))
             {
-                throw new CommandException(
+                var msg = "@Build.1 msbuildPath = " + msbuildPath;
+                throw new CommandException(msg +
                     string.Format(
                         CultureInfo.CurrentCulture,
                         LocalizedResourceManager.GetString(nameof(NuGetResources.MsBuildDoesNotExistAtPath)),
@@ -84,7 +85,8 @@ namespace NuGet.CommandLine
 
             if (!File.Exists(msbuildPath))
             {
-                throw new CommandException(
+                var msg = "@GetProjectReferencesAsync.1 msbuildPath = " + msbuildPath;
+                throw new CommandException(msg +
                     string.Format(
                         CultureInfo.CurrentCulture,
                         LocalizedResourceManager.GetString(nameof(NuGetResources.MsBuildDoesNotExistAtPath)),

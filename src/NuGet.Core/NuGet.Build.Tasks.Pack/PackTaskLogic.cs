@@ -397,6 +397,7 @@ namespace NuGet.Build.Tasks.Pack
         private void PopulateFrameworkReferences(PackageBuilder builder, LockFile assetsFile)
         {
             var tfmSpecificRefs = new Dictionary<string, ISet<string>>();
+            bool hasAnyRefs = false;
 
             foreach (var framework in assetsFile.PackageSpec.TargetFrameworks)
             {
@@ -406,14 +407,18 @@ namespace NuGet.Build.Tasks.Pack
                 {
                     var frameworkRefNames = tfmSpecificRefs[frameworkShortFolderName];
                     frameworkRefNames.Add(frameworkRef.Name);
+                    hasAnyRefs = true;
                 }
             }
 
-            builder.FrameworkReferenceGroups.AddRange(
-                tfmSpecificRefs.Select(e =>
-                    new FrameworkReferenceGroup(
-                        NuGetFramework.Parse(e.Key),
-                        e.Value.Select(fr => new FrameworkReference(fr)))));
+            if (hasAnyRefs)
+            {
+                builder.FrameworkReferenceGroups.AddRange(
+                    tfmSpecificRefs.Select(e =>
+                        new FrameworkReferenceGroup(
+                            NuGetFramework.Parse(e.Key),
+                            e.Value.Select(fr => new FrameworkReference(fr)))));
+            }
         }
 
         public PackCommandRunner GetPackCommandRunner(

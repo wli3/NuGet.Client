@@ -13,7 +13,10 @@ namespace NuGet.Common
     {
         private static readonly string[] VisualStudioProcesses = { "DEVENV", "BLEND" };
 
-        private static Lazy<bool> _isMono = new Lazy<bool>(() => Type.GetType("Mono.Runtime") != null);
+        //private static Lazy<bool> _isMono = new Lazy<bool>(() => Type.GetType("Mono.Runtime") != null);
+        private static Lazy<bool> _isMono = new Lazy<bool>(() => _isMono_nullable ?? (_isMono_nullable = Type.GetType("Mono.Runtime") != null).Value);
+
+        private static bool? _isMono_nullable;
 
         private static Lazy<bool> _isWindows = new Lazy<bool>(() => GetIsWindows());
 

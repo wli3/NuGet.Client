@@ -488,8 +488,19 @@ namespace NuGet.CommandLine
             {
                 // If Mono, test well known paths and bail if found
                 toolset = GetMsBuildFromMonoPaths(userVersion);
+                LogToolsetToConsoleDebug(console, toolset, "@1: GetMsBuildFromMonoPaths");
                 if (toolset != null)
                 {
+                    var path = toolset.Path;
+                    var msg = "toolset.Path : " + path + " Exist? " + Directory.Exists(path);
+                    if (Directory.Exists(path))
+                    {
+                        foreach (var file in Directory.GetFiles(path))
+                        {
+                            msg = msg + "\n file : " + file;
+                        }
+                    }
+                    LogToolsetToConsoleDebug(console, toolset, "@2: GetMsBuildFromMonoPaths not null" + msg);
                     return toolset;
                 }
 
@@ -502,7 +513,9 @@ namespace NuGet.CommandLine
                     {
                         var msBuildDirectory = Path.GetDirectoryName(msbuildExe);
                         var msbuildVersion = FileVersionInfo.GetVersionInfo(msbuildExe)?.FileVersion;
-                        return toolset = new MsBuildToolset(msbuildVersion, msBuildDirectory);
+                        toolset = new MsBuildToolset(msbuildVersion, msBuildDirectory);
+                        LogToolsetToConsoleDebug(console, toolset, "@3: GetMsBuildFromMonoPaths not null");
+                        return toolset;
                     }
                 }
 
@@ -544,12 +557,15 @@ namespace NuGet.CommandLine
                 toolset = GetMsBuildDirectoryInternal(
                     userVersion, console, installedToolsets.OrderByDescending(t => t), (IEnvironmentVariableReader reader) => GetMSBuild(reader));
 
+                LogToolsetToConsoleDebug(console, toolset, "@4: GetMsBuildDirectoryInternal");
+
                 Directory.SetCurrentDirectory(currentDirectoryCache);
+                LogToolsetToConsoleDebug(console, toolset, "@5: final");
                 return toolset;
             }
             finally
             {
-                LogToolsetToConsole(console, toolset);
+                LogToolsetToConsoleDebug(console, toolset, "@6 : in finally");
             }
         }
 
@@ -803,6 +819,33 @@ namespace NuGet.CommandLine
             else
             {
                 console.WriteLine(
+                    LocalizedResourceManager.GetString(
+                        nameof(NuGetResources.MSBuildAutoDetection)),
+                    toolset.Version,
+                    toolset.Path);
+            }
+        }
+
+        private static void LogToolsetToConsoleDebug(IConsole console, MsBuildToolset toolset, string debugInfo)
+        {
+            if (console == null || toolset == null)
+            {
+                return;
+            }
+
+            if (console.Verbosity == Verbosity.Detailed)
+            {
+                console.WriteLine(
+                    debugInfo +
+                    LocalizedResourceManager.GetString(
+                        nameof(NuGetResources.MSBuildAutoDetection_Verbose)),
+                    toolset.Version,
+                    toolset.Path);
+            }
+            else
+            {
+                console.WriteLine(
+                    debugInfo +
                     LocalizedResourceManager.GetString(
                         nameof(NuGetResources.MSBuildAutoDetection)),
                     toolset.Version,

@@ -451,6 +451,9 @@ namespace NuGet.CommandLine
                     solutionFile,
                     exMessage);
 
+                //test if IsMono works correctly
+                message = message +"\n" +"1.IsMono :" + RuntimeEnvironmentHelper.IsMono;
+
                 throw new CommandException(message);
             }
         }
@@ -480,6 +483,9 @@ namespace NuGet.CommandLine
         /// <returns>The msbuild directory.</returns>
         public static MsBuildToolset GetMsBuildToolset(string userVersion, IConsole console)
         {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("userVersion: " + userVersion);
+
             var currentDirectoryCache = Directory.GetCurrentDirectory();
             var installedToolsets = new List<MsBuildToolset>();
             MsBuildToolset toolset = null;
@@ -490,6 +496,7 @@ namespace NuGet.CommandLine
                 toolset = GetMsBuildFromMonoPaths(userVersion);
                 if (toolset != null)
                 {
+                    sb.AppendLine("GetMsBuildFromMonoPaths : " + toolset.Path);
                     return toolset;
                 }
 
@@ -497,11 +504,13 @@ namespace NuGet.CommandLine
                 if (string.IsNullOrEmpty(userVersion))
                 {
                     var msbuildExe = GetMSBuild(EnvironmentVariableWrapper.Instance);
+                    sb.AppendLine("GetMSBuild : " + msbuildExe);
 
                     if (msbuildExe != null)
                     {
                         var msBuildDirectory = Path.GetDirectoryName(msbuildExe);
                         var msbuildVersion = FileVersionInfo.GetVersionInfo(msbuildExe)?.FileVersion;
+                        sb.AppendLine("new MsBuildToolset : " );
                         return toolset = new MsBuildToolset(msbuildVersion, msBuildDirectory);
                     }
                 }
@@ -514,16 +523,25 @@ namespace NuGet.CommandLine
                         foreach (var item in installed)
                         {
                             installedToolsets.Add(new MsBuildToolset(version: item.ToolsVersion, path: item.ToolsPath));
+                            sb.AppendLine("installedToolsets.Add : " + " version: " + item.ToolsVersion + "path: " + item.ToolsPath);
                         }
 
                         installedToolsets = installedToolsets.ToList();
+                        
                     }
                 }
+
+                sb.AppendLine("RuntimeEnvironmentHelper.IsMono : " + RuntimeEnvironmentHelper.IsMono);
 
                 // In a non-Mono environment, we have the potential for SxS installs of MSBuild 15.1+. Let's add these here.
                 if (!RuntimeEnvironmentHelper.IsMono)
                 {
+                    sb.AppendLine("RuntimeEnvironmentHelper.IsMono : not mono" );
                     var installedSxsToolsets = GetInstalledSxsToolsets();
+                    foreach (var installedSxsToolset in installedSxsToolsets)
+                    {
+                        sb.AppendLine("installedSxsToolsets : " + "path : " + toolset.Path + " version : " + toolset.Version);
+                    }
                     if (installedToolsets == null)
                     {
                         installedToolsets = installedSxsToolsets;
@@ -536,9 +554,17 @@ namespace NuGet.CommandLine
 
                 if (!installedToolsets.Any())
                 {
+                    sb.AppendLine("installedToolsets is empty");
+
+                    toolset = GetMsBuildDirectoryInternal(
+                    userVersion, console, installedToolsets.OrderByDescending(t => t), (IEnvironmentVariableReader reader) => GetMSBuild(reader));
+
+                    sb.AppendLine("toolset= GetMsBuildDirectoryInternal : " + " path : " + toolset.Path + " version: " + toolset.Version);
+
+                    var message = sb.ToString();
                     throw new CommandException(
                         LocalizedResourceManager.GetString(
-                            nameof(NuGetResources.Error_CannotFindMsbuild)));
+                            nameof(NuGetResources.Error_CannotFindMsbuild)) + message);
                 }
 
                 toolset = GetMsBuildDirectoryInternal(

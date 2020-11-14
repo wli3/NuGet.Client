@@ -13,6 +13,7 @@ namespace NuGet.PackageManagement.UI
     {
         public readonly object Lock = new object();
         private readonly LoadingStatusIndicator _loadingStatusIndicator = new LoadingStatusIndicator();
+        private Panel _loadingStatusIndicatorParent;
 
         public Style LoadingStatusIndicatorStyle
         {
@@ -60,6 +61,12 @@ namespace NuGet.PackageManagement.UI
         public InfiniteScrollListBox()
         {
             _loadingStatusIndicator.PropertyChanged += LoadingStatusIndicator_PropertyChanged;
+            Loaded += InfiniteScrollListBox_Loaded;
+        }
+
+        private void InfiniteScrollListBox_Loaded(object sender, RoutedEventArgs e)
+        {
+            
         }
 
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
@@ -86,6 +93,27 @@ namespace NuGet.PackageManagement.UI
 
         private bool _showingLoadingStatusIndicator;
 
+        public void MoveLoadingStatusIndicator(Panel parent)
+        {
+            if (_loadingStatusIndicatorParent == null)
+            {
+                //TODO: validate?
+                _loadingStatusIndicatorParent = parent;
+            }
+            else
+            {
+                lock (_loadingStatusIndicator)
+                {
+                    _loadingStatusIndicatorParent.Children.Remove(_loadingStatusIndicator);
+
+                    //TODO: validate?
+                    _loadingStatusIndicatorParent = parent;
+
+                    _loadingStatusIndicatorParent.Children.Add(_loadingStatusIndicator);
+                }
+            }
+        }
+
         /// <summary>
         /// Adds or removes the LoadingStatusIndicator from the ListBox's VisualTree with any specified state information.
         /// </summary>
@@ -95,8 +123,10 @@ namespace NuGet.PackageManagement.UI
         /// <param name="itemsCount">Number of items that have been loaded.</param>
         public void UpdateLoadingIndicator(LoadingStatus status, string loadingMessage = null, int itemsCount = 0)
         {
-            WrapPanel wrapPanel = (WrapPanel)Template.FindName("ListBoxWrapPanel", this);
-
+            if (_loadingStatusIndicatorParent == null)
+            {
+                throw new NullReferenceException();
+            }
             bool show = false;
 
             if (status != LoadingStatus.Unknown)
@@ -144,13 +174,13 @@ namespace NuGet.PackageManagement.UI
                 {
                     if (!_showingLoadingStatusIndicator)
                     {
-                        wrapPanel.Children.Add(_loadingStatusIndicator);
+                        _loadingStatusIndicatorParent.Children.Add(_loadingStatusIndicator);
                         _showingLoadingStatusIndicator = true;
                     }
                 }
                 else // Remove the indicator.
                 {
-                    wrapPanel.Children.Remove(_loadingStatusIndicator);
+                    _loadingStatusIndicatorParent.Children.Remove(_loadingStatusIndicator);
                     _showingLoadingStatusIndicator = false;
                 }
             }

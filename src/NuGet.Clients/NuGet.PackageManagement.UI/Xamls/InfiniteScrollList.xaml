@@ -359,7 +359,7 @@
         Focusable="False"
         AutomationProperties.IsOffscreenBehavior="Offscreen" />
     </Grid>
-    <Grid DockPanel.Dock="Bottom">
+    <Grid Name="ListBoxArea" DockPanel.Dock="Bottom">
       <nuget:InfiniteScrollListBox
         d:DataContext="{d:DesignData Source=/Design/PackageItemListViewSampleData.xaml,IsDesignTimeCreatable=True}"
         x:Name="_listBrowse"

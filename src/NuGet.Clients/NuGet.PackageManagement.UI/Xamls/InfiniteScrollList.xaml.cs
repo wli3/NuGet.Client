@@ -13,6 +13,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
 using NuGet.Common;
@@ -33,6 +34,7 @@ namespace NuGet.PackageManagement.UI
     public partial class InfiniteScrollList : UserControl
     {
         public event SelectionChangedEventHandler SelectionChanged;
+        public event EventHandler ListBox_BeginInitialLoad;
 
         public delegate void UpdateButtonClickEventHandler(PackageItemListViewModel[] selectedPackages);
         public event UpdateButtonClickEventHandler UpdateButtonClicked;
@@ -58,7 +60,14 @@ namespace NuGet.PackageManagement.UI
         public bool IsBrowseTab
         {
             get { return (bool)GetValue(IsBrowseTabProperty); }
-            set { SetValue(IsBrowseTabProperty, value); }
+            set
+            {
+                SetValue(IsBrowseTabProperty, value);
+                //if (value == true && BrowseInitialized == false)
+                //{
+                //    var test = ItemsBrowse;
+                //}
+            }
         }
 
         public static readonly DependencyProperty IsBrowseTabProperty =
@@ -79,9 +88,9 @@ namespace NuGet.PackageManagement.UI
 
             _joinableTaskFactory = joinableTaskFactory;
 
-            InitializeComponent();
-
             DataContext = this;
+                        
+            InitializeComponent();
 
             var lcv = ItemsInstalledCollectionView as ListCollectionView;
             lcv.IsLiveFiltering = true;
@@ -89,8 +98,73 @@ namespace NuGet.PackageManagement.UI
             lcv.LiveFilteringProperties.Add(nameof(PackageItemListViewModel.Status));
             lcv.LiveFilteringProperties.Add(nameof(PackageItemListViewModel.HasPendingBackgroundWork));
 
+            Loaded += InfiniteScrollList_Loaded;
+            _listBrowse.ItemContainerGenerator.StatusChanged += ItemContainerGenerator_StatusChanged;
+            _listInstalled.ItemContainerGenerator.StatusChanged += ItemContainerGenerator_StatusChanged;
+
             _listBrowse.LoadingStatusIndicator_PropertyChanged += LoadingStatusIndicator_PropertyChanged;
             _listInstalled.LoadingStatusIndicator_PropertyChanged += LoadingStatusIndicator_PropertyChanged;
+        }
+
+        private void InfiniteScrollList_Loaded(object sender, RoutedEventArgs e)
+        {
+            //Show loading indicator in the ListBox Grid until a ListBox is created.
+            Grid listBoxArea = (Grid)FindName("ListBoxArea");
+
+            _listBrowse.MoveLoadingStatusIndicator(listBoxArea);
+            _listInstalled.MoveLoadingStatusIndicator(listBoxArea);
+
+            if (IsBrowseTab)
+            {
+                _listBrowse.UpdateLoadingIndicator(LoadingStatus.Loading, loadingMessage: "Initializing...");
+            }
+            else
+            {
+                _listInstalled.UpdateLoadingIndicator(LoadingStatus.Loading, loadingMessage: "Initializing...");
+            }
+
+            _joinableTaskFactory.Value.WithPriority(Dispatcher, DispatcherPriority.Background).RunAsync(async () =>
+            {
+                await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
+
+                ListBox_BeginInitialLoad?.Invoke(sender, e);
+                return Task.CompletedTask;
+            }).PostOnFailure(nameof(InfiniteScrollList), nameof(ListBox_BeginInitialLoad));
+        }
+
+        private bool _browseTabContainersGenerated = false;
+        private bool _installedTabContainersGenerated = false;
+
+        private void ItemContainerGenerator_StatusChanged(object sender, EventArgs e)
+        {
+            if ((IsBrowseTab && _browseTabContainersGenerated) || (!IsBrowseTab && _installedTabContainersGenerated))
+            {
+                return;
+            }
+            _joinableTaskFactory.Value.RunAsync(async () =>
+            {
+                await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
+
+                //ListBox lb = sender as ListBox;
+                ItemContainerGenerator icg = sender as ItemContainerGenerator;
+                //var name = icg.Name;
+                var status = icg.Status;
+                if (status == System.Windows.Controls.Primitives.GeneratorStatus.GeneratingContainers)
+                {
+                    if (IsBrowseTab)
+                    {
+                        _browseTabContainersGenerated = true;
+                        WrapPanel ListBoxWrapPanel = (WrapPanel)_listBrowse.Template.FindName("ListBoxWrapPanel", _listBrowse);
+                        _listBrowse.MoveLoadingStatusIndicator(ListBoxWrapPanel);
+                    }
+                    else
+                    {
+                        _installedTabContainersGenerated = true;
+                        WrapPanel ListBoxWrapPanel = (WrapPanel)_listInstalled.Template.FindName("ListBoxWrapPanel", _listInstalled);
+                        _listInstalled.MoveLoadingStatusIndicator(ListBoxWrapPanel);
+                    }
+                }
+            }).PostOnFailure(nameof(InfiniteScrollList), nameof(ItemContainerGenerator_StatusChanged));
         }
 
         private void LoadingStatusIndicator_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -189,9 +263,11 @@ namespace NuGet.PackageManagement.UI
         {
             get
             {
-                if (!IsBrowseTab && ItemsInstalledCollectionView.Filter != null)
+                ICollectionView itemsInstalledCollectionView = ItemsInstalledCollectionView;
+                if (!IsBrowseTab && itemsInstalledCollectionView.Filter != null)
                 {
-                    return ItemsInstalledCollectionView.OfType<PackageItemListViewModel>();
+                    itemsInstalledCollectionView.Refresh();
+                    return itemsInstalledCollectionView.OfType<PackageItemListViewModel>();
                 }
                 else
                 {
@@ -262,7 +338,7 @@ namespace NuGet.PackageManagement.UI
 
                 _joinableTaskFactory.Value.Run(() =>
                 {
-                    ClearPackageList(_listBrowse, ref _itemsBrowse);
+                    ClearPackageList(_listBrowse, _itemsBrowse);
                     return Task.CompletedTask;
                 });
 
@@ -277,7 +353,7 @@ namespace NuGet.PackageManagement.UI
 
                 _joinableTaskFactory.Value.Run(() =>
                 {
-                    ClearPackageList(_listInstalled, ref _itemsInstalled);
+                    ClearPackageList(_listInstalled, _itemsInstalled);
                     return Task.CompletedTask;
                 });
 
@@ -440,7 +516,10 @@ namespace NuGet.PackageManagement.UI
                 default: break;
             }
 
-            _listInstalled.UpdateLoadingIndicator(status: LoadingStatus.CompletedItems, itemsCount: FilteredItemsCount);
+            if (InstallInitialized)
+            {
+                _listInstalled.UpdateLoadingIndicator(status: LoadingStatus.CompletedItems, itemsCount: FilteredItemsCount);
+            }
             UpdateCheckBoxStatus();
             LoadItemsCompleted?.Invoke(this, EventArgs.Empty);
         }
@@ -455,11 +534,11 @@ namespace NuGet.PackageManagement.UI
 
             if (filterToRender == ItemFilter.All)
             {
-                UpdatePackageList(currentListBox, ref _itemsBrowse, loadedItems, refresh: false);
+                UpdatePackageList(currentListBox, _itemsBrowse, loadedItems, refresh: false);
             }
             else
             {
-                UpdatePackageList(currentListBox, ref _itemsInstalled, loadedItems, refresh: false);
+                UpdatePackageList(currentListBox, _itemsInstalled, loadedItems, refresh: false);
             }
 
             token.ThrowIfCancellationRequested();
@@ -487,11 +566,11 @@ namespace NuGet.PackageManagement.UI
             {
                 if (filterToRender == ItemFilter.All)
                 {
-                    UpdatePackageList(currentListBox, ref _itemsBrowse, currentLoader.GetCurrent(), refresh: false);
+                    UpdatePackageList(currentListBox, _itemsBrowse, currentLoader.GetCurrent(), refresh: false);
                 }
                 else
                 {
-                    UpdatePackageList(currentListBox, ref _itemsInstalled, currentLoader.GetCurrent(), refresh: false);
+                    UpdatePackageList(currentListBox, _itemsInstalled, currentLoader.GetCurrent(), refresh: false);
                 }
             }
 
@@ -501,8 +580,11 @@ namespace NuGet.PackageManagement.UI
         private async Task<IEnumerable<PackageItemListViewModel>> LoadNextPageAsync(InfiniteScrollListBox currentListBox,
             IPackageItemLoader currentLoader, CancellationToken token)
         {
-            var progress = new Progress<IItemLoaderState>(
-                s => HandleItemLoaderStateChange(currentListBox, currentLoader, s));
+            var progress = new Progress<IItemLoaderState>();
+            progress.ProgressChanged += (s, e) =>
+            {
+                HandleItemLoaderStateChange(currentListBox, currentLoader, currentLoader.State, nameof(LoadNextPageAsync));
+            };
 
             // if searchResultTask is in progress then just wait for it to complete
             // without creating new load task
@@ -536,30 +618,37 @@ namespace NuGet.PackageManagement.UI
 
         private async Task WaitForCompletionAsync(ItemFilter filterToRender, IItemLoader<PackageItemListViewModel> currentLoader, CancellationToken token)
         {
-            InfiniteScrollListBox currentListBox = filterToRender == ItemFilter.All ? _listBrowse : _listInstalled;
-            ObservableCollection<object> currentItems = filterToRender == ItemFilter.All ? _itemsBrowse : _itemsInstalled;
-
-            IProgress<IItemLoaderState> progress = new Progress<IItemLoaderState>(
-                s => HandleItemLoaderStateChange(currentListBox, currentLoader, s));
-
-            // run to completion
-            while (currentLoader.State.LoadingStatus == LoadingStatus.Loading)
+            // A searchbox term may cause loader to still be in Loading state at this point.
+            if (currentLoader.State.LoadingStatus == LoadingStatus.Loading)
             {
-                token.ThrowIfCancellationRequested();
-                await currentLoader.UpdateStateAsync(progress, token);
+                InfiniteScrollListBox currentListBox = filterToRender == ItemFilter.All ? _listBrowse : _listInstalled;
+
+                Progress<IItemLoaderState> progress = new Progress<IItemLoaderState>();
+                progress.ProgressChanged += (s, e) =>
+                {
+                    HandleItemLoaderStateChange(currentListBox, currentLoader, currentLoader.State, nameof(WaitForCompletionAsync));
+                };
+
+                while (currentLoader.State.LoadingStatus == LoadingStatus.Loading)
+                {
+                    await currentLoader.UpdateStateAsync(progress, token);
+                }
             }
 
-            if (currentListBox.ShowLoadingIndicatorForBackgroundWork)
+            // Installed data views care about Background Work.
+            if (filterToRender != ItemFilter.All)
             {
                 // Keep the progress indication active until background work is reported as complete.
-                NuGetUIThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+                // Dispatcher priority is necessary to prevent reading `Count` of filtered items before UI has made that calculation.
+                NuGetUIThreadHelper.JoinableTaskFactory.WithPriority(Dispatcher, DispatcherPriority.Background).RunAsync(async () =>
                 {
-                    await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
-                    foreach (PackageItemListViewModel package in currentItems) //currentLoader.GetCurrent()
+                    foreach (PackageItemListViewModel package in _itemsInstalled)
                     {
                         await package.ReloadPackageVersionsAsync();
                     }
-                    currentListBox.UpdateLoadingIndicator(LoadingStatus.NoMoreBackgroundWork, itemsCount: FilteredItemsCount);
+
+                    await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
+                    _listInstalled.UpdateLoadingIndicator(LoadingStatus.NoMoreBackgroundWork, itemsCount: FilteredItemsCount);
                 }).PostOnFailure(nameof(InfiniteScrollList), nameof(WaitForCompletionAsync));
             }
         }
@@ -583,12 +672,17 @@ namespace NuGet.PackageManagement.UI
         /// <param name="loader">Current loader</param>
         /// <param name="state">Progress reported by the <c>Progress</c> callback</param>
         private void HandleItemLoaderStateChange(InfiniteScrollListBox currentListBox,
-            IItemLoader<PackageItemListViewModel> loader, IItemLoaderState state)
+            IItemLoader<PackageItemListViewModel> loader, IItemLoaderState state, string whoAmI)
         {
-            _joinableTaskFactory.Value.Run(async () =>
+            //_joinableTaskFactory.Value.Run(async () =>
+            NuGetUIThreadHelper.JoinableTaskFactory.WithPriority(Dispatcher, DispatcherPriority.Background).RunAsync(async () =>
             {
                 await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
+                string whoAreYou = whoAmI;
+                if (whoAreYou.Length > 0)
+                {
 
+                }
                 if (loader == _loaderBrowse)
                 {
                     // decide when to show status bar
@@ -623,6 +717,7 @@ namespace NuGet.PackageManagement.UI
                 }
 
                 currentListBox.UpdateLoadingIndicator(status: resolvedStatus, itemsCount: FilteredItemsCount);
+                return Task.CompletedTask;
             });
         }
 
@@ -658,51 +753,39 @@ namespace NuGet.PackageManagement.UI
         /// </summary>
         /// <param name="packages">Packages collection to add</param>
         /// <param name="refresh">Clears list if set to <c>true</c></param>
-        private void UpdatePackageList(InfiniteScrollListBox listBoxToUpdate, ref ObservableCollection<object> collectionToUpdate,
+        private void UpdatePackageList(InfiniteScrollListBox listBoxToUpdate, ObservableCollection<object> collectionToUpdate,
             IEnumerable<PackageItemListViewModel> packages, bool refresh)
         {
             // Synchronize updating Items list
-            //_joinableTaskFactory.Value.Run(() =>
-            //{
-                //var tmp = collectionToUpdate;
-                if (refresh)
-                {
-                    ClearPackageList(listBoxToUpdate, ref collectionToUpdate);
-                }
+            if (refresh)
+            {
+                ClearPackageList(listBoxToUpdate, collectionToUpdate);
+            }
 
-                // add newly loaded items
-                foreach (var package in packages)
-                {
-                    package.PropertyChanged += Package_PropertyChanged;
-                    collectionToUpdate.Add(package);
-                    _selectedCount = package.Selected ? _selectedCount + 1 : _selectedCount;
-                }
-
-                //return Task.CompletedTask;
-            //});
+            // add newly loaded items
+            foreach (var package in packages)
+            {
+                package.PropertyChanged += Package_PropertyChanged;
+                collectionToUpdate.Add(package);
+                _selectedCount = package.Selected ? _selectedCount + 1 : _selectedCount;
+            }
         }
 
         /// <summary>
         /// Clear <paramref name="itemsToClear"/> list and removes the event handlers for each element.
         /// </summary>
-        private void ClearPackageList(InfiniteScrollListBox listBox, ref ObservableCollection<object> itemsToClear)
+        private void ClearPackageList(InfiniteScrollListBox listBox, ObservableCollection<object> itemsToClear)
         {
             foreach (var package in itemsToClear.OfType<PackageItemListViewModel>())
             {
                 package.PropertyChanged -= Package_PropertyChanged;
             }
 
-            //CollectionViewSource must be updated through the Dispatcher.
-            //Dispatcher.Invoke(() =>
-            //{
-
-            //await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
             itemsToClear.Clear();
             if (itemsToClear == ItemsBrowse)
             {
                 _loadingStatusBarBrowse.ItemsLoaded = 0;
             }
-            //});
         }
 
         public void UpdatePackageStatus(PackageCollectionItem[] installedPackages)
@@ -873,7 +956,7 @@ namespace NuGet.PackageManagement.UI
             try
             {
                 var packageItems = _loaderBrowse?.GetCurrent() ?? Enumerable.Empty<PackageItemListViewModel>();
-                UpdatePackageList(_listBrowse, ref _itemsBrowse, packageItems, refresh: true);
+                UpdatePackageList(_listBrowse, _itemsBrowse, packageItems, refresh: true);
                 _loadingStatusBarBrowse.ItemsLoaded = _loaderBrowse?.State.ItemsCount ?? 0;
 
                 var desiredVisibility = EvaluateStatusBarVisibility(_loaderBrowse, _loaderBrowse.State);

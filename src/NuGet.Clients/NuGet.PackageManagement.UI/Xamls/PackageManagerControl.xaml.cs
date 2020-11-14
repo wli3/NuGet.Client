@@ -71,12 +71,31 @@ namespace NuGet.PackageManagement.UI
         private PackageManagerControl()
         {
             InitializeComponent();
-            _packageList.Loaded += PackageList_Loaded;
-        }
-
-        private void PackageList_Loaded(object sender, RoutedEventArgs e)
-        {
             SynchronizePackageListTabSelection();
+            _packageList.ListBox_BeginInitialLoad += PackageList_BeginInitialLoad;
+        }
+        protected void PackageList_BeginInitialLoad(object sender, EventArgs e)
+        {
+            var timeSpan = GetTimeSinceLastRefreshAndRestart();
+            
+            // Do not trigger a refresh if the browse tab is open and this is not the first load of the control.
+            // The loaded event is triggered once all the data binding has occurred, which effectively means we'll just display what was loaded earlier and not trigger another search
+            if (!_loadedAndInitialized || _topPanel.Filter != ItemFilter.All)
+            {
+                _loadedAndInitialized = true;
+                if (!_packageList.IsBrowseTab)
+                {
+                    //Installed Data can have UI filtering applied.
+                    _packageList.FilterInstalledDataItems(_topPanel.Filter);
+                }
+                SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: false);
+                EmitRefreshEvent(timeSpan, RefreshOperationSource.PackageManagerLoaded, RefreshOperationStatus.Success);
+            }
+            else
+            {
+                EmitRefreshEvent(timeSpan, RefreshOperationSource.PackageManagerLoaded, RefreshOperationStatus.NoOp);
+            }
+            RefreshConsolidatablePackagesCount();
         }
 
         public static async ValueTask<PackageManagerControl> CreateAsync(PackageManagerModel model, INuGetUILogger uiLogger)
@@ -148,8 +167,8 @@ namespace NuGet.PackageManagement.UI
             _packageList.CheckBoxesEnabled = _topPanel.Filter == ItemFilter.UpdatesAvailable;
             _packageList.IsSolution = Model.IsSolution;
 
-            Loaded += PackageManagerLoaded;
-
+            //Loaded += PackageManagerLoaded;
+            
             // register with the UI controller
             var controller = model.UIController as NuGetUI;
             if (controller != null)
@@ -392,24 +411,6 @@ namespace NuGet.PackageManagement.UI
             {
                 _topPanel.SelectFilter(settings.SelectedFilter);
             }
-        }
-
-        private void PackageManagerLoaded(object sender, RoutedEventArgs e)
-        {
-            var timeSpan = GetTimeSinceLastRefreshAndRestart();
-            // Do not trigger a refresh if the browse tab is open and this is not the first load of the control.
-            // The loaded event is triggered once all the data binding has occurred, which effectively means we'll just display what was loaded earlier and not trigger another search
-            if (!(_loadedAndInitialized && _topPanel.Filter == ItemFilter.All))
-            {
-                _loadedAndInitialized = true;
-                SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: false);
-                EmitRefreshEvent(timeSpan, RefreshOperationSource.PackageManagerLoaded, RefreshOperationStatus.Success);
-            }
-            else
-            {
-                EmitRefreshEvent(timeSpan, RefreshOperationSource.PackageManagerLoaded, RefreshOperationStatus.NoOp);
-            }
-            RefreshConsolidatablePackagesCount();
         }
 
         private void PackageManagerUnloaded(object sender, RoutedEventArgs e)
@@ -785,7 +786,7 @@ namespace NuGet.PackageManagement.UI
         /// </summary>
         private void SearchPackagesAndRefreshUpdateCount(bool useCacheForUpdates)
         {
-            NuGetUIThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            NuGetUIThreadHelper.JoinableTaskFactory.WithPriority(Dispatcher, DispatcherPriority.Background).RunAsync(async () =>
             {
                 ItemFilter filterToRender = ActiveFilter;
                 CancellationTokenSource loadCts;
@@ -807,9 +808,8 @@ namespace NuGet.PackageManagement.UI
                     pSearchCallback: null,
                     searchTask: null,
                     token: loadCts.Token
-                    );
-            })
-            .PostOnFailure(nameof(PackageManagerControl), nameof(SearchPackagesAndRefreshUpdateCount));
+                );
+            }).PostOnFailure(nameof(PackageManagerControl), nameof(SearchPackagesAndRefreshUpdateCount));
         }
 
         // Check if user has environment variable of NUGET_RECOMMEND_PACKAGES set to 1 or is in A/B experiment.
@@ -1179,11 +1179,8 @@ namespace NuGet.PackageManagement.UI
                     //There may be UI filtering applied on top of this data.
                     isLoadingDataFromSource = true;
 
-                    Dispatcher.Invoke(() =>
-                    {
-                        //Load from source.
-                        SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: false);
-                    }, DispatcherPriority.Loaded);
+                    //Load from source.
+                    SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: false);
                 }
 
                 EmitRefreshEvent(timeSpan, RefreshOperationSource.FilterSelectionChanged, RefreshOperationStatus.Success, isUIFiltering: !isLoadingDataFromSource);

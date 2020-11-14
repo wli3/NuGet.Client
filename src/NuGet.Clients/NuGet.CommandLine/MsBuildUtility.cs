@@ -40,7 +40,7 @@ namespace NuGet.CommandLine
 
             if (!File.Exists(msbuildPath))
             {
-                var msg = "@Build.1 msbuildPath = " + msbuildPath +"\n The ismono is : " + RuntimeEnvironmentHelper.IsMono;
+                var msg = "@Build.1 msbuildPath = " + msbuildPath +"\n The ismono is : " + RuntimeEnvironmentHelper.IsMono + "\n msbuildDirectory : " + msbuildDirectory;
                 throw new CommandException(msg +
                     string.Format(
                         CultureInfo.CurrentCulture,
@@ -1059,7 +1059,30 @@ namespace NuGet.CommandLine
                 }
             }
 
-            return null;
+            var msg = "";
+            if (pathDirs == null)
+            {
+                msg = "pathDir is null.";
+            }
+            else if (pathDirs.Length == 0)
+            {
+                msg = "pathDir is empty.";
+            }
+            else
+            {
+                msg = "The pathDir has :";
+                foreach (var path in pathDirs)
+                {
+                    msg += path + "\n";
+                }
+            }
+
+            msg += "\n exeNames :";
+            foreach (var exeName in exeNames)
+            {
+                msg += exeName + "\n";
+            }
+            throw new CommandException(msg); 
         }
 
         /// <summary>

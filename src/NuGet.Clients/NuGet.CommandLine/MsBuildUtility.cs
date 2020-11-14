@@ -40,7 +40,7 @@ namespace NuGet.CommandLine
 
             if (!File.Exists(msbuildPath))
             {
-                var msg = "@Build.1 msbuildPath = " + msbuildPath;
+                var msg = "@Build.1 msbuildPath = " + msbuildPath +"\n The ismono is : " + RuntimeEnvironmentHelper.IsMono;
                 throw new CommandException(msg +
                     string.Format(
                         CultureInfo.CurrentCulture,

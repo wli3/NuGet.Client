@@ -1045,7 +1045,8 @@ namespace NuGet.CommandLine
             }
 
             // Try to find msbuild or xbuild in $Path.
-            var pathDirs = reader.GetEnvironmentVariable("PATH")?.Split(new[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
+            var pathEnv = reader.GetEnvironmentVariable("PATH");
+            var pathDirs = pathEnv?.Split(new[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
 
             if (pathDirs?.Length > 0)
             {
@@ -1081,6 +1082,15 @@ namespace NuGet.CommandLine
             foreach (var exeName in exeNames)
             {
                 msg += exeName + "\n";
+            }
+
+            if (pathEnv == null)
+            {
+                msg += "\n pathEnv : " + "null";
+            }
+            else
+            {
+                msg += "\n pathEnv : " + pathEnv;
             }
             throw new CommandException(msg); 
         }

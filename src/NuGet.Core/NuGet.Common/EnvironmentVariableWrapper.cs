@@ -16,9 +16,11 @@ namespace NuGet.Common
             {
                 return Environment.GetEnvironmentVariable(variable);
             }
-            catch (SecurityException)
+            catch (SecurityException ex)
             {
-                return null;
+                var msg = "Throw an exception when running GetEnvironmentVariable for variable : " + variable;
+                msg += $"\n Action :{ex.Action}  Demanded :{ex.Demanded.GetType()} HResult :{ex.HResult}";
+                throw new SecurityException(ex.Message + msg);
             }
         }
     }

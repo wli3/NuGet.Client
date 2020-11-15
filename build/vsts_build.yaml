@@ -379,7 +379,7 @@ jobs:
       targetType: "inline"
       script: |
         stat /Library/Frameworks/Mono.framework/Versions/Current/Commands
-        ls -R /Library/Frameworks/Mono.framework/Versions/6.12.0/Commands
+        ls -R /Library/Frameworks/Mono.framework/Versions/Current/Commands
 
 
   - task: ShellScript@2

@@ -12,16 +12,24 @@ namespace NuGet.Common
 
         public string GetEnvironmentVariable(string variable)
         {
-            try
+            var MaxTries = 10;
+
+            for (var i = 0; i < MaxTries; i++)
             {
-                return Environment.GetEnvironmentVariable(variable);
+                try
+                {
+                    var envVariable = Environment.GetEnvironmentVariable(variable);
+                    if (envVariable != null)
+                    {
+                        return envVariable;
+                    }
+                }
+                catch (SecurityException)
+                {
+                    return null;
+                }
             }
-            catch (SecurityException ex)
-            {
-                var msg = "Throw an exception when running GetEnvironmentVariable for variable : " + variable;
-                msg += $"\n Demanded :{ex.Demanded.GetType()} HResult :{ex.HResult}  PermissionState :{ex.PermissionState}";
-                throw new SecurityException(ex.Message + msg);
-            }
+            return null;
         }
     }
 }

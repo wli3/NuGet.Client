@@ -19,7 +19,7 @@ namespace NuGet.Common
             catch (SecurityException ex)
             {
                 var msg = "Throw an exception when running GetEnvironmentVariable for variable : " + variable;
-                msg += $"\n Action :{ex.Action}  Demanded :{ex.Demanded.GetType()} HResult :{ex.HResult}";
+                msg += $"\n Demanded :{ex.Demanded.GetType()} HResult :{ex.HResult}  PermissionState :{ex.PermissionState}";
                 throw new SecurityException(ex.Message + msg);
             }
         }

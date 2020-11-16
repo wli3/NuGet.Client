@@ -430,7 +430,7 @@ jobs:
     SDKVersionForBuild: $[dependencies.Initialize_Build.outputs['getSDKVersionForBuild.SDKVersionForBuild']]
   condition: "and(succeeded(),eq(variables['RunEndToEndTests'], 'true')) "
   pool:
-    name: DDNuGet-Windows
+    name: VSEngSS-MicroBuild2019
     demands:
     - DotNetFramework
     - Allow_NuGet_E2E_Tests -equals true
@@ -455,7 +455,7 @@ jobs:
     SDKVersionForBuild: $[dependencies.Initialize_Build.outputs['getSDKVersionForBuild.SDKVersionForBuild']]
   condition: "and(succeeded(),eq(variables['RunApexTests'], 'true')) "
   pool:
-    name: DDNuGet-Windows
+    name: VSEngSS-MicroBuild2019
     demands:
     - DotNetFramework
     - Allow_NuGet_Apex_Tests -equals true

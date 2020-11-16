@@ -28,21 +28,6 @@ $VSIXPath = Join-Path $FuncTestRoot 'NuGet.Tools.vsix'
 
 Copy-Item $VSIXSrcPath $VSIXPath
 
-# Because we are upgrading an installed system component VSIX, we need to downgrade first.
-$numberOfTries = 0
-$success = $false
-do {
-    KillRunningInstancesOfVS
-    $numberOfTries++
-    Write-Host "Attempt # $numberOfTries to downgrade VSIX..."
-    $success = DowngradeVSIX $NuGetVSIXID $VSVersion $ProcessExitTimeoutInSeconds
-}
-until (($success -eq $true) -or ($numberOfTries -gt 3))
-
-# Clearing MEF cache helps load the right dlls for VSIX
-ClearMEFCache
-
-
 $numberOfTries = 0
 $success = $false
 do {

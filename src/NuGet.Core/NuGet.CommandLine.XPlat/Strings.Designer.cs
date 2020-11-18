@@ -340,6 +340,15 @@ namespace NuGet.CommandLine.XPlat {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid value provided for &apos;{0}&apos;. The accepted values are {1)..
+        /// </summary>
+        internal static string Err_InvalidValue {
+            get {
+                return ResourceManager.GetString("Err_InvalidValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Item &apos;{0}&apos; for &apos;{1}&apos; in Imported file &apos;{2}&apos;..
         /// </summary>
         internal static string Error_AddPkgErrorStringForImportedEdit {
@@ -1680,6 +1689,33 @@ namespace NuGet.CommandLine.XPlat {
         internal static string SignCommandHashAlgorithmDescription {
             get {
                 return ResourceManager.GetString("SignCommandHashAlgorithmDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Multiple options were used to specify a certificate..
+        /// </summary>
+        internal static string SignCommandMultipleCertificateException {
+            get {
+                return ResourceManager.GetString("SignCommandMultipleCertificateException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No certificate was provided..
+        /// </summary>
+        internal static string SignCommandNoCertificateException {
+            get {
+                return ResourceManager.GetString("SignCommandNoCertificateException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;-Timestamper&apos; option was not provided. The signed package will not be timestamped. To learn more about this option, please visit https://docs.microsoft.com/en-us/dotnet/core/tools.
+        /// </summary>
+        internal static string SignCommandNoTimestamperWarning {
+            get {
+                return ResourceManager.GetString("SignCommandNoTimestamperWarning", resourceCulture);
             }
         }
         

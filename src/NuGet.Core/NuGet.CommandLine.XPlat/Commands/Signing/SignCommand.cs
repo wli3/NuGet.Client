@@ -112,7 +112,7 @@ namespace NuGet.CommandLine.XPlat
 
                     var args = new SignArgs()
                     {
-                        PackagePath = packagePaths.Value,
+                        PackagePaths = packagePaths.Values,
                         OutputDirectory = outputDirectory.Value(),
                         CertificatePath = path.Value(),
                         CertificateStoreName = storeName,

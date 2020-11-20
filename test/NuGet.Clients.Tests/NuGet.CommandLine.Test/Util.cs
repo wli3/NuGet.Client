@@ -1061,31 +1061,6 @@ EndProject";
                  </Project>".Replace("$NAME$", projectName);
         }
 
-        public static void ClearWebCache()
-        {
-            var nugetExe = Util.GetNuGetExePath();
-
-            var r = CommandRunner.Run(
-            nugetExe,
-            ".",
-            "locals http-cache -Clear",
-            waitForExit: true);
-
-            Assert.Equal(0, r.Item1);
-        }
-
-        public static Dictionary<string, string> SetCustomizedHttpCacheAndAddToEnv(string path)
-        {
-            // Override default http-cache using the NUGET_HTTP_CACHE_PATH environment variable.
-            var httpCache = Path.Combine(path, "v3-cache");
-            Directory.CreateDirectory(httpCache);
-            var envVars = new Dictionary<string, string>()
-                {
-                    { "NUGET_HTTP_CACHE_PATH", httpCache }
-                };
-            return envVars;
-        }
-
         public static string CreateBasicTwoProjectSolution(TestDirectory workingPath, string proj1ConfigFileName, string proj2ConfigFileName)
         {
             var repositoryPath = Path.Combine(workingPath, "Repository");

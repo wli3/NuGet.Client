@@ -128,7 +128,10 @@ namespace NuGet.CommandLine.XPlat
                         TimestampHashAlgorithm = timestampHashAlgorithm
                     };
 
-                    setLogLevel(XPlatUtility.MSBuildVerbosityToNuGetLogLevel(verbosity.Value()));
+                    if (verbosity.HasValue())
+                    {
+                        setLogLevel(XPlatUtility.MSBuildVerbosityToNuGetLogLevel(verbosity.Value()));
+                    }
 
                     var runner = getCommandRunner();
                     int result = await runner.ExecuteCommandAsync(args);

@@ -56,13 +56,14 @@ namespace Dotnet.Integration.Test
                 }
 
                 //Act
+                string args = $"nuget sign {packagePath} --certificate-fingerprint {_trustedTestCert.Source.Cert.Thumbprint} --certificate-store-name {_trustedTestCert.StoreName} --certificate-store-location {_trustedTestCert.StoreLocation}";
                 var result = _msbuildFixture.RunDotnet(
                     dir,
-                    $"nuget sign {packagePath} --certificate-fingerprint {_trustedTestCert.Source.Cert.Thumbprint} --certificate-store-name {_trustedTestCert.StoreName} --certificate-store-location {_trustedTestCert.StoreLocation}",
+                    args,
                     ignoreExitCode: true);
 
                 // Assert
-                result.Success.Should().BeTrue(because: result.AllOutput);
+                result.Success.Should().BeTrue(because: string.Join("---", args, result.AllOutput));
                 result.AllOutput.Should().Contain(_noTimestamperWarningCode);
             }
         }

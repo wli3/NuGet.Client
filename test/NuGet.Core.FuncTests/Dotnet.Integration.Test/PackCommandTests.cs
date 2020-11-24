@@ -4567,11 +4567,11 @@ namespace ClassLibrary
                 using (var nupkgReader = new PackageArchiveReader(nupkgPath))
                 {
                     var expectedFrameworks = expectedTargetFramework.Split(';').Where(fw => !string.IsNullOrEmpty(fw));
-
+                    var allFrameworks = expectedTargetFramework.Split(';').Where(fw => !string.IsNullOrEmpty(fw));
                     var frameworkItems = nupkgReader.NuspecReader.GetFrameworkRefGroups();
 
                     Assert.Equal(
-                        expectedFrameworks.Select(fw => NuGetFramework.Parse(fw)).ToHashSet(),
+                        allFrameworks.Select(fw => NuGetFramework.Parse(fw)).ToHashSet(),
                         frameworkItems.Select(t => t.TargetFramework).ToHashSet()
                     );
 

@@ -181,6 +181,13 @@ jobs:
         Invoke-RestMethod -Method Get -Uri $url -UseDefaultCredentials -OutFile $(Build.Repository.LocalPath)\\NuGet.Protocol.FuncTest.Config
 
   - task: PowerShell@1
+    displayName: "Clear local NuGet folders"
+    inputs:
+      scriptType: "inlineScript"
+      inlineScript: |
+        dotnet nuget locals all --clear
+
+  - task: PowerShell@1
     displayName: "Run Configure.ps1"
     inputs:
       scriptName: "$(Build.Repository.LocalPath)\\configure.ps1"

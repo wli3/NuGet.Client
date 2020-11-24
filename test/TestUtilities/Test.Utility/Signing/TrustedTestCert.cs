@@ -68,7 +68,6 @@ namespace Test.Utility.Signing
 #endif
             if (RuntimeEnvironmentHelper.IsMacOSX)
             {
-                StoreName = storeName;
                 StoreLocation = storeLocation;
                 AddCertificateToStoreForMacOSX();
             }

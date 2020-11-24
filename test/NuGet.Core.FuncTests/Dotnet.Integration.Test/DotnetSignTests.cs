@@ -63,7 +63,7 @@ namespace Dotnet.Integration.Test
                     ignoreExitCode: true);
 
                 // Assert
-                result.Success.Should().BeTrue(because: string.Join("---", args, result.AllOutput));
+                result.Success.Should().BeTrue(because: string.Join("$$", args, result.AllOutput));
                 result.AllOutput.Should().Contain(_noTimestamperWarningCode);
             }
         }

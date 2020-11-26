@@ -8,8 +8,10 @@ using System.Linq;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using Dotnet.Integration.Test;
 using NuGet.Packaging.Signing;
 using NuGet.Test.Utility;
+using NuGet;
 using Test.Utility.Signing;
 
 namespace Dotnet.Integration.Test
@@ -23,6 +25,16 @@ namespace Dotnet.Integration.Test
         private const int _invalidCertChainLength = 2;
 
         private TrustedTestCert<TestCertificate> _trustedTestCert;
+        private TrustedTestCert<TestCertificate> _trustedTestCertWithInvalidEku;
+        private TrustedTestCert<TestCertificate> _trustedTestCertExpired;
+        private TrustedTestCert<TestCertificate> _trustedTestCertNotYetValid;
+        private TrustedTestCert<X509Certificate2> _trustedTimestampRoot;
+        private TrustedTestCert<X509Certificate2> _untrustedSelfIssuedCertificateInCertificateStore;
+        private TrustedTestCertificateChain _trustedTestCertChain;
+        private TrustedTestCertificateChain _revokedTestCertChain;
+        private TrustedTestCertificateChain _revocationUnknownTestCertChain;
+        private IList<ISignatureVerificationProvider> _trustProviders;
+        private SigningSpecifications _signingSpecifications;
         private MockServer _crlServer;
         private bool _crlServerRunning;
         private object _crlServerRunningLock = new object();
@@ -47,6 +59,170 @@ namespace Dotnet.Integration.Test
                 }
 
                 return _trustedTestCert;
+            }
+        }
+
+        public TrustedTestCert<TestCertificate> TrustedTestCertificateWithInvalidEku
+        {
+            get
+            {
+                if (_trustedTestCertWithInvalidEku == null)
+                {
+                    var actionGenerator = SigningTestUtility.CertificateModificationGeneratorForInvalidEkuCert;
+
+                    // Add the cert to Root CA list in LocalMachine as it does not prompt a dialog
+                    // This makes all the associated tests to require admin privilege
+                    _trustedTestCertWithInvalidEku = TestCertificate.Generate(actionGenerator).WithPrivateKeyAndTrust(StoreName.Root);
+                }
+
+                return _trustedTestCertWithInvalidEku;
+            }
+        }
+
+        public TrustedTestCert<TestCertificate> TrustedTestCertificateExpired
+        {
+            get
+            {
+                if (_trustedTestCertExpired == null)
+                {
+                    var actionGenerator = SigningTestUtility.CertificateModificationGeneratorExpiredCert;
+
+                    // Code Sign EKU needs trust to a root authority
+                    // Add the cert to Root CA list in LocalMachine as it does not prompt a dialog
+                    // This makes all the associated tests to require admin privilege
+                    _trustedTestCertExpired = TestCertificate.Generate(actionGenerator).WithPrivateKeyAndTrust(StoreName.Root);
+                }
+
+                return _trustedTestCertExpired;
+            }
+        }
+
+        public TrustedTestCert<TestCertificate> TrustedTestCertificateNotYetValid
+        {
+            get
+            {
+                if (_trustedTestCertNotYetValid == null)
+                {
+                    var actionGenerator = SigningTestUtility.CertificateModificationGeneratorNotYetValidCert;
+
+                    // Code Sign EKU needs trust to a root authority
+                    // Add the cert to Root CA list in LocalMachine as it does not prompt a dialog
+                    // This makes all the associated tests to require admin privilege
+                    _trustedTestCertNotYetValid = TestCertificate.Generate(actionGenerator).WithPrivateKeyAndTrust(StoreName.Root);
+                }
+
+                return _trustedTestCertNotYetValid;
+            }
+        }
+
+        public TrustedTestCertificateChain TrustedTestCertificateChain
+        {
+            get
+            {
+                if (_trustedTestCertChain == null)
+                {
+                    var certChain = SigningTestUtility.GenerateCertificateChain(_validCertChainLength, CrlServer.Uri, TestDirectory.Path);
+
+                    _trustedTestCertChain = new TrustedTestCertificateChain()
+                    {
+                        Certificates = certChain
+                    };
+
+                    SetUpCrlDistributionPoint();
+                }
+
+                return _trustedTestCertChain;
+            }
+        }
+
+        public TrustedTestCert<TestCertificate> RevokedTestCertificateWithChain
+        {
+            get
+            {
+                if (_revokedTestCertChain == null)
+                {
+                    var certChain = SigningTestUtility.GenerateCertificateChain(_invalidCertChainLength, CrlServer.Uri, TestDirectory.Path);
+
+                    _revokedTestCertChain = new TrustedTestCertificateChain()
+                    {
+                        Certificates = certChain
+                    };
+
+                    // mark leaf certificate as revoked
+                    _revokedTestCertChain.Certificates[0].Source.Crl.RevokeCertificate(_revokedTestCertChain.Leaf.Source.Cert);
+
+                    SetUpCrlDistributionPoint();
+                }
+
+                return _revokedTestCertChain.Leaf;
+            }
+        }
+
+        public TrustedTestCert<TestCertificate> RevocationUnknownTestCertificateWithChain
+        {
+            get
+            {
+                if (_revocationUnknownTestCertChain == null)
+                {
+                    var certChain = SigningTestUtility.GenerateCertificateChain(_invalidCertChainLength, CrlServer.Uri, TestDirectory.Path, configureLeafCrl: false);
+
+                    _revocationUnknownTestCertChain = new TrustedTestCertificateChain()
+                    {
+                        Certificates = certChain
+                    };
+
+                    SetUpCrlDistributionPoint();
+                }
+
+                return _revocationUnknownTestCertChain.Leaf;
+            }
+        }
+
+        public X509Certificate2 UntrustedSelfIssuedCertificateInCertificateStore
+        {
+            get
+            {
+                if (_untrustedSelfIssuedCertificateInCertificateStore == null)
+                {
+                    var certificate = SigningTestUtility.GenerateSelfIssuedCertificate(isCa: false);
+
+                    _untrustedSelfIssuedCertificateInCertificateStore = TrustedTestCert.Create(
+                        certificate,
+                        StoreName.My,
+                        StoreLocation.CurrentUser);
+                }
+
+                return new X509Certificate2(_untrustedSelfIssuedCertificateInCertificateStore.Source);
+            }
+        }
+
+        public IList<ISignatureVerificationProvider> TrustProviders
+        {
+            get
+            {
+                if (_trustProviders == null)
+                {
+                    _trustProviders = new List<ISignatureVerificationProvider>()
+                    {
+                        new SignatureTrustAndValidityVerificationProvider(),
+                        new IntegrityVerificationProvider()
+                    };
+                }
+
+                return _trustProviders;
+            }
+        }
+
+        public SigningSpecifications SigningSpecifications
+        {
+            get
+            {
+                if (_signingSpecifications == null)
+                {
+                    _signingSpecifications = SigningSpecifications.V1;
+                }
+
+                return _signingSpecifications;
             }
         }
 
@@ -130,6 +306,21 @@ namespace Dotnet.Integration.Test
                     _crlServerRunning = true;
                 }
             }
+        }
+
+        public async Task<ISigningTestServer> GetSigningTestServerAsync()
+        {
+            return await _testServer.Value;
+        }
+
+        public async Task<CertificateAuthority> GetDefaultTrustedCertificateAuthorityAsync()
+        {
+            return await _defaultTrustedCertificateAuthority.Value;
+        }
+
+        public async Task<TimestampService> GetDefaultTrustedTimestampServiceAsync()
+        {
+            return await _defaultTrustedTimestampService.Value;
         }
 
         public void Dispose()

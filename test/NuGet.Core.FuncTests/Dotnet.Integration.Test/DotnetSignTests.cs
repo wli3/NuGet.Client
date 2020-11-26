@@ -57,7 +57,6 @@ namespace Dotnet.Integration.Test
 
                 //Act
                 string args = $"nuget sign {packagePath} --certificate-fingerprint {_trustedTestCert.Source.Cert.Thumbprint} " +
-                        $"--certificate-password {_trustedTestCert.Source.Cert.PrivateKey} " +
                         $"--certificate-store-name {_trustedTestCert.StoreName} " +
                         $"--certificate-store-location {_trustedTestCert.StoreLocation}";
 

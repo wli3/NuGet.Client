@@ -98,6 +98,16 @@ namespace NuGet.Build.Tasks.Console
         {
             var dependencyGraphSpec = GetDependencyGraphSpec(entryProjectFilePath, globalProperties);
 
+            // Get user specified parameters for a binary logger
+            string dependencyGraphSpecPath = Environment.GetEnvironmentVariable("RESTORE_TASK_DEPENDENCYGRAPHSPEC_PATH");
+
+            // Attach the binary logger if Debug or binlog parameters were specified
+            if (!string.IsNullOrWhiteSpace(dependencyGraphSpecPath))
+            {
+                dependencyGraphSpec.Save(dependencyGraphSpecPath);
+            }
+
+
             // If the dependency graph spec is null, something went wrong evaluating the projects, so return false
             if (dependencyGraphSpec == null)
             {

@@ -18,6 +18,10 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" NoWarn="NU1605" />
+  </ItemGroup>
+  
   <Target Name="CopyFinalNuGetExeToOutputPath" AfterTargets="Build" Condition="'$(SkipILMergeOfNuGetExe)' != 'true'">
       <Copy SourceFiles="$(ArtifactsDirectory)$(VsixOutputDirName)\NuGet.exe"
             DestinationFolder="$(OutputPath)NuGet\" />

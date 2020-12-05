@@ -63,7 +63,7 @@ namespace NuGet.PackageManagement.VisualStudio
             Assumes.Present(vsProject);
             Assumes.Present(context);
 
-            ThreadHelper.ThrowIfNotOnUIThread();
+            await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             // The project must be an IVsHierarchy.
             var hierarchy = vsProject.VsHierarchy;
@@ -109,6 +109,8 @@ namespace NuGet.PackageManagement.VisualStudio
 
         private static UnconfiguredProject GetUnconfiguredProject(EnvDTE.Project project)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             var context = project as IVsBrowseObjectContext;
             if (context == null)
             {

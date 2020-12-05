@@ -12,6 +12,7 @@
     <ProjectReference Include="$(NuGetClientsSrcDirectory)NuGet.Console\NuGet.Console.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.TextManager.Interop" />
     <PackageReference Include="Newtonsoft.Json" NoWarn="NU1605" />
   </ItemGroup>
   <ItemGroup>

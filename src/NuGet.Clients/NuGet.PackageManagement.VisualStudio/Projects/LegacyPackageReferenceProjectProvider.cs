@@ -15,8 +15,6 @@ using NuGet.ProjectModel;
 using NuGet.VisualStudio;
 using VSLangProj150;
 using IAsyncServiceProvider = Microsoft.VisualStudio.Shell.IAsyncServiceProvider;
-using ProjectSystem = Microsoft.VisualStudio.ProjectSystem;
-
 
 namespace NuGet.PackageManagement.VisualStudio
 {
@@ -87,6 +85,8 @@ namespace NuGet.PackageManagement.VisualStudio
         private async Task<INuGetProjectServices> TryCreateProjectServicesAsync(
             IVsProjectAdapter vsProjectAdapter, bool forceCreate)
         {
+            await _threadingService.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             var componentModel = await _componentModel.GetValueAsync();
 
             // Check for RestoreProjectStyle property

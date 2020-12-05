@@ -20,7 +20,7 @@ namespace Commands.Test
 
     public class NugetPackageUtilsTests
     {
-        private readonly int DefaultTimeOut = (int)TimeSpan.FromMinutes(5).TotalMilliseconds;
+        private static readonly int DefaultTimeOut = (int)TimeSpan.FromMinutes(5).TotalMilliseconds;
 
         [Fact]
         public async Task PackageExpander_ExpandsPackage()
@@ -361,7 +361,7 @@ namespace Commands.Test
 
                         Func<CancellationToken, Task<bool>> action = (ct) =>
                         {
-                            Assert.ThrowsAnyAsync<IOException>(async () =>
+                            _ = Assert.ThrowsAnyAsync<IOException>(async () =>
                                 await PackageExtractor.InstallFromSourceAsync(
                                     identity,
                                     packageDownloader,

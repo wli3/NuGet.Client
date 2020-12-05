@@ -139,6 +139,8 @@ namespace NuGet.PackageManagement.VisualStudio
 
         private async System.Threading.Tasks.Task ShowWarningsForPackageReinstallationAsync(Solution solution)
         {
+            await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             Debug.Assert(solution != null);
 
             foreach (Project project in solution.Projects)

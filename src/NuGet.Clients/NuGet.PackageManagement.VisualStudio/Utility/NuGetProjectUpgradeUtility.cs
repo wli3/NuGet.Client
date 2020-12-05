@@ -94,6 +94,8 @@ namespace NuGet.PackageManagement.VisualStudio
 
         private static async Task<bool> IsProjectPackageReferenceCompatibleAsync(Project project)
         {
+            await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             var projectGuids = await project.GetProjectTypeGuidsAsync();
 
             if (projectGuids.Any(t => UnupgradeableProjectTypes.Contains(t)))
@@ -108,6 +110,8 @@ namespace NuGet.PackageManagement.VisualStudio
 
         public static bool IsPackagesConfigSelected(IVsMonitorSelection vsMonitorSelection)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             var selectedFileName = GetSelectedFileName(vsMonitorSelection);
             return !string.IsNullOrEmpty(selectedFileName) && Path.GetFileName(selectedFileName).Equals("packages.config", StringComparison.OrdinalIgnoreCase);
         }

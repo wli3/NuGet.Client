@@ -212,7 +212,7 @@ namespace NuGet.PackageManagement.VisualStudio
 
         private async Task AddProjectItemAsync(string filePath)
         {
-            ThreadHelper.ThrowIfNotOnUIThread();
+            await _threadingService.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             var folderPath = Path.GetDirectoryName(filePath);
             var fullPath = filePath;

@@ -452,6 +452,8 @@ namespace NuGet.PackageManagement.VisualStudio
         /// </summary>
         private bool DoesSolutionRequireAnInitialSaveAs()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             // Check if user is doing File - New File without saving the solution.
             var value = GetVSSolutionProperty((int)(__VSPROPID.VSPROPID_IsSolutionSaveAsRequired));
             if ((bool)value)
@@ -549,6 +551,8 @@ namespace NuGet.PackageManagement.VisualStudio
         {
             NuGetUIThreadHelper.JoinableTaskFactory.Run(async () =>
             {
+                await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
                 if (!string.IsNullOrEmpty(oldName) && await IsSolutionOpenAsync() && _solutionOpenedRaised)
                 {
                     await EnsureNuGetAndVsProjectAdapterCacheAsync();
@@ -603,6 +607,8 @@ namespace NuGet.PackageManagement.VisualStudio
         {
             NuGetUIThreadHelper.JoinableTaskFactory.Run(async () =>
             {
+                await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
                 if (await IsSolutionOpenAsync()
                     && await EnvDTEProjectUtility.IsSupportedAsync(envDTEProject)
                     && !EnvDTEProjectUtility.IsParentProjectExplicitlyUnsupported(envDTEProject)
@@ -621,7 +627,7 @@ namespace NuGet.PackageManagement.VisualStudio
 
         private async Task SetDefaultProjectNameAsync()
         {
-            ThreadHelper.ThrowIfNotOnUIThread();
+            await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             IEnumerable<object> startupProjects;
 

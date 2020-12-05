@@ -130,7 +130,11 @@ namespace NuGet.PackageManagement.VisualStudio
 
         private IEnumerable<Reference> GetVSProjectReferences()
         {
+            _threadingService.ThrowIfNotOnUIThread();
+
+#pragma warning disable VSTHRD010 // Invoke single-threaded types on Main thread
             var langProject = _vsProjectAdapter.Project.Object as VSProject;
+#pragma warning restore VSTHRD010 // Invoke single-threaded types on Main thread
             if (langProject != null)
             {
                 return langProject.References.Cast<Reference>();
@@ -154,6 +158,7 @@ namespace NuGet.PackageManagement.VisualStudio
 
             // Get all items in the hierarchy, this includes project references, files, and everything else.
             IEnumHierarchyItems items;
+#pragma warning disable VSTHRD010 // Invoke single-threaded types on Main thread
             if (ErrorHandler.Succeeded(itemsFactory.EnumHierarchyItems(
                 hierarchy,
                 (uint)__VSEHI.VSEHI_Leaf,
@@ -202,6 +207,7 @@ namespace NuGet.PackageManagement.VisualStudio
                     }
                 }
             }
+#pragma warning restore VSTHRD010 // Invoke single-threaded types on Main thread
 
             return excludedReferences;
         }

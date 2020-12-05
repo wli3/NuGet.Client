@@ -3,6 +3,7 @@
 
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.Shell;
 using NuGet.ProjectManagement;
 using NuGet.VisualStudio;
 using Task = System.Threading.Tasks.Task;
@@ -53,6 +54,8 @@ namespace NuGet.PackageManagement.VisualStudio
 
         public override void RemoveFile(string path)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             if (string.IsNullOrEmpty(path))
             {
                 return;

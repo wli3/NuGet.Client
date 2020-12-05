@@ -47,6 +47,8 @@ namespace NuGet.PackageManagement.VisualStudio
 
         private static async Task<bool> SupportsBindingRedirectsAsync(EnvDTE.Project Project)
         {
+            await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             return (Project.Kind != null && ProjectType.IsSupportedForBindingRedirects(Project.Kind))
                 && !await Project.IsWindowsStoreAppAsync();
         }
@@ -78,8 +80,7 @@ namespace NuGet.PackageManagement.VisualStudio
         {
             Assumes.Present(vsProjectAdapter);
 
-            // Need to be on the UI thread
-            ThreadHelper.ThrowIfNotOnUIThread();
+            await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             var envDTEProjectUniqueName = vsProjectAdapter.UniqueName;
             if (visitedProjects.Contains(envDTEProjectUniqueName))

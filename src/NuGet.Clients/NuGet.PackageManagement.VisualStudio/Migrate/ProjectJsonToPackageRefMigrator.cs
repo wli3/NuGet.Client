@@ -59,7 +59,7 @@ namespace NuGet.PackageManagement.VisualStudio
 
         private static async Task MigrateDependenciesAsync(BuildIntegratedNuGetProject project, PackageSpec packageSpec)
         {
-            ThreadHelper.ThrowIfNotOnUIThread();
+            await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             if (packageSpec.TargetFrameworks.Count > 1)
             {

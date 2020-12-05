@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -20,7 +19,6 @@ using NuGet.Common;
 using NuGet.Frameworks;
 using NuGet.PackageManagement.Utility;
 using NuGet.ProjectManagement;
-using NuGet.ProjectModel;
 using NuGet.VisualStudio;
 using PathUtility = NuGet.Common.PathUtility;
 using Task = System.Threading.Tasks.Task;
@@ -189,12 +187,14 @@ namespace NuGet.PackageManagement.VisualStudio
             });
         }
 
-        private Task AddFileCoreAsync(string path, Action addFile)
+        private async Task AddFileCoreAsync(string path, Action addFile)
         {
+            await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             // Do not try to add file to project, if the path is null or empty.
             if (string.IsNullOrEmpty(path))
             {
-                return Task.FromResult(false);
+                return;
             }
 
             var fileExistsInProject = FileExistsInProject(path);
@@ -222,11 +222,9 @@ namespace NuGet.PackageManagement.VisualStudio
                 addFile();
                 if (!fileExistsInProject)
                 {
-                    return AddFileToProjectAsync(path);
+                    await AddFileToProjectAsync(path);
                 }
             }
-
-            return Task.FromResult(false);
         }
 
         public void AddExistingFile(string path)
@@ -262,7 +260,7 @@ namespace NuGet.PackageManagement.VisualStudio
         /// </summary>
         protected virtual async Task AddFileToProjectAsync(string path)
         {
-            ThreadHelper.ThrowIfNotOnUIThread();
+            await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             if (ExcludeFile(path))
             {
@@ -1001,7 +999,7 @@ namespace NuGet.PackageManagement.VisualStudio
 
         private async Task AddProjectItemAsync(string filePath, string folderPath, bool createFolderIfNotExists)
         {
-            ThreadHelper.ThrowIfNotOnUIThread();
+            await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             var container = await GetProjectItemsAsync(folderPath, createFolderIfNotExists);
 

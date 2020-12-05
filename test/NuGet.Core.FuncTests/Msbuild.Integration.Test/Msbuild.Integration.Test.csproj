@@ -16,6 +16,7 @@
     <PackageReference Include="Microsoft.Build.Runtime" />
     <PackageReference Include="Microsoft.CodeAnalysis.Build.Tasks" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <PackageReference Include="Newtonsoft.Json" NoWarn="NU1605" />
   </ItemGroup>
   
   <ItemGroup>

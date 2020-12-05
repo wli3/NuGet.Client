@@ -80,7 +80,15 @@ namespace NuGet.PackageManagement.VisualStudio
             _threadingService = GetGlobalService<IVsProjectThreadingService>();
             Assumes.Present(_threadingService);
 
-            _asVSProject4 = new Lazy<VSProject4>(() => vsProjectAdapter.Project.Object as VSProject4);
+            _asVSProject4 = new Lazy<VSProject4>(
+                () =>
+                {
+                    _threadingService.ThrowIfNotOnUIThread();
+
+#pragma warning disable VSTHRD010 // Invoke single-threaded types on Main thread
+                    return vsProjectAdapter.Project.Object as VSProject4;
+#pragma warning restore VSTHRD010 // Invoke single-threaded types on Main thread
+                });
 
             ScriptService = new VsProjectScriptHostService(vsProjectAdapter, this);
         }

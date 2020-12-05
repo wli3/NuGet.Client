@@ -2,14 +2,11 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using Microsoft.VisualStudio.Shell;
 using NuGet.ProjectManagement;
 using NuGet.VisualStudio;
-using EnvDTEProject = EnvDTE.Project;
-using EnvDTEProjectItems = EnvDTE.ProjectItems;
 using Task = System.Threading.Tasks.Task;
 
 namespace NuGet.PackageManagement.VisualStudio
@@ -27,7 +24,7 @@ namespace NuGet.PackageManagement.VisualStudio
         {
             get
             {
-                if (String.IsNullOrEmpty(_projectName))
+                if (string.IsNullOrEmpty(_projectName))
                 {
                     NuGetUIThreadHelper.JoinableTaskFactory.Run(async delegate
                         {
@@ -76,6 +73,8 @@ namespace NuGet.PackageManagement.VisualStudio
 
         protected override async Task AddFileToProjectAsync(string path)
         {
+            await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             if (ExcludeFile(path))
             {
                 return;

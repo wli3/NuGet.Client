@@ -68,11 +68,13 @@ namespace NuGet.StaFact
 
                         // Arrange to pump messages to execute any async work associated with the test.
                         var frame = new DispatcherFrame();
-                        Task.Run(async delegate
+                        _ = Task.Run(async delegate
                         {
                             try
                             {
+#pragma warning disable VSTHRD003 // Avoid awaiting foreign Tasks
                                 await testCaseTask;
+#pragma warning restore VSTHRD003 // Avoid awaiting foreign Tasks
                             }
                             finally
                             {
@@ -138,7 +140,9 @@ namespace NuGet.StaFact
             }
             else
             {
+#pragma warning disable VSTHRD002 // Avoid problematic synchronous waits
                 taskCompletionSource.SetResult(template.Result);
+#pragma warning restore VSTHRD002 // Avoid problematic synchronous waits
             }
         }
     }

@@ -18,6 +18,18 @@
     <ProjectReference Include="$(NuGetClientsSrcDirectory)NuGet.VisualStudio.Internal.Contracts\NuGet.VisualStudio.Internal.Contracts.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.RpcContracts" />
+    <PackageReference Include="Microsoft.VisualStudio.Telemetry" />
+    <PackageReference Include="Newtonsoft.Json" NoWarn="NU1605" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="App.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <Import Project="$(BuildCommonDirectory)common.targets" />
   <Import Project="$(BuildCommonDirectory)embedinterop.targets" />
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />

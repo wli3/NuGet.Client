@@ -3,6 +3,7 @@
 
 using System.IO;
 using EnvDTE;
+using Microsoft.VisualStudio.Shell;
 using NuGet.ProjectManagement;
 
 namespace NuGet.PackageManagement.VisualStudio
@@ -11,6 +12,8 @@ namespace NuGet.PackageManagement.VisualStudio
     {
         public static void EnsureCheckedOutIfExists(SourceControl sourceControl, string fullPath)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             if (File.Exists(fullPath))
             {
                 FileSystemUtility.MakeWritable(fullPath);

@@ -6,7 +6,6 @@ using System.ComponentModel.Composition;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using NuGet.VisualStudio;
 
 namespace NuGet.PackageManagement.VisualStudio
 {
@@ -14,10 +13,10 @@ namespace NuGet.PackageManagement.VisualStudio
     public class OptionsPageActivator : IOptionsPageActivator
     {
         // GUID of the Package Sources page, defined in PackageSourcesOptionsPage.cs
-        private const string _packageSourcesGUID = "2819C3B6-FC75-4CD5-8C77-877903DE864C";
+        private const string PackageSourcesGUID = "2819C3B6-FC75-4CD5-8C77-877903DE864C";
 
         // GUID of the General page, defined in GeneralOptionsPage.cs
-        private const string _generalGUID = "0F052CF7-BF62-4743-B190-87FA4D49421E";
+        private const string GeneralGUID = "0F052CF7-BF62-4743-B190-87FA4D49421E";
 
         private Action _closeCallback;
         private readonly Lazy<IVsUIShell> _vsUIShell;
@@ -51,14 +50,16 @@ namespace NuGet.PackageManagement.VisualStudio
 
         public void ActivatePage(OptionsPage page, Action closeCallback)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             _closeCallback = closeCallback;
             if (page == OptionsPage.General)
             {
-                ShowOptionsPage(_generalGUID);
+                ShowOptionsPage(GeneralGUID);
             }
             else if (page == OptionsPage.PackageSources)
             {
-                ShowOptionsPage(_packageSourcesGUID);
+                ShowOptionsPage(PackageSourcesGUID);
             }
             else
             {

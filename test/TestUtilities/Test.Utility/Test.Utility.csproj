@@ -51,12 +51,15 @@
   <ItemGroup>
     <PackageReference Include="Portable.BouncyCastle" />
     <PackageReference Include="Newtonsoft.Json" NoWarn="NU1605" />
+    <PackageReference Include="System.Collections.Immutable" />
     <PackageReference Include="xunit" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == '$(NETFXTargetFramework)' ">
+    <PackageReference Include="Microsoft.ServiceHub.Framework" />
     <PackageReference Include="Microsoft.VisualStudio.ProjectSystem" PrivateAssets="All" />
     <PackageReference Include="Microsoft.VisualStudio.Shell.15.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.VisualStudio.Telemetry" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == '$(NETFXTargetFramework)' ">

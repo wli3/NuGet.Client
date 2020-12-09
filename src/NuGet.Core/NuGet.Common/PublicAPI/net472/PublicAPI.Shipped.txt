@@ -541,6 +541,7 @@ static NuGet.Common.MSBuildStringUtility.TrimAndGetNullForEmpty(string s) -> str
 static NuGet.Common.NetworkProtocolUtility.SetConnectionLimit() -> void
 static NuGet.Common.NuGetEnvironment.GetDotNetLocation() -> string
 static NuGet.Common.NuGetEnvironment.GetFolderPath(NuGet.Common.NuGetFolderPath folder) -> string
+static NuGet.Common.NuGetEnvironment.GetFolderPath(NuGet.Common.SpecialFolder folder) -> string
 static NuGet.Common.NullLogger.Instance.get -> NuGet.Common.ILogger
 static NuGet.Common.PackagingLogMessage.CreateError(string message, NuGet.Common.NuGetLogCode code) -> NuGet.Common.PackagingLogMessage
 static NuGet.Common.PackagingLogMessage.CreateMessage(string message, NuGet.Common.LogLevel logLevel) -> NuGet.Common.PackagingLogMessage

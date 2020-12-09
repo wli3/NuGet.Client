@@ -1,3 +1,12 @@
+NuGet.Common.NuGetEnvironment.SpecialFolder
+NuGet.Common.NuGetEnvironment.SpecialFolder.ApplicationData = 4 -> NuGet.Common.NuGetEnvironment.SpecialFolder
+NuGet.Common.NuGetEnvironment.SpecialFolder.CommonApplicationData = 3 -> NuGet.Common.NuGetEnvironment.SpecialFolder
+NuGet.Common.NuGetEnvironment.SpecialFolder.LocalApplicationData = 5 -> NuGet.Common.NuGetEnvironment.SpecialFolder
+NuGet.Common.NuGetEnvironment.SpecialFolder.ProgramFiles = 1 -> NuGet.Common.NuGetEnvironment.SpecialFolder
+NuGet.Common.NuGetEnvironment.SpecialFolder.ProgramFilesX86 = 0 -> NuGet.Common.NuGetEnvironment.SpecialFolder
+NuGet.Common.NuGetEnvironment.SpecialFolder.UserProfile = 2 -> NuGet.Common.NuGetEnvironment.SpecialFolder
 NuGet.Common.NuGetLogCode.NU5501 = 5501 -> NuGet.Common.NuGetLogCode
 NuGet.Common.NuGetLogCode.NU1012 = 1012 -> NuGet.Common.NuGetLogCode
 NuGet.Common.NuGetLogCode.NU5045 = 5045 -> NuGet.Common.NuGetLogCode
+static NuGet.Common.NuGetEnvironment.GetFolderPath(NuGet.Common.NuGetEnvironment.SpecialFolder folder) -> string
+static NuGet.Common.NuGetEnvironment.GetFolderPath(object programFilesX86) -> object

@@ -531,7 +531,7 @@ namespace NuGet.CommandLine.Test
         {
             var resource = new JObject
             {
-                { "@id", $"{server.Uri}flat" },
+                { "@id", $"{server.Uri}v3-flatcontainer" },
                 { "@type", "PackageBaseAddress/3.0.0" }
             };
 
@@ -762,7 +762,7 @@ namespace NuGet.CommandLine.Test
 
             var catalogEntry = new JObject();
             item.Add(new JProperty("catalogEntry", catalogEntry));
-            item.Add(new JProperty("packageContent", $"{server.Uri}packages/{id}.{version}.nupkg"));
+            item.Add(new JProperty("packageContent", $"{server.Uri}v3-flatcontainer/{id}/{version}/{id}.{version}.nupkg"));
             item.Add(new JProperty("registration", indexUrl));
 
             catalogEntry.Add(new JProperty("@id",

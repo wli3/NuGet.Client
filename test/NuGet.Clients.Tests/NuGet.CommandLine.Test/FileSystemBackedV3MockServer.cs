@@ -55,7 +55,7 @@ namespace NuGet.CommandLine.Test
                 var path = GetRequestUrlAbsolutePath(request);
                 var parts = request.Url.AbsolutePath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
-                if (path.StartsWith("/flat/") && path.EndsWith("/index.json"))
+                if (path.StartsWith("/v3-flatcontainer/") && path.EndsWith("/index.json"))
                 {
                     return new Action<HttpListenerResponse>(response =>
                     {
@@ -74,7 +74,7 @@ namespace NuGet.CommandLine.Test
                         SetResponseContent(response, versionsJson.ToString());
                     });
                 }
-                else if (path.StartsWith("/flat/") && path.EndsWith(".nupkg"))
+                else if (path.StartsWith("/v3-flatcontainer/") && path.EndsWith(".nupkg"))
                 {
                     var file = new FileInfo(Path.Combine(_packageDirectory, parts.Last()));
 
@@ -118,30 +118,6 @@ namespace NuGet.CommandLine.Test
                             var packageToListedMapping = packages.Select(e => new KeyValuePair<PackageIdentity, bool>(e.Identity, !UnlistedPackages.Contains(e.Identity))).ToArray();
                             MockResponse mockResponse = _builder.BuildRegistrationIndexResponse(this, packageToListedMapping);
                             SetResponseContent(response, mockResponse.Content);
-                        });
-                    }
-                    else
-                    {
-                        return new Action<HttpListenerResponse>(response =>
-                        {
-                            response.StatusCode = 404;
-                        });
-                    }
-                }
-                else if (path.StartsWith("/packages/"))
-                {
-                    var file = new FileInfo(Path.Combine(_packageDirectory, parts.Last()));
-
-                    if (file.Exists)
-                    {
-                        return new Action<HttpListenerResponse>(response =>
-                        {
-                            response.ContentType = "application/zip";
-                            using (var stream = file.OpenRead())
-                            {
-                                var content = stream.ReadAllBytes();
-                                MockServer.SetResponseContent(response, content);
-                            }
                         });
                     }
                     else

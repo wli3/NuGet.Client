@@ -85,11 +85,13 @@ namespace NuGet.PackageManagement.VisualStudio
                 return null;
             }
 
-            _projectSystemCache.TryGetNuGetProject(DefaultNuGetProjectName, out var defaultNuGetProject);
+            _projectSystemCache.TryGetNuGetProject(DefaultNuGetProjectName, out var defaultNuGetProject, out _);
             return defaultNuGetProject;
         }
 
         public string DefaultNuGetProjectName { get; set; }
+
+        private Dictionary<string, IReadOnlyList<IAssetsLogMessage>> _nominationErrors = new Dictionary<string, IReadOnlyList<IAssetsLogMessage>>();
 
         #region Events
 
@@ -230,12 +232,34 @@ namespace NuGet.PackageManagement.VisualStudio
             await EnsureInitializeAsync();
 
             NuGetProject nuGetProject = null;
+            IReadOnlyList<IAssetsLogMessage> nominationMessages = null;
+
             // Project system cache could be null when solution is not open.
             if (_projectSystemCache != null)
             {
-                _projectSystemCache.TryGetNuGetProject(nuGetProjectSafeName, out nuGetProject);
+                _projectSystemCache.TryGetNuGetProject(nuGetProjectSafeName, out nuGetProject, out nominationMessages);
+                if (nuGetProject != null)
+                {
+                    _nominationErrors[nuGetProjectSafeName] = nominationMessages;
+                }
             }
+
             return nuGetProject;
+        }
+
+        public IReadOnlyList<IAssetsLogMessage> GetNominationErrors(string nuGetProjectSafeName)
+        {
+            if (string.IsNullOrWhiteSpace(nuGetProjectSafeName))
+            {
+                return null;
+            }
+
+            if (_nominationErrors.ContainsKey(nuGetProjectSafeName))
+            {
+                return _nominationErrors[nuGetProjectSafeName];
+            }
+
+            return null;
         }
 
         // Return short name if it's non-ambiguous.
@@ -577,7 +601,7 @@ namespace NuGet.PackageManagement.VisualStudio
                         var vsProjectAdapter = await _vsProjectAdapterProvider.CreateAdapterForFullyLoadedProjectAsync(envDTEProject);
                         await AddVsProjectAdapterToCacheAsync(vsProjectAdapter);
 
-                        _projectSystemCache.TryGetNuGetProject(envDTEProject.Name, out var nuGetProject);
+                        _projectSystemCache.TryGetNuGetProject(envDTEProject.Name, out var nuGetProject, out _);
 
                         NuGetProjectRenamed?.Invoke(this, new NuGetProjectEventArgs(nuGetProject));
 
@@ -609,7 +633,7 @@ namespace NuGet.PackageManagement.VisualStudio
             ThreadHelper.ThrowIfNotOnUIThread();
 
             NuGetProject nuGetProject;
-            _projectSystemCache.TryGetNuGetProject(envDTEProject.Name, out nuGetProject);
+            _projectSystemCache.TryGetNuGetProject(envDTEProject.Name, out nuGetProject, out _);
 
             RemoveVsProjectAdapterFromCache(envDTEProject.FullName);
 
@@ -629,7 +653,7 @@ namespace NuGet.PackageManagement.VisualStudio
                     var vsProjectAdapter = await _vsProjectAdapterProvider.CreateAdapterForFullyLoadedProjectAsync(envDTEProject);
                     await AddVsProjectAdapterToCacheAsync(vsProjectAdapter);
                     NuGetProject nuGetProject;
-                    _projectSystemCache.TryGetNuGetProject(envDTEProject.Name, out nuGetProject);
+                    _projectSystemCache.TryGetNuGetProject(envDTEProject.Name, out nuGetProject, out _);
 
                     NuGetProjectAdded?.Invoke(this, new NuGetProjectEventArgs(nuGetProject));
                 }
@@ -955,6 +979,21 @@ namespace NuGet.PackageManagement.VisualStudio
             {
                 var vsProjectAdapter = await _vsProjectAdapterProvider.CreateAdapterForFullyLoadedProjectAsync(project);
                 nuGetProject = await CreateNuGetProjectAsync(vsProjectAdapter, projectContext);
+            }
+
+            IReadOnlyList<IAssetsLogMessage> nominationMessages = GetNominationErrors(projectSafeName);
+
+            // Propogate nomination errors
+            if (nominationMessages?.Count > 0)
+            {
+                IEnumerable<string> messages = nominationMessages
+                    .Where(assetsLogMessage => assetsLogMessage.Level == LogLevel.Error)
+                    .Select(assetsLogMessage => assetsLogMessage.Message);
+
+                var messageString = string.Join(" ", messages);
+                NuGetProjectContext.ReportError(messageString);
+
+                //TODO: Need t o explicitly clear errors once resolved?
             }
 
             return nuGetProject;

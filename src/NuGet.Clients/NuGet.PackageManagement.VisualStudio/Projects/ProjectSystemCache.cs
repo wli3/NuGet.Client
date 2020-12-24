@@ -43,7 +43,7 @@ namespace NuGet.PackageManagement.VisualStudio
         // Event used to inform VSSolutionManager that cache is has been updated
         public event EventHandler<NuGetEventArgs<string>> CacheUpdated;
 
-        public bool TryGetNuGetProject(string name, out NuGetProject project)
+        public bool TryGetNuGetProject(string name, out NuGetProject project, out IReadOnlyList<IAssetsLogMessage> additionalMessages)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -51,11 +51,13 @@ namespace NuGet.PackageManagement.VisualStudio
             }
 
             project = null;
+            additionalMessages = null;
 
             CacheEntry cacheEntry;
             if (TryGetCacheEntry(name, out cacheEntry))
             {
                 project = cacheEntry.NuGetProject;
+                additionalMessages = cacheEntry.AdditionalMessages;
             }
 
             return project != null;

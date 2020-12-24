@@ -34,7 +34,7 @@ namespace NuGet.VisualStudio
         /// <param name="name">Project name, full path, unique name, or project id (guid).</param>
         /// <param name="nuGetProject">Desired project object, not initialized if not found.</param>
         /// <returns>True if found, false otherwise.</returns>
-        bool TryGetNuGetProject(string name, out NuGetProject nuGetProject);
+        bool TryGetNuGetProject(string name, out NuGetProject nuGetProject, out IReadOnlyList<IAssetsLogMessage> nominationMessages);
 
         /// <summary>
         /// Retrieves instance of <see cref="IVsProjectAdapter"/> associated with project name.

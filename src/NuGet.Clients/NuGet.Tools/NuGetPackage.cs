@@ -490,7 +490,7 @@ namespace NuGetVSExtension
 
             var uniqueName = project.GetUniqueName();
             var nugetProject = await SolutionManager.Value.GetNuGetProjectAsync(uniqueName);
-
+            
             // If we failed to generate a cache entry in the solution manager something went wrong.
             if (nugetProject == null)
             {

@@ -158,7 +158,7 @@ namespace NuGet.ProjectModel.Test
             Assert.Equal(VersionRange.All, range);
         }
 
-        [Fact]
+        [Fact] //TODO NK
         public void PackageSpecReader_SetsPlatformDependencyFlagsCorrectly()
         {
             // Arrange
@@ -177,7 +177,6 @@ namespace NuGet.ProjectModel.Test
             // Assert
             var dep = actual.Dependencies.FirstOrDefault(d => d.Name.Equals("redist"));
             Assert.NotNull(dep);
-            Assert.Equal(LibraryDependencyTypeKeyword.Platform.CreateType(), dep.Type);
 
             var expected = LibraryIncludeFlags.Build |
                 LibraryIncludeFlags.Compile |
@@ -205,7 +204,6 @@ namespace NuGet.ProjectModel.Test
             // Assert
             var dep = actual.Dependencies.FirstOrDefault(d => d.Name.Equals("redist"));
             Assert.NotNull(dep);
-            Assert.Equal(LibraryDependencyTypeKeyword.Platform.CreateType(), dep.Type);
 
             var expected = LibraryIncludeFlags.Build |
                 LibraryIncludeFlags.Compile;
@@ -232,7 +230,6 @@ namespace NuGet.ProjectModel.Test
             // Assert
             var dep = actual.Dependencies.FirstOrDefault(d => d.Name.Equals("redist"));
             Assert.NotNull(dep);
-            Assert.Equal(LibraryDependencyTypeKeyword.Platform.CreateType(), dep.Type);
 
             var expected = LibraryIncludeFlags.Analyzers;
             Assert.Equal(expected, dep.IncludeType);

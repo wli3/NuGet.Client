@@ -101,6 +101,7 @@ namespace NuGet.LibraryModel
             DeclareOnOff("BecomesNupkgDependency", LibraryDependencyTypeFlag.BecomesNupkgDependency, emptyFlags);
         }
 
+        [Obsolete]
         public LibraryDependencyType CreateType()
         {
             return LibraryDependencyType.Default.Combine(FlagsToAdd, FlagsToRemove);

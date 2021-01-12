@@ -74,13 +74,6 @@ namespace NuGet.PackageManagement.UI
             return Service.SavePackageSourceContextInfosAsync(sources, cancellationToken);
         }
 
-#pragma warning disable CS0618 // Type or member is obsolete
-        public ValueTask SavePackageSourcesAsync(IReadOnlyList<PackageSource> sources, PackageSourceUpdateOptions packageSourceUpdateOptions, CancellationToken cancellationToken)
-        {
-            return Service.SavePackageSourcesAsync(sources, packageSourceUpdateOptions, cancellationToken);
-        }
-#pragma warning restore CS0618 // Type or member is obsolete
-
         public ValueTask<string?> GetActivePackageSourceNameAsync(CancellationToken cancellationToken)
         {
             return Service.GetActivePackageSourceNameAsync(cancellationToken);
@@ -97,10 +90,6 @@ namespace NuGet.PackageManagement.UI
             public ValueTask<IReadOnlyList<PackageSourceContextInfo>> GetPackageSourcesAsync(CancellationToken cancellationToken) => new ValueTask<IReadOnlyList<PackageSourceContextInfo>>(Array.Empty<PackageSourceContextInfo>());
 
             public ValueTask SavePackageSourceContextInfosAsync(IReadOnlyList<PackageSourceContextInfo> sources, CancellationToken cancellationToken) => new ValueTask();
-
-#pragma warning disable CS0618 // Type or member is obsolete
-            public ValueTask SavePackageSourcesAsync(IReadOnlyList<PackageSource> sources, PackageSourceUpdateOptions packageSourceUpdateOptions, CancellationToken cancellationToken) => new ValueTask();
-#pragma warning restore CS0618 // Type or member is obsolete
 
             public ValueTask<string?> GetActivePackageSourceNameAsync(CancellationToken cancellationToken) => new ValueTask<string?>();
         }

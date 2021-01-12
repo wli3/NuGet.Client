@@ -51,24 +51,6 @@ namespace NuGet.PackageManagement.VisualStudio
                 .ToList());
         }
 
-#pragma warning disable CS0618 // Type or member is obsolete
-        public ValueTask SavePackageSourcesAsync(IReadOnlyList<PackageSource> sources, PackageSourceUpdateOptions packageSourceUpdateOptions, CancellationToken cancellationToken)
-        {
-            var packageSources2 = _sharedServiceState.SourceRepositoryProvider.PackageSourceProvider as IPackageSourceProvider2;
-#pragma warning restore CS0618 // Type or member is obsolete
-
-            if (packageSources2 != null)
-            {
-                packageSources2.SavePackageSources(sources, packageSourceUpdateOptions);
-            }
-            else
-            {
-                _sharedServiceState.SourceRepositoryProvider.PackageSourceProvider.SavePackageSources(sources);
-            }
-
-            return new ValueTask();
-        }
-
         public ValueTask SavePackageSourceContextInfosAsync(IReadOnlyList<PackageSourceContextInfo> sources, CancellationToken cancellationToken)
         {
             IEnumerable<PackageSource> packageSources = GetPackageSourcesToUpdate(sources);

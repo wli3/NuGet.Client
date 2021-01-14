@@ -166,7 +166,6 @@ namespace NuGet.ProjectModel.Test
                            ""dependencies"": {
                              ""redist"": {
                                ""version"": ""1.0.0"",
-                               ""type"": ""platform""
                              }
                            }
                          }";
@@ -192,7 +191,6 @@ namespace NuGet.ProjectModel.Test
                            ""dependencies"": {
                              ""redist"": {
                                ""version"": ""1.0.0"",
-                               ""type"": ""platform"",
                                ""exclude"": ""analyzers""
                              }
                            }
@@ -1294,7 +1292,7 @@ namespace NuGet.ProjectModel.Test
         [InlineData("exclude")]
         [InlineData("include")]
         [InlineData("suppressParent")]
-        [InlineData("type")]
+        //[InlineData("type")]
         public void GetPackageSpec_WhenDependenciesDependencyValueIsArray_Throws(string propertyName)
         {
             var json = $"{{\"dependencies\":{{\"a\":{{\"{propertyName}\":[\"b\"]}}}}}}";
@@ -1774,7 +1772,7 @@ namespace NuGet.ProjectModel.Test
         [InlineData("exclude")]
         [InlineData("include")]
         [InlineData("suppressParent")]
-        [InlineData("type")]
+        //[InlineData("type")]
         public void GetPackageSpec_WhenFrameworksDependenciesDependencyValueIsArray_Throws(string propertyName)
         {
             var json = $"{{\"frameworks\":{{\"a\":{{\"dependencies\":{{\"b\":{{\"{propertyName}\":[\"c\"]}}}}}}}}}}";

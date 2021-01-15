@@ -81,6 +81,8 @@ namespace NuGet.Protocol
                     timeoutMessage: null,
                     token: cancellationToken).ConfigureAwait(false);
 
+                Console.WriteLine($"offset: {offset}, count:{count}");
+
                 return result;
             }
             catch (TimeoutException e)

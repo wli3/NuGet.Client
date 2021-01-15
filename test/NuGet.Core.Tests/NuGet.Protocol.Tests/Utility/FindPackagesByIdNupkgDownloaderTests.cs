@@ -15,12 +15,20 @@ using NuGet.Test.Utility;
 using NuGet.Versioning;
 using Test.Utility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace NuGet.Protocol.Tests
 {
     [Collection(nameof(NotThreadSafeResourceCollection))]
     public class FindPackagesByIdNupkgDownloaderTests
     {
+        private readonly ITestOutputHelper _output;
+
+        public FindPackagesByIdNupkgDownloaderTests(ITestOutputHelper output)
+        {
+            _output = output;
+        }
+
         [Theory]
         [InlineData(HttpStatusCode.NoContent, 1)]
         [InlineData(HttpStatusCode.NotFound, 1)]
@@ -174,7 +182,7 @@ namespace NuGet.Protocol.Tests
             using (var testDirectory = TestDirectory.Create())
             using (var cacheContext = new SourceCacheContext())
             {
-                var tc = await TestContext.CreateAsync(testDirectory);
+                var tc = await TestContext.CreateAsync(testDirectory, _output);
 
                 // Act
                 // This should record the cache entry in memory.
@@ -204,6 +212,7 @@ namespace NuGet.Protocol.Tests
                 Assert.Equal(tc.ExpectedContent, actualContentA);
                 Assert.Equal(tc.ExpectedContent, actualContentB);
                 Assert.Equal(1, tc.RequestCount);
+                _output.WriteLine("something");
             }
         }
 
@@ -306,7 +315,7 @@ namespace NuGet.Protocol.Tests
 
         private class TestContext
         {
-            public static async Task<TestContext> CreateAsync(TestDirectory testDirectory)
+            public static async Task<TestContext> CreateAsync(TestDirectory testDirectory, ITestOutputHelper testOutputHelper = null)
             {
                 var identity = new PackageIdentity("PackageA", NuGetVersion.Parse("1.0.0-Beta"));
 
@@ -318,10 +327,10 @@ namespace NuGet.Protocol.Tests
 
                 var expectedContent = File.ReadAllBytes(package.FullName);
 
-                return new TestContext(testDirectory, identity, expectedContent);
+                return new TestContext(testDirectory, identity, expectedContent, testOutputHelper);
             }
 
-            private TestContext(TestDirectory testDirectory, PackageIdentity identity, byte[] expectedContent)
+            private TestContext(TestDirectory testDirectory, PackageIdentity identity, byte[] expectedContent, ITestOutputHelper testOutputHelper = null)
             {
                 TestDirectory = testDirectory;
                 Identity = identity;
@@ -333,7 +342,7 @@ namespace NuGet.Protocol.Tests
                 HttpCacheDirectory = Path.Combine(testDirectory, "httpCache");
                 StatusCode = HttpStatusCode.OK;
 
-                Logger = new TestLogger();
+                Logger = new TestLogger(testOutputHelper);
                 DestinationStream = new MemoryStream();
 
                 Initialize();

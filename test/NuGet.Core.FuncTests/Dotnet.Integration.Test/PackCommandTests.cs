@@ -4567,7 +4567,7 @@ namespace ClassLibrary
                 using (var nupkgReader = new PackageArchiveReader(nupkgPath))
                 {
                     var expectedFrameworks = expectedTargetFramework.Split(';').Where(fw => !string.IsNullOrEmpty(fw));
-                    var allFrameworks = expectedTargetFramework.Split(';').Where(fw => !string.IsNullOrEmpty(fw));
+                    var allFrameworks = targetFrameworks.Split(';').Where(fw => !string.IsNullOrEmpty(fw));
                     var frameworkItems = nupkgReader.NuspecReader.GetFrameworkRefGroups();
 
                     Assert.Equal(

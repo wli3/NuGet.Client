@@ -96,7 +96,7 @@ namespace NuGet.Protocol.Tests
             using (var testDirectory = TestDirectory.Create())
             using (var cacheContext = new SourceCacheContext())
             {
-                var tc = await TestContext.CreateAsync(testDirectory);
+                var tc = await TestContext.CreateAsync(testDirectory, _output);
 
                 // Act
                 var nuspecReader = await tc.Target.GetNuspecReaderFromNupkgAsync(
@@ -111,6 +111,8 @@ namespace NuGet.Protocol.Tests
                 Assert.Equal(tc.Identity.Id, nuspecReader.GetId());
                 Assert.Equal(tc.Identity.Version.ToFullString(), nuspecReader.GetVersion().ToFullString());
                 Assert.Equal(1, tc.RequestCount);
+
+                _output.WriteLine("something");
             }
         }
 
@@ -212,7 +214,6 @@ namespace NuGet.Protocol.Tests
                 Assert.Equal(tc.ExpectedContent, actualContentA);
                 Assert.Equal(tc.ExpectedContent, actualContentB);
                 Assert.Equal(1, tc.RequestCount);
-                _output.WriteLine("something");
             }
         }
 

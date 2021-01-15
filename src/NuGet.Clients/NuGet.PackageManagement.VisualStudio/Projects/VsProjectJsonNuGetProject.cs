@@ -71,7 +71,7 @@ namespace NuGet.PackageManagement.VisualStudio
                 {
                     var platformMinVersionString = await _vsProjectAdapter
                         .BuildProperties
-                        .GetPropertyValueAsync(ProjectBuildProperties.TargetPlatformMinVersion);
+                        .GetPropertyValueAsync(ProjectBuildProperties.CLRSupport);
 
                     var platformMinVersion = !string.IsNullOrEmpty(platformMinVersionString)
                         ? new Version(platformMinVersionString)

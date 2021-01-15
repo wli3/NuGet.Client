@@ -544,6 +544,7 @@ namespace NuGet.ProjectModel
                     SetCentralDependencies(writer, framework.CentralPackageVersions.Values, compressed);
                     SetImports(writer, framework.Imports);
                     SetValueIfTrue(writer, "assetTargetFallback", framework.AssetTargetFallback);
+                    SetValueIfTrue(writer, "nativeSupport", framework.FrameworkName is MultipleCompatibilityFramework);
                     SetValueIfTrue(writer, "warn", framework.Warn);
                     SetDownloadDependencies(writer, framework.DownloadDependencies);
                     SetFrameworkReferences(writer, framework.FrameworkReferences);

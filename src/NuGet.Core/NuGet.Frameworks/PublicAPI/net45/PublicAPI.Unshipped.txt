@@ -1,0 +1,3 @@
+NuGet.Frameworks.MultipleCompatibilityFramework.Equals(NuGet.Frameworks.MultipleCompatibilityFramework other) -> bool
+override NuGet.Frameworks.MultipleCompatibilityFramework.Equals(object obj) -> bool
+override NuGet.Frameworks.MultipleCompatibilityFramework.GetHashCode() -> int

@@ -302,7 +302,7 @@ namespace NuGet.VisualStudio
             var projectPath = GetFullProjectPath(envDTEProject);
             var platformIdentifier = GetPropertyValue<string>(envDTEProject, ProjectBuildProperties.TargetPlatformIdentifier);
             var platformVersion = GetPropertyValue<string>(envDTEProject, ProjectBuildProperties.TargetPlatformVersion);
-            var platformMinVersion = GetPropertyValue<string>(envDTEProject, ProjectBuildProperties.TargetPlatformMinVersion);
+            var platformMinVersion = GetPropertyValue<string>(envDTEProject, ProjectBuildProperties.CLRSupport);
             var targetFrameworkMoniker = GetPropertyValue<string>(envDTEProject, ProjectBuildProperties.TargetFrameworkMoniker);
             var isManagementPackProject = IsManagementPackProject(envDTEProject);
             var isXnaWindowsPhoneProject = IsXnaWindowsPhoneProject(envDTEProject);

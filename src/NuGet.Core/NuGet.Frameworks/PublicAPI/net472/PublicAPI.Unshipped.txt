@@ -1,0 +1,8 @@
+NuGet.Frameworks.MultipleCompatibilityFramework
+NuGet.Frameworks.MultipleCompatibilityFramework.AsFallbackFramework() -> NuGet.Frameworks.FallbackFramework
+NuGet.Frameworks.MultipleCompatibilityFramework.Equals(NuGet.Frameworks.MultipleCompatibilityFramework other) -> bool
+NuGet.Frameworks.MultipleCompatibilityFramework.MultipleCompatibilityFramework(NuGet.Frameworks.NuGetFramework framework, NuGet.Frameworks.NuGetFramework secondaryFramework) -> void
+NuGet.Frameworks.MultipleCompatibilityFramework.RootFramework.get -> NuGet.Frameworks.NuGetFramework
+NuGet.Frameworks.MultipleCompatibilityFramework.SecondaryFramework.get -> NuGet.Frameworks.NuGetFramework
+override NuGet.Frameworks.MultipleCompatibilityFramework.Equals(object obj) -> bool
+override NuGet.Frameworks.MultipleCompatibilityFramework.GetHashCode() -> int

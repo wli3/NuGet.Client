@@ -1635,6 +1635,14 @@ namespace NuGet.ProjectModel
                         targetFrameworkInformation.AssetTargetFallback = ReadNextTokenAsBoolOrFalse(jsonReader, packageSpec.FilePath);
                         break;
 
+                    case "nativeSupport":
+                        var supportsNative = ReadNextTokenAsBoolOrFalse(jsonReader, packageSpec.FilePath);
+                        if (supportsNative)
+                        {
+                            targetFrameworkInformation.FrameworkName = new MultipleCompatibilityFramework(targetFrameworkInformation.FrameworkName, NuGetFramework.Parse("native0.0"));
+                        }
+                        break;
+
                     case "centralPackageVersions":
                         ReadCentralPackageVersions(
                             jsonReader,

@@ -233,17 +233,30 @@ namespace NuGet.Protocol.Tests
 
                 SourceRepository repository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
                 FindPackageByIdResource resource = await repository.GetResourceAsync<FindPackageByIdResource>();
+
                 string packageId = "Newtonsoft.Json";
                 NuGetVersion packageVersion = new NuGetVersion("12.0.1");
 
-
-                await resource.CopyNupkgToStreamAsync(
-                        packageId,
+                if (resource is HttpFileSystemBasedFindPackageByIdResource httpFileSystemBasedFindPackageByIdResource)
+                {
+                    var packageInfo = await httpFileSystemBasedFindPackageByIdResource.GetNupkgPackageContentUriAsync(packageId,
                         packageVersion,
                         tc.DestinationStream,
                         cacheContext,
                         tc.Logger,
                         cancellationToken);
+
+                    if (packageInfo.success)
+                    {
+                        await httpFileSystemBasedFindPackageByIdResource.CopyContentUriToStreamAsync(
+                            packageInfo.packageIdentity,
+                            packageInfo.contentUri,
+                            tc.DestinationStream,
+                            cacheContext,
+                            tc.Logger,
+                            cancellationToken);
+                    }
+                }
             }
         }
 

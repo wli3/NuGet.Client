@@ -143,6 +143,7 @@ namespace NuGet.Protocol
                         {
                             var networkStream = await response.Content.ReadAsStreamAsync();
                             var timeoutStream = new DownloadTimeoutStream(requestUri.ToString(), networkStream, request.DownloadTimeout);
+                            timeoutStream._log = log;
                             var inProgressEvent = new ProtocolDiagnosticInProgressHttpEvent(
                                 source,
                                 requestUri,

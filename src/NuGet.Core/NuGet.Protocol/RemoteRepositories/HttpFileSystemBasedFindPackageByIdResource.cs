@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Common;
@@ -273,8 +274,12 @@ namespace NuGet.Protocol
                 var packageInfos = await EnsurePackagesAsync(id, cacheContext, logger, cancellationToken);
 
                 PackageInfo packageInfo;
+                var httpClient = new HttpClient();
+                
                 if (packageInfos.TryGetValue(version, out packageInfo))
                 {
+                    var headResult = await httpClient.GetAsync(packageInfo.ContentUri, HttpCompletionOption.ResponseHeadersRead);
+                    logger.LogWarning(packageInfo.ContentUri + " total size:" + headResult.Content.Headers.ContentLength.ToString());
                     return await _nupkgDownloader.CopyNupkgToStreamAsync(
                         packageInfo.Identity,
                         packageInfo.ContentUri,

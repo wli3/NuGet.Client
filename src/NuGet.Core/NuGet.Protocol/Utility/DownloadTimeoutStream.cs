@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using NuGet.Common;
 
 namespace NuGet.Protocol
 {
@@ -13,6 +14,8 @@ namespace NuGet.Protocol
         private readonly string _downloadName;
         private readonly Stream _networkStream;
         private readonly TimeSpan _timeout;
+        internal ILogger _log;
+        private int _totalByte;
 
         public DownloadTimeoutStream(string downloadName, Stream networkStream, TimeSpan timeout)
         {
@@ -42,7 +45,9 @@ namespace NuGet.Protocol
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            return _networkStream.Read(buffer, offset, count);
+            var readCount = _networkStream.Read(buffer, offset, count); 
+            _log?.Log(LogLevel.Warning, $"Read - offset: {offset}, count:{count}, readCount: {readCount}");
+            return readCount;
         }
 
 #if !IS_CORECLR
@@ -80,8 +85,9 @@ namespace NuGet.Protocol
                     timeout: _timeout,
                     timeoutMessage: null,
                     token: cancellationToken).ConfigureAwait(false);
-
-                Console.WriteLine($"offset: {offset}, count:{count}");
+                _totalByte += result;
+                _log?.Log(LogLevel.Warning, $"ReadAsync - offset: {offset}, count:{count}, readCount: {result}, totalByte: {_totalByte}");
+                
 
                 return result;
             }

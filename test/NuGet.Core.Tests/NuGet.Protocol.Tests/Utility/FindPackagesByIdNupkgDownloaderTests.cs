@@ -111,8 +111,6 @@ namespace NuGet.Protocol.Tests
                 Assert.Equal(tc.Identity.Id, nuspecReader.GetId());
                 Assert.Equal(tc.Identity.Version.ToFullString(), nuspecReader.GetVersion().ToFullString());
                 Assert.Equal(1, tc.RequestCount);
-
-                _output.WriteLine("something");
             }
         }
 
@@ -224,38 +222,28 @@ namespace NuGet.Protocol.Tests
             using (var testDirectory = TestDirectory.Create())
             using (var cacheContext = new SourceCacheContext())
             {
-                var tc = await TestContext.CreateAsync(testDirectory);
+                var tc = await TestContext.CreateAsync(testDirectory, _output);
                 cacheContext.DirectDownload = true;
+                cacheContext.NoCache = true;
 
                 // Act
                 // This should not write to the disk cache.
-                var copiedA = await tc.Target.CopyNupkgToStreamAsync(
-                    tc.Identity,
-                    tc.NupkgUrl,
-                    tc.DestinationStream,
-                    cacheContext,
-                    tc.Logger,
-                    CancellationToken.None);
-                var actualContentA = tc.DestinationStream.ToArray();
-                tc.DestinationStream.SetLength(0);
 
-                // This also should not write to the disk cache.
-                var copiedB = await tc.Target.CopyNupkgToStreamAsync(
-                    tc.Identity,
-                    tc.NupkgUrl,
-                    tc.DestinationStream,
-                    cacheContext,
-                    tc.Logger,
-                    CancellationToken.None);
-                var actualContentB = tc.DestinationStream.ToArray();
+                CancellationToken cancellationToken = CancellationToken.None;
 
-                // Assert
-                Assert.True(copiedA);
-                Assert.True(copiedB);
-                Assert.Equal(tc.ExpectedContent, actualContentA);
-                Assert.Equal(tc.ExpectedContent, actualContentB);
-                Assert.Equal(2, tc.RequestCount);
-                Assert.False(Directory.Exists(tc.HttpCacheDirectory));
+                SourceRepository repository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
+                FindPackageByIdResource resource = await repository.GetResourceAsync<FindPackageByIdResource>();
+                string packageId = "Newtonsoft.Json";
+                NuGetVersion packageVersion = new NuGetVersion("12.0.1");
+
+
+                await resource.CopyNupkgToStreamAsync(
+                        packageId,
+                        packageVersion,
+                        tc.DestinationStream,
+                        cacheContext,
+                        tc.Logger,
+                        cancellationToken);
             }
         }
 

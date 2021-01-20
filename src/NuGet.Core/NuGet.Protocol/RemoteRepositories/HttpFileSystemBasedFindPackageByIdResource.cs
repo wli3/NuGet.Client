@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Common;
@@ -273,6 +274,7 @@ namespace NuGet.Protocol
                 var packageInfos = await EnsurePackagesAsync(id, cacheContext, logger, cancellationToken);
 
                 PackageInfo packageInfo;
+
                 if (packageInfos.TryGetValue(version, out packageInfo))
                 {
                     return await _nupkgDownloader.CopyNupkgToStreamAsync(
@@ -285,6 +287,110 @@ namespace NuGet.Protocol
                 }
 
                 return false;
+            }
+            finally
+            {
+                ProtocolDiagnostics.RaiseEvent(new ProtocolDiagnosticResourceEvent(
+                    _httpSource.PackageSource,
+                    ResourceTypeName,
+                    ThisTypeName,
+                    nameof(CopyNupkgToStreamAsync),
+                    stopwatch.Elapsed));
+            }
+        }
+
+#pragma warning disable RS0016 // Add public types and members to the declared API
+        public async Task<(bool success, string contentUri, PackageIdentity packageIdentity)> GetNupkgPackageContentUriAsync(
+#pragma warning restore RS0016 // Add public types and members to the declared API
+            string id,
+            NuGetVersion version,
+            Stream destination,
+            SourceCacheContext cacheContext,
+            ILogger logger,
+            CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                throw new ArgumentException(Strings.ArgumentCannotBeNullOrEmpty, nameof(id));
+            }
+
+            if (version == null)
+            {
+                throw new ArgumentNullException(nameof(version));
+            }
+
+            if (destination == null)
+            {
+                throw new ArgumentNullException(nameof(destination));
+            }
+
+            if (cacheContext == null)
+            {
+                throw new ArgumentNullException(nameof(cacheContext));
+            }
+
+            if (logger == null)
+            {
+                throw new ArgumentNullException(nameof(logger));
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var packageInfos = await EnsurePackagesAsync(id, cacheContext, logger, cancellationToken);
+
+            PackageInfo packageInfo;
+            if (packageInfos.TryGetValue(version, out packageInfo))
+            {
+                return (true, packageInfo.ContentUri, packageInfo.Identity);
+            }
+
+            return (false, null, null);
+        }
+
+#pragma warning disable RS0016 // Add public types and members to the declared API
+        public async Task<bool> CopyContentUriToStreamAsync(
+#pragma warning restore RS0016 // Add public types and members to the declared API
+            PackageIdentity packageIdentity,
+#pragma warning disable CA1054 // Uri parameters should not be strings
+            string contentUri,
+#pragma warning restore CA1054 // Uri parameters should not be strings
+            Stream destination,
+            SourceCacheContext cacheContext,
+            ILogger logger,
+            CancellationToken cancellationToken)
+        {
+            if (contentUri is null)
+            {
+                throw new ArgumentNullException(nameof(contentUri));
+            }
+
+            if (destination == null)
+            {
+                throw new ArgumentNullException(nameof(destination));
+            }
+
+            if (cacheContext == null)
+            {
+                throw new ArgumentNullException(nameof(cacheContext));
+            }
+
+            if (logger == null)
+            {
+                throw new ArgumentNullException(nameof(logger));
+            }
+
+            var stopwatch = Stopwatch.StartNew();
+            try
+            {
+
+                return await _nupkgDownloader.CopyNupkgToStreamAsync(
+                    packageIdentity,
+                    contentUri,
+                    destination,
+                    cacheContext,
+                    logger,
+                    cancellationToken);
+
             }
             finally
             {

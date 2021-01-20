@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using NuGet.Common;
 
 namespace NuGet.Protocol
 {
@@ -13,6 +14,8 @@ namespace NuGet.Protocol
         private readonly string _downloadName;
         private readonly Stream _networkStream;
         private readonly TimeSpan _timeout;
+        internal ILogger _log;
+        private int _totalByte;
 
         public DownloadTimeoutStream(string downloadName, Stream networkStream, TimeSpan timeout)
         {
@@ -80,6 +83,8 @@ namespace NuGet.Protocol
                     timeout: _timeout,
                     timeoutMessage: null,
                     token: cancellationToken).ConfigureAwait(false);
+                _totalByte += result;
+                _log?.Log(LogLevel.Information, $"ReadAsync - offset: {offset}, count:{count}, readCount: {result}, totalByte: {_totalByte}");
 
                 return result;
             }
